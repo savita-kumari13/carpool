@@ -30,7 +30,7 @@ const AppStackContainer = createStackNavigator(
   {
     headerMode: 'none',
     navigationOptions: {
-      headerVisible: false
+      headerVisible: false,
     }
   }
 

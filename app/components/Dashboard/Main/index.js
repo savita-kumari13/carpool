@@ -14,27 +14,23 @@ import
     createMaterialTopTabNavigator,
   } from 'react-navigation'
 
-import Offer from './Offer'
 import Inbox from './Inbox'
 import Profile from './Profile'
 import History from './Rides/History';
 import Current from './Rides/Current';
 import Search from './Search';
+import Offer from './Offer/Offer';
+import Calendarr from './Offer/Calendarr';
+import Time from './Offer/Time';
+import PassengersNumber from './Offer/PassengersNumber';
+import Price from './Offer/Price';
+import AboutRide from './Offer/AboutRide';
 
-// export default class Main extends Component {
-  
-//   static navigationOptions = {
-//     header: null
-// }
-
-// constructor(props) {
-//   super(props)
-// }
-
-//   render(){
-//     return <MainContainer/>
-//   }
-// }
+const backArrow = <Icon name = "ios-arrow-round-back" 
+              size = {25} color = "#000000" 
+              style = {{marginRight: 10}}
+            // onPress = {this.props.navigation.navigate('settings')}
+          />
 
 
 
@@ -66,10 +62,10 @@ const RidesTabNavigator = createMaterialTopTabNavigator(
   }
   )
 
+
   const RidesStack = createStackNavigator(
     {
       RideScreen: { screen: RidesTabNavigator
-  
       }
   
   },
@@ -80,6 +76,7 @@ const RidesTabNavigator = createMaterialTopTabNavigator(
     }
   }
   )
+
 
 
 const MainTabNavigator = createBottomTabNavigator(
@@ -144,7 +141,7 @@ const MainTabNavigator = createBottomTabNavigator(
         }
       },
 
-      initialRouteName: 'Search',
+      initialRouteName: 'Offer',
 
       tabBarOptions: {
         activeTintColor: '#7963b6',
@@ -163,11 +160,100 @@ const MainTabNavigator = createBottomTabNavigator(
     MainScreen:
     {
       screen: MainTabNavigator
+    },
+
+    Calendarr:{
+      screen: Calendarr,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />
+        
+        
+      })
+    },
+
+    Time: {
+      screen: Time,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />
+        
+        
+      })
+    },
+
+    PassengersNumber: {
+      screen: PassengersNumber,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />
+        
+        
+      })
+    },
+
+    Price: {
+      screen: Price,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />
+        
+        
+      })
+    },
+
+    AboutRide: {
+      screen: AboutRide,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />
+        
+        
+      })
     }
   },
+ 
+
+  
     {
       initialRouteName: 'MainScreen',
-      // mode: 'modal'
+      headerMode: 'screen'
+
     }
   );
 
