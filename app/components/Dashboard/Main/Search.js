@@ -20,9 +20,10 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  TextInput,
 } from 'react-native'
 
-import { TextInput,} from 'react-native-paper';
+import { Button} from 'react-native-paper';
 import _ from 'lodash';
 
 
@@ -267,13 +268,12 @@ setGoingToLoading = () => {
 
 
     return (
-      <ScrollView >
+      <ScrollView contentContainerStyle = {styles.container}>
         <SafeAreaView style={[ { backgroundColor: '#7963b6' }]}/>
           <Text style = {styles.findRide}>Find a ride</Text>
 
           <TextInput
             placeholder='Leaving from'
-            mode = 'flat(disabled)'
             value={this.state.leavingFrom}
             style = {styles.textInput}
             onChangeText={leavingFrom =>{
@@ -284,7 +284,6 @@ setGoingToLoading = () => {
           
           <TextInput
             placeholder='Going To'
-            mode = 'flat(disabled)'
             value={this.state.goingTo}
             style = {styles.textInput}
             onChangeText={goingTo =>{
@@ -328,8 +327,7 @@ setGoingToLoading = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: 10,
   },
 
   findRide: {

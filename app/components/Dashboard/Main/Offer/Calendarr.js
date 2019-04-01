@@ -3,7 +3,8 @@ import
 {
     Text,
     View,
-    StyleSheet
+    StyleSheet,
+    AsyncStorage,
 } from 'react-native'
 import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 
@@ -18,12 +19,22 @@ export default class Calendarr extends Component {
     }
   }
 
-markSelectedDate(day)
+async markSelectedDate(day)
 {
-  this.setState({
-    chosenDate: day.dateString
-  })
-  this.props.navigation.navigate('Time')
+  try {
+
+    this.setState({
+      chosenDate: day.dayString
+    })
+
+    await AsyncStorage.setItem('offered_ride_date', JSON.stringify(day.timestamp))
+  
+    this.props.navigation.navigate('TimeAndPassengersNumber')
+    
+  } catch (error) {
+    console.log('Error in AsyncStorage ', error)
+    
+  }
 
 }
 

@@ -83,27 +83,42 @@ export default class SignUp extends Component {
     { 
       firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.password)
         .then((user) => {
-          this.userDoc = this.userRef.doc(this.state.email)
-          if(!this.userDoc.exists)
-          {
-            this.userDoc.set({
-              firstname: this.state.firstName,
-                lastname: this.state.lastName,
+          console.log('user : ', user)
+
+            this.userRef.add({
+                first_name: this.state.firstName,
+                last_name: this.state.lastName,
                 email: this.state.email,
                 password: this.state.password,
-                phonenumber: this.state.phoneNumber
+                phone_number: this.state.phoneNumber
+            })
+            .then(() => {
+              this.setState({
+                firstName: '',
+                lastName: '',
+                email: '',
+                password: '',
+                phoneNumber: '',
+              });
+              console.log('user created successfully')
+              this.props.navigation.navigate('mainContainer')
+
+            })
+            .catch((error) => {
+              this.setState({
+                firstName: '',
+                lastName: '',
+                email: '',
+                password: '',
+                phoneNumber: '',
+              });
+
+              console.error("error adding user to firestore ", error);
+
             })
               
-            this.setState({
-              firstName: '',
-              lastName: '',
-              email: '',
-              password: '',
-              phoneNumber: '',
-            });
-            console.log('user created successfully')
-            this.props.navigation.navigate('mainContainer')
-          }}).catch((error) => {
+            
+          }).catch((error) => {
             this.setState(
                 { errorMessage: error.message })
                 alert('An error occured', error.message)
@@ -130,6 +145,8 @@ export default class SignUp extends Component {
     handlePhoneBlur = () => this.setState({isPhoneFocused: false})
 
     render() {
+
+      // let userRef = firebase.firestore().collection('users');
         return (
 
           <ScrollView contentContainerStyle={styles.container}>
@@ -220,73 +237,97 @@ export default class SignUp extends Component {
               <Text style = {{fontWeight : 'bold' ,color: '#000'}}>OR</Text>
 
 
-          <View style={styles.btnstyle}>
-          <LoginButton style = {styles.fbButton}
+        <View style={styles.btnstyle}>
+            <LoginButton style = {styles.fbButton}
+              onLoginFinished=
+              {
+                (error, result) =>
+                {
+                      if (error)
+                      {
+                        console.log("login has error: " + result.error);
+                      } else if (result.isCancelled)
+                      {
+                        console.log("login is cancelled.");
+                      } else
+                      {
+                            AccessToken.getCurrentAccessToken().then(
+                              (data) =>
+                              {
+                                    LoginManager.logInWithReadPermissions(['public_profile', 'email'])
+                                      .then((result) =>
+                                      {
+                                        if (result.isCancelled)
+                                        {
+                                          return Promise.reject(new Error('The user cancelled the request'));
+                                        }
+                                        // Retrieve the access token
+                                        return AccessToken.getCurrentAccessToken();
+                                      })
+                                      .then((data) =>
+                                      {
+                                          const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
+                                          return firebase.auth().signInWithCredential(credential).then((user) =>
+                                          {
+                                                console.log("user : ", user)
 
-            onLoginFinished={
-              (error, result) => {
-                if (error) {
-                  console.log("login has error: " + result.error);
-                } else if (result.isCancelled) {
-                  console.log("login is cancelled.");
-                } else {
-                  AccessToken.getCurrentAccessToken().then(
-                    (data) => {
+                                                // this.userRef.where("email", "==", user.additionalUserInfo.profile.email).onSnapshot((snapshot) =>
+                                                if(user.additionalUserInfo.isNewUser)
+                                                {
+                                                  this.userRef.add({
+                                                    first_name: user.additionalUserInfo.profile.first_name,
+                                                    last_name: user.additionalUserInfo.profile.last_name,
+                                                    email: user.additionalUserInfo.profile.email,
+                                                    password: '',
+                                                    phone_number: ''
+                                                  }).then(() =>
+                                                  {
+                                                    this.setState({
+                                                      firstName: '',
+                                                      lastName: '',
+                                                      email: '',
+                                                      phoneNumber: '',
+                                                      password: ''
+                                                    });
+                                                  console.log('adding user data to firestore')
                       
-                      let firebaseUser;
-                          LoginManager.logInWithReadPermissions(['public_profile', 'email'])
-                        .then((result) => {
-                          if (result.isCancelled) {
-                            return Promise.reject(new Error('The user cancelled the request'));
+                                                  }).catch((error) =>
+                                                  {
+
+                                                    this.setState({
+                                                      firstName: '',
+                                                      lastName: '',
+                                                      email: '',
+                                                      phoneNumber: '',
+                                                      password: ''
+                                                    });
+                                                    console.log('error adding user to firestore -- facebook', error)
+                                                  })
+                                                 
+                                                }
+                                                else
+                                                {
+                                                  console.log('logging in facebook user')
+
+                                                }
+                                                        
+                                          }).catch(error)
+                                          {
+                                            console.log('error.', error)
+                                          }                                                                       
+                                  }).catch(error)
+                                  {
+                                    console.log('error.', error)
+                                  }
+                              }).catch((error) => {
+                                    const { code, message } = error;
+                                  });
                           }
-                          // Retrieve the access token
-                          return AccessToken.getCurrentAccessToken();
-                        })
-                        .then((data) => {
-                          // Create a new Firebase credential with the token
-                          const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
-                          // Login with the credential
-                          firebaseUser = firebase.auth().signInWithCredential(credential);
-                          return firebase.auth().signInWithCredential(credential);
-                        })
-                        .then((user) => {
-                          this.userDoc = this.userRef.doc(user.additionalUserInfo.profile.email)
-                          if(!this.userDoc.exists)
-                          {
-                            this.userDoc.set({
-                              firstname: user.additionalUserInfo.profile.firstname,
-                              lastname: user.additionalUserInfo.profile.lastname,
-                              email: user.additionalUserInfo.profile.email,
-                              password: '',
-                              phonenumber: ''
-                            })
-                              
-                            this.setState({
-                              firstName: '',
-                              lastName: '',
-                              email: '',
-                              phoneNumber: '',
-                              password: ''
-                            });
-                          console.log('user signed in through facebook', user)
-                          // this.props.navigation.navigate('mainContainer')
-                        }
-                      else{
-                        console.log('simply logging ..not creating user')
-                      }
-                        })
-                        .catch((error) => {
-                          const { code, message } = error;
-                        });
-                    }
-                  )
                 }
               }
-            }
-            onLogoutFinished={() => console.log("logout.")}/>
+              onLogoutFinished={() => console.log("logout.")} >
+              </LoginButton>
             </View>
-
-
 
         </ScrollView>
         )

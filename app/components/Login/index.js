@@ -199,61 +199,90 @@ handleEmailFocus = () => this.setState({isEmailFocused: true})
 
           <View style={styles.btnstyle}>
             <LoginButton style = {styles.fbButton}
-              onLoginFinished={
-                (error, result) => {
-                  if (error) {
-                    console.log("login has error: " + result.error);
-                  } else if (result.isCancelled) {
-                    console.log("login is cancelled.");
-                  } else {
-                    AccessToken.getCurrentAccessToken().then(
-                      (data) => {
+              onLoginFinished=
+              {
+                (error, result) =>
+                {
+                      if (error)
+                      {
+                        console.log("login has error: " + result.error);
+                      } else if (result.isCancelled)
+                      {
+                        console.log("login is cancelled.");
+                      } else
+                      {
+                            AccessToken.getCurrentAccessToken().then(
+                              (data) =>
+                              {
+                                    LoginManager.logInWithReadPermissions(['public_profile', 'email'])
+                                      .then((result) =>
+                                      {
+                                        if (result.isCancelled)
+                                        {
+                                          return Promise.reject(new Error('The user cancelled the request'));
+                                        }
+                                        // Retrieve the access token
+                                        return AccessToken.getCurrentAccessToken();
+                                      })
+                                      .then((data) =>
+                                      {
+                                          const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
+                                          return firebase.auth().signInWithCredential(credential).then((user) =>
+                                          {
+                                                console.log("user : ", user)
 
-                        LoginManager.logInWithReadPermissions(['public_profile', 'email'])
-                          .then((result) => {
-                            if (result.isCancelled) {
-                              return Promise.reject(new Error('The user cancelled the request'));
-                            }
-                            // Retrieve the access token
-                            return AccessToken.getCurrentAccessToken();
-                          })
-                          .then((data) => {
-                            // Create a new Firebase credential with the token
-                            const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
-                            // Login with the credential
-                          return firebase.auth().signInWithCredential(credential);
-                            
-                          })
-                          .then((user) => {
-                            this.userDoc = this.userRef.doc(user.additionalUserInfo.profile.email)
-                                if(! this.userDoc.exists)
-                                {
-                                  this.userDoc.set({
-                                    firstname: user.additionalUserInfo.profile.first_name,
-                                    lastname: user.additionalUserInfo.profile.last_name,
-                                    email: user.additionalUserInfo.profile.email,
-                                    password: '',
-                                    phonenumber: ''
-                                  })
-                                    this.setState({
-                                      firstName: '',
-                                      lastName: '',
-                                      email: '',
-                                      phoneNumber: '',
-                                      password: ''
-                                    });
-                                  console.log('user added through facebook', user)
-                                }
-                                else
-                                {
-                                  console.log('not adding...simply logging ..not creating user')
-                                }
-                      }).catch((error) => {
-                            const { code, message } = error;
-                          });
-                      }
-                    )
-                  }
+                                                // this.userRef.where("email", "==", user.additionalUserInfo.profile.email).onSnapshot((snapshot) =>
+                                                if(user.additionalUserInfo.isNewUser)
+                                                {
+                                                  this.userRef.add({
+                                                    first_name: user.additionalUserInfo.profile.first_name,
+                                                    last_name: user.additionalUserInfo.profile.last_name,
+                                                    email: user.additionalUserInfo.profile.email,
+                                                    password: '',
+                                                    phone_number: ''
+                                                  }).then(() =>
+                                                  {
+                                                    this.setState({
+                                                      firstName: '',
+                                                      lastName: '',
+                                                      email: '',
+                                                      phoneNumber: '',
+                                                      password: ''
+                                                    });
+                                                  console.log('adding user data to firestore')
+                      
+                                                  }).catch((error) =>
+                                                  {
+
+                                                    this.setState({
+                                                      firstName: '',
+                                                      lastName: '',
+                                                      email: '',
+                                                      phoneNumber: '',
+                                                      password: ''
+                                                    });
+                                                    console.log('error adding user to firestore -- facebook', error)
+                                                  })
+                                                 
+                                                }
+                                                else
+                                                {
+                                                  console.log('logging in facebook user')
+
+                                                }
+                                                        
+                                          }).catch(error)
+                                          {
+                                            console.log('error.', error)
+                                          }                                                                       
+                                  }).catch(error)
+                                  {
+                                    console.log('error.', error)
+                                  }
+                              }).catch((error) => {
+                                    const { code, message } = error;
+                                  });
+                          }
                 }
               }
               onLogoutFinished={() => console.log("logout.")} >

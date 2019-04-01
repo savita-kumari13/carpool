@@ -9,8 +9,10 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  AsyncStorage,
+  TextInput,
 } from 'react-native'
-import { TextInput, Button,} from 'react-native-paper';
+import {  Button,} from 'react-native-paper';
 
 import _ from 'lodash';
 
@@ -36,6 +38,9 @@ export default class Offer extends Component {
 
       pickUp: '',
       dropOff: '',
+
+      pickUpPlaceId: '',
+      dropOffPlaceId: '',
 
       pickUpLatitude: 0,
       pickUpLongitude: 0,
@@ -64,8 +69,8 @@ export default class Offer extends Component {
 
     this._handleBackHandler = this._handleBackHandler.bind(this);
 
-    this.onChangePickUpDebounced = _.debounce(this.onChangePickUp, 0)
-    this.onChangeDropOffDebounced = _.debounce(this.onChangeDropOff, 0)
+    this.onChangePickUpDebounced = _.debounce(this.onChangePickUp, 1000)
+    this.onChangeDropOffDebounced = _.debounce(this.onChangeDropOff, 1000)
 }
 
 
@@ -112,11 +117,17 @@ _handleBackHandler = () => {
     {
      pickUp,
    })
-  const pickUpApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${pickUp}&location=${this.state.pickUpLatitude}, ${this.state.pickUpLongitude}&radius=2000`;
-     
+  const pickUpApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${pickUp}&radius=2000`;
+  
+  
   try{
    const pickUpResult = await fetch(pickUpApiUrl);
    const pickUpJson = await pickUpResult.json();
+
+  //  const pickUpPlaceId = pickUpJson.placeId
+
+  //  const placeApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&placeid=`
+
    console.log('pickUpJson', pickUpJson)
 
    this.setState({
@@ -133,7 +144,7 @@ async onChangeDropOff(dropOff) {
     {
      dropOff,
    })
-  const dropOffApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${dropOff}&location=${this.state.dropOfflatitude}, ${this.state.dropOfflongitude}&radius=2000`;
+  const dropOffApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${dropOff}&radius=2000`;
   
   try{
    const dropOffResult = await fetch(dropOffApiUrl);
@@ -173,10 +184,13 @@ setCurrentLocationToPickUp =(currentPlace) => {
   console.log('currentPlaceForPickUpPlace', currentPlace)
   this.setState({
     pickUp: currentPlace,
+    pickUpLatitude: this.state.currentLocationLatitude,
+    pickUpLongitude: this.state.currentLocationLongitude,
     pickUploading: false,
     dropOffLoading: false,
     currentPlaceLoadingForPickUp: false,
     currentPlaceLoadingForDropOff: false,
+    showNextIconAfterPickUp: true,
   })
 }
 
@@ -206,32 +220,84 @@ setCurrentLocationToDropOff =(currentPlace) => {
   console.log('currentPlaceForDropOff', currentPlace)
   this.setState({
     dropOff: currentPlace,
-    pickUploading: false,
-    dropOffLoading: false,
-    currentPlaceLoadingForPickUp: false,
-    currentPlaceLoadingForDropOff: false,
-  })
-}
-
-setPickUpLocation (pickUpPlace) {
-  this.setState({
-    pickUp: pickUpPlace,
-    pickUploading: false,
-    dropOffLoading: false,
-    currentPlaceLoadingForPickUp: false,
-    showNextIconAfterPickUp: true,
-  })
-}
-
-setDropOffLocation (dropOffPlace) {
-  this.setState({
-    dropOff: dropOffPlace,
+    dropOfflatitude: this.state.currentLocationLatitude,
+    dropOfflongitude: this.state.currentLocationLongitude,
     pickUploading: false,
     dropOffLoading: false,
     currentPlaceLoadingForPickUp: false,
     currentPlaceLoadingForDropOff: false,
     showNextIconAfterDropOff: true,
   })
+}
+
+async setPickUpLocation (pickUpPlace) {
+
+  console.log('selected pickUp place : ', pickUpPlace)
+  console.log('selected pickUp place_id : ', pickUpPlace.place_id)
+
+  this.setState({
+    pickUpPlaceId: pickUpPlace.place_id,
+    pickUp: pickUpPlace.description,
+    pickUploading: false,
+    dropOffLoading: false,
+    currentPlaceLoadingForPickUp: false,
+    showNextIconAfterPickUp: true,
+  })
+  console.log('pick Up place id : ', this.state.pickUpPlaceId)
+
+  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${pickUpPlace.place_id}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4`
+
+  try {
+
+  const placeIdResult = await fetch(placeIdApiUrl);
+  const placeIdJson = await placeIdResult.json();
+  console.log('place id json : ', placeIdJson)
+
+  this.setState({
+    pickUpLatitude: placeIdJson.result.geometry.location.lat,
+    pickUpLongitude: placeIdJson.result.geometry.location.lng
+  })
+   
+    
+  } catch (error) {
+    console.log(error)
+    
+  }
+}
+
+async setDropOffLocation (dropOffPlace) {
+
+  console.log('selected dropOff place : ', dropOffPlace)
+  console.log('selected dropOff place_id : ', dropOffPlace.place_id)
+
+  this.setState({
+    dropOffPlaceId: dropOffPlace.place_id,
+    dropOff: dropOffPlace.description,
+    pickUploading: false,
+    dropOffLoading: false,
+    currentPlaceLoadingForPickUp: false,
+    currentPlaceLoadingForDropOff: false,
+    showNextIconAfterDropOff: true,
+  })
+
+  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${dropOffPlace.place_id}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4`
+
+  try {
+
+  const placeIdResult = await fetch(placeIdApiUrl);
+  const placeIdJson = await placeIdResult.json();
+  console.log('place id json : ', placeIdJson)
+
+  this.setState({
+    dropOfflatitude: placeIdJson.result.geometry.location.lat,
+    dropOfflongitude: placeIdJson.result.geometry.location.lng
+  })
+   
+    
+  } catch (error) {
+    console.log(error)
+    
+  }
 }
 
 setPickUpLoading = () => {
@@ -252,14 +318,31 @@ setDropOffLoading = () => {
   })
 }
 
-goToCalendarScreen() {
-  if(this.state.pickUp != this.state.dropOff)
-  {
-    console.log('Calendar')
-    this.props.navigation.navigate('Calendarr')
-  }
-  else{
-    alert('Please fill different places')
+async savePickUpDropOffLocations() {
+  try{
+      if(this.state.pickUp != this.state.dropOff)
+      {
+        console.log('pickUpLatitude : ', this.state.pickUpLatitude)
+        console.log('dropOffLongitude : ', this.state.dropOfflongitude)
+
+        await AsyncStorage.setItem('pickup_location_latitude', JSON.stringify(this.state.pickUpLatitude))
+        await AsyncStorage.setItem('pickup_location_longitude', JSON.stringify(this.state.pickUpLongitude))
+
+        await AsyncStorage.setItem('dropoff_location_latitude', JSON.stringify(this.state.dropOfflatitude))
+        await AsyncStorage.setItem('dropoff_location_longitude', JSON.stringify(this.state.dropOfflongitude))
+
+        await AsyncStorage.setItem('pickup_location_name', this.state.pickUp)
+        await AsyncStorage.setItem('dropoff_location_name', this.state.dropOff)
+
+        console.log('Calendar screen')
+        this.props.navigation.navigate('Calendarr')
+      }
+      else{
+        alert('Please fill different places')
+      }
+
+  }catch(error){
+    console.log('Error in AsyncStorage ', error)
   }
   
 }
@@ -272,13 +355,13 @@ goToCalendarScreen() {
       <Text
         style = {styles.suggestions}
         key = {pickUpPrediction.id}
-        onPress = {() => this.setPickUpLocation(pickUpPrediction.description)}>{pickUpPrediction.description}</Text>))
+        onPress = {() => this.setPickUpLocation(pickUpPrediction)}>{pickUpPrediction.description}</Text>))
 
     const  dropOffPredictions = this.state.dropOffPredictions.map(dropOffPrediction => (
       <Text
         style = {styles.suggestions}
         key = {dropOffPrediction.id}
-        onPress = {() => this.setDropOffLocation(dropOffPrediction.description)}>{dropOffPrediction.description}</Text>))
+        onPress = {() => this.setDropOffLocation(dropOffPrediction)}>{dropOffPrediction.description}</Text>))
 
 
     return (
@@ -289,7 +372,6 @@ goToCalendarScreen() {
 
         <TextInput
             placeholder='Pick-up'
-            mode = 'flat(disabled)'
             value={this.state.pickUp}
             style = {styles.textInput}
             onChangeText={pickUp =>{
@@ -300,7 +382,6 @@ goToCalendarScreen() {
           
           <TextInput
             placeholder='Drop-off'
-            mode = 'flat(disabled)'
             value={this.state.dropOff}
             style = {styles.textInput}
             onChangeText={dropOff =>{
@@ -334,14 +415,22 @@ goToCalendarScreen() {
         {this.state.pickUploading && pickUpPredictions}
         {this.state.dropOffLoading && dropOffPredictions}
 
-        {this.state.showNextIconAfterPickUp && this.state.showNextIconAfterDropOff &&
+        {/* {this.state.showNextIconAfterPickUp && this.state.showNextIconAfterDropOff &&
          <IconNext name = "ios-arrow-dropright-circle" size = {50} color = "#7963b6"
                             style = {{position: 'absolute',
                             bottom:20,
                             right:20,}}
                             onPress = {() =>
-                              this.goToCalendarScreen()}
-                            />}
+                              this.savePickUpDropOffLocations()}
+                            />} */}
+
+        <IconNext name = "ios-arrow-dropright-circle" size = {50} color = "#7963b6"
+                            style = {{position: 'absolute',
+                            bottom:20,
+                            right:20,}}
+                            onPress = {() =>
+                              this.savePickUpDropOffLocations()}
+                            />                    
       </ScrollView>
     )
   }
@@ -351,14 +440,12 @@ goToCalendarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // alignItems: 'center',
-    // justifyContent: 'center',
     paddingTop: 10,
   },
 
   findRide: {
     fontWeight: 'bold',
-    fontFamily: 'sans-serif-condensed',
+    fontFamily: 'sans-serif-medium',
     fontSize: 30,
     color: '#054752',
     margin: 20,

@@ -21,10 +21,8 @@ import Current from './Rides/Current';
 import Search from './Search';
 import Offer from './Offer/Offer';
 import Calendarr from './Offer/Calendarr';
-import Time from './Offer/Time';
-import PassengersNumber from './Offer/PassengersNumber';
-import Price from './Offer/Price';
-import AboutRide from './Offer/AboutRide';
+import PriceAndAboutRide from './Offer/PriceAndAboutRide';
+import TimeAndPassengersNumber from './Offer/TimeAndPassengersNumber';
 
 const backArrow = <Icon name = "ios-arrow-round-back" 
               size = {25} color = "#000000" 
@@ -141,7 +139,7 @@ const MainTabNavigator = createBottomTabNavigator(
         }
       },
 
-      initialRouteName: 'Offer',
+      initialRouteName: 'Rides',
 
       tabBarOptions: {
         activeTintColor: '#7963b6',
@@ -179,8 +177,8 @@ const MainTabNavigator = createBottomTabNavigator(
       })
     },
 
-    Time: {
-      screen: Time,
+    TimeAndPassengersNumber: {
+      screen: TimeAndPassengersNumber,
       navigationOptions: ({navigation}) => ({
         headerStyle:{
           backgroundColor: 'transparent',         
@@ -196,8 +194,8 @@ const MainTabNavigator = createBottomTabNavigator(
       })
     },
 
-    PassengersNumber: {
-      screen: PassengersNumber,
+    PriceAndAboutRide: {
+      screen: PriceAndAboutRide,
       navigationOptions: ({navigation}) => ({
         headerStyle:{
           backgroundColor: 'transparent',         
@@ -213,39 +211,6 @@ const MainTabNavigator = createBottomTabNavigator(
       })
     },
 
-    Price: {
-      screen: Price,
-      navigationOptions: ({navigation}) => ({
-        headerStyle:{
-          backgroundColor: 'transparent',         
-        },
-        headerLeft: 
-          <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
-              style = {{marginLeft: 20, marginTop: 20,}}
-              onPress = {() => navigation.goBack()}
-          />
-        
-        
-      })
-    },
-
-    AboutRide: {
-      screen: AboutRide,
-      navigationOptions: ({navigation}) => ({
-        headerStyle:{
-          backgroundColor: 'transparent',         
-        },
-        headerLeft: 
-          <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
-              style = {{marginLeft: 20, marginTop: 20,}}
-              onPress = {() => navigation.goBack()}
-          />
-        
-        
-      })
-    }
   },
  
 
