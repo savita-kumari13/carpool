@@ -124,10 +124,6 @@ _handleBackHandler = () => {
    const pickUpResult = await fetch(pickUpApiUrl);
    const pickUpJson = await pickUpResult.json();
 
-  //  const pickUpPlaceId = pickUpJson.placeId
-
-  //  const placeApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&placeid=`
-
    console.log('pickUpJson', pickUpJson)
 
    this.setState({
@@ -334,8 +330,8 @@ async savePickUpDropOffLocations() {
         await AsyncStorage.setItem('pickup_location_name', this.state.pickUp)
         await AsyncStorage.setItem('dropoff_location_name', this.state.dropOff)
 
-        console.log('Calendar screen')
-        this.props.navigation.navigate('Calendarr')
+        console.log('TimeAndPassengersNumber screen')
+        this.props.navigation.navigate('TimeAndPassengersNumber')
       }
       else{
         alert('Please fill different places')

@@ -21,13 +21,18 @@ export default class TimeAndPassengersNumber extends Component {
         super(props)
 
         this.state = {
+            pickedDate: new Date(),
             isDateTimePickerVisible: false,
             hours : new Date().getHours(),
             minutes : new Date().getMinutes(),
 
             passengersNumber : 3,
             isDisabledMinusIcon: false,
-            isLessThanZero: '#7963b6'
+            isLessThanZero: '#7963b6',
+
+            monthNames : ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+              ],
         }
     }
 
@@ -38,9 +43,7 @@ export default class TimeAndPassengersNumber extends Component {
             hours: (this.state.hours <10?'0':'') + this.state.hours,
             minutes: (this.state.minutes <10?'0':'') + this.state.minutes
             
-        })
-       
-        
+        })        
     }
 
     _showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
@@ -48,11 +51,15 @@ export default class TimeAndPassengersNumber extends Component {
     _hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
    
     _handleDatePicked = (date) => {
-      console.log('A date has been picked: ', date);
+      
+
+      console.log('Time has been picked: ', date.getMonth());
       this.setState({
+          pickedDate: date ,
           hours: ((date.getHours()) < 10? '0': '') + date.getHours(),
           minutes: ((date.getMinutes()) < 10? '0': '') + date.getMinutes()
       })
+
       this._hideDateTimePicker();
     };
 
@@ -87,15 +94,9 @@ export default class TimeAndPassengersNumber extends Component {
     async saveOfferedRideTimeAndPassengersNumber() {
 
       try {
-
-        const offeredRideHours = this.state.hours * 60 * 60 * 1000
-        const offeredRideMinutes = this.state.minutes * 60 * 1000
-
-        const offeredRideDate = await AsyncStorage.getItem('offered_ride_date')
-
-        const offeredRideTime = offeredRideHours + offeredRideMinutes + offeredRideDate
-
-        await AsyncStorage.setItem('offered_ride_time', JSON.stringify(offeredRideTime))
+        console.log('picked date time : ', this.state.pickedDate)
+        console.log('picked date time : JSON ', JSON.stringify(this.state.pickedDate))
+        await AsyncStorage.setItem('offered_ride_date_time', JSON.stringify(this.state.pickedDate))
         await AsyncStorage.setItem('passengers_number', JSON.stringify(this.state.passengersNumber))
 
         console.log('Price Screen')
@@ -125,7 +126,7 @@ export default class TimeAndPassengersNumber extends Component {
 
     return (
         <View style = {styles.container}>
-            <Text style = {styles.goingTime}>What time will you pick passengers up?</Text>
+            <Text style = {styles.goingTime}>When are you going?</Text>
 
 
             <TouchableOpacity style = {styles.showTimePicker}
@@ -134,9 +135,19 @@ export default class TimeAndPassengersNumber extends Component {
                     style = {{
                         color: '#054752',
                         fontWeight: 'bold',
-                        fontSize: 40,
+                        fontSize: 23,
                         fontFamily: "sans-serif-condensed",
-                        }}>{this.state.hours} : {this.state.minutes}</Text>
+                        }}>{this.state.pickedDate.getDate()} {this.state.monthNames[this.state.pickedDate.getMonth()]}
+                        </Text>
+
+                  <Text 
+                        style = {{
+                            color: '#054752',
+                            fontWeight: 'bold',
+                            fontSize: 23,
+                            fontFamily: "sans-serif-condensed",
+                            }}>{this.state.hours}:{this.state.minutes}
+                        </Text>        
 
                 <Icon2 name = "ios-arrow-down" size = {20} color = "#7963b6"
                                             style = {{ position: 'absolute',
@@ -145,7 +156,7 @@ export default class TimeAndPassengersNumber extends Component {
             </TouchableOpacity>
 
             <DateTimePicker
-                mode = 'time'
+                mode = 'datetime'
                 isVisible={this.state.isDateTimePickerVisible}
                 onConfirm={this._handleDatePicked}
                 onCancel={this._hideDateTimePicker}
@@ -211,7 +222,7 @@ container: {
     backgroundColor: "#fff",
     marginTop: 50,
     marginLeft: '10%',
-    flexDirection: 'row',
+    // flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center' ,
     borderWidth: 1,

@@ -18,11 +18,12 @@ import Inbox from './Inbox'
 import Profile from './Profile'
 import History from './Rides/History';
 import Current from './Rides/Current';
-import Search from './Search';
+import Search from './Search/Search';
 import Offer from './Offer/Offer';
 import Calendarr from './Offer/Calendarr';
 import PriceAndAboutRide from './Offer/PriceAndAboutRide';
 import TimeAndPassengersNumber from './Offer/TimeAndPassengersNumber';
+import SearchList from './Search/SearchList';
 
 const backArrow = <Icon name = "ios-arrow-round-back" 
               size = {25} color = "#000000" 
@@ -139,7 +140,7 @@ const MainTabNavigator = createBottomTabNavigator(
         }
       },
 
-      initialRouteName: 'Rides',
+      initialRouteName: 'Search',
 
       tabBarOptions: {
         activeTintColor: '#7963b6',
@@ -211,12 +212,29 @@ const MainTabNavigator = createBottomTabNavigator(
       })
     },
 
+    SearchList: {
+      screen: SearchList,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />
+        
+        
+      })
+    }
+
   },
  
 
   
     {
-      initialRouteName: 'MainScreen',
+      initialRouteName: 'PriceAndAboutRide',
       headerMode: 'screen'
 
     }

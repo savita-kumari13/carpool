@@ -27,6 +27,8 @@ export default class PriceAndAboutRide extends Component {
 
             aboutText: '',
         }
+        firebase.firestore.enableLogging(true)
+        firebase.firestore.setLogLevel('debug');
         this.userRef = firebase.firestore().collection('users')
         this.offeredRideRef = firebase.firestore().collection('offered_ride')
     }
@@ -67,31 +69,36 @@ export default class PriceAndAboutRide extends Component {
 
             await AsyncStorage.setItem('offered_ride_info', this.state.aboutText)
 
-            const pickUpLocationName = await AsyncStorage.getItem('pickup_location_name')
-            const dropOffLocationName = await AsyncStorage.getItem('dropoff_location_name')
+            let pickUpLocationName = await AsyncStorage.getItem('pickup_location_name')
+            let dropOffLocationName = await AsyncStorage.getItem('dropoff_location_name')
 
-            const pickUpLocationLatitudeToParse = await AsyncStorage.getItem('pickup_location_latitude')
-            const pickUpLocationLongitudeToParse = await AsyncStorage.getItem('pickup_location_longitude')
+            let pickUpLocationLatitudeToParse = await AsyncStorage.getItem('pickup_location_latitude')
+            let pickUpLocationLongitudeToParse = await AsyncStorage.getItem('pickup_location_longitude')
 
-            const dropOffLocationLatitudeToParse = await AsyncStorage.getItem('dropoff_location_latitude')
-            const dropOffLocationLongitudeToParse = await AsyncStorage.getItem('dropoff_location_longitude')
+            let dropOffLocationLatitudeToParse = await AsyncStorage.getItem('dropoff_location_latitude')
+            let dropOffLocationLongitudeToParse = await AsyncStorage.getItem('dropoff_location_longitude')
 
-            const offeredRideDateToParse = await AsyncStorage.getItem('offered_ride_date')
-            const offeredRideTimeToParse = await AsyncStorage.getItem('offered_ride_time')
-            const offeredPassengersNumberToParse = await AsyncStorage.getItem('passengers_number')
-            const offeredPriceToParse = await AsyncStorage.getItem('offered_price')
-            const offeredRideInfo = await AsyncStorage.getItem('offered_ride_info')
+            let offeredRideDateTimeToParse = await AsyncStorage.getItem('offered_ride_date_time')
+            let offeredPassengersNumberToParse = await AsyncStorage.getItem('passengers_number')
+            let offeredPriceToParse = await AsyncStorage.getItem('offered_price')
+            let offeredRideInfo = await AsyncStorage.getItem('offered_ride_info')
 
-            const pickUpLocationLatitude = JSON.parse(pickUpLocationLatitudeToParse)
-            const pickUpLocationLongitude = JSON.parse(pickUpLocationLongitudeToParse)
+            let pickUpLocationLatitude = JSON.parse(pickUpLocationLatitudeToParse)
+            let pickUpLocationLongitude = JSON.parse(pickUpLocationLongitudeToParse)
 
-            const dropOffLocationLatitude = JSON.parse(dropOffLocationLatitudeToParse)
-            const dropOffLocationLongitude = JSON.parse(dropOffLocationLongitudeToParse)
+            let dropOffLocationLatitude = JSON.parse(dropOffLocationLatitudeToParse)
+            let dropOffLocationLongitude = JSON.parse(dropOffLocationLongitudeToParse)
 
-            const offeredRideDate = JSON.parse(offeredRideDateToParse)
-            const offeredRideTime = JSON.parse(offeredRideTimeToParse)
-            const offeredPassengersNumber = JSON.parse(offeredPassengersNumberToParse)
-            const offeredPrice = JSON.parse(offeredPriceToParse)
+            let offeredRideDateTimeString = JSON.parse(offeredRideDateTimeToParse)
+            let offeredRideDateTimeObject = new Date(offeredRideDateTimeString)
+            console.log('offeredRideDateTimeString  : ', offeredRideDateTimeString)
+            console.log('offeredRideDateTimeObject : ',offeredRideDateTimeObject)
+            console.log('firebase firestore', firebase.firestore)
+            // let offeredRideDateTime = new firebase.firestore.Timestamp.fromDate(offeredRideDateTimeObject)
+            
+
+            let offeredPassengersNumber = JSON.parse(offeredPassengersNumberToParse)
+            let offeredPrice = JSON.parse(offeredPriceToParse)
     
             console.log('pickUp : ', pickUpLocationName)
             console.log('dropOff : ', dropOffLocationName)
@@ -102,88 +109,57 @@ export default class PriceAndAboutRide extends Component {
             console.log('dropOffLocationLatitude : ', dropOffLocationLatitude)
             console.log('dropOffLocationLongitude : ', dropOffLocationLongitude)
 
-            console.log('offeredRideDate : ', offeredRideDate)
-            console.log('offeredRideTime : ', offeredRideTime)
+            // console.log('offeredRideDateTime in timestamp : ', offeredRideDateTime)
+            // console.log('offeredRideDateTime : type :  ', typeof(offeredRideDateTime))
             console.log('offeredPassengersNumber : ', offeredPassengersNumber)
             console.log('offeredPrice : ', offeredPrice)
             console.log('offeredRideInfo : ', offeredRideInfo)
-            
+
 
             let currentUser = firebase.auth().currentUser
 
-            // if(currentUser)
-            // {
-            //      // console.log('refence ', db.collection('users').doc(currentUser.uid))
-                
-            //     let offeredRideUserEmail = currentUser._user.email
-            //     console.log('current user email ', offeredRideUserEmail)
+            if(currentUser)
+            {
+                // console.log("currentUser ", currentUser)
+                // console.log(this.userRef.get().then(user=>{
+                //     console.log(user);
+                // }).catch(console.log));
+                // return;
+                this.userRef.where("email", "==", currentUser._user.email).onSnapshot((querySnapshot) =>
+                {
+                    console.log('querysnapshot : ', querySnapshot)
+                    querySnapshot.forEach((doc) => {
+                        console.log('queysnapshot doc : ', doc.data())
 
-            //     let userRideDoc = this.userRef.doc(offeredRideUserEmail)
+                        let userFirstName = doc.data().first_name
+                        let userLastName = doc.data().last_name
+                        let userPhoneNumber = doc.data().phone_number
 
-                
+                        this.offeredRideRef.add({
+                            pick_up_location: {
+                                name: pickUpLocationName,
+                                lat_lng: new firebase.firestore.GeoPoint( pickUpLocationLatitude, pickUpLocationLongitude)
+                            },
+                            drop_off_location: {
+                                name: dropOffLocationName,
+                                lat_lng: new firebase.firestore.GeoPoint(dropOffLocationLatitude, dropOffLocationLongitude)
+                            },
+                            offered_ride_date_time: offeredRideDateTimeObject,
+                            offered_ride_price: offeredPrice,
+                            offered_ride_passengers_no : offeredPassengersNumber,
+                            offered_ride_user: {
+                                first_name: userFirstName,
+                                last_name: userLastName,
+                                phone_number: userPhoneNumber
+                            }
+                        })
+                    })
+                })
+            }
+            
 
-            //     userRideDoc.onSnapshot(function (doc) {
-            //         if(doc.exists)
-            //         {
-            //             console.log("onSnapshot data : ", doc.data())
-            //         } else
-            //         {
-            //             console.log("No such user exists");
-            //         }
-                    
+            
 
-            //     }
-            //     )
-
-            //     // userRideDoc.get().then(function(doc) {
-            //     //     if (doc.exists) {
-            //     //         console.log("Document data:", doc.data());
-                        
-                        
-            //     //     } else {
-            //     //         // doc.data() will be undefined in this case
-            //     //         console.log("No such document!");
-            //     //     }
-            //     // }).catch(function(error) {
-            //     //     console.log("Error getting document:", error);
-            //     // });
-
-            //     this.offeredRideUserDoc = this.offeredRideRef.doc(offeredRideUserEmail)
-            //     // if(!this.offeredRideUserDoc.exists)
-            //     // {
-            //     //     // this.offeredRideUserDoc.collection('ride_offerring_user').doc(offeredRideUser).set({
-            //     //     //     pickup_location: pickUp,
-            //     //     //     dropOff_location: dropOff,
-            //     //     //     offered_ride_date: offeredRideDate,
-            //     //     //     offered_ride_time: offeredRideTime,
-            //     //     //     offered_passengers_number: offeredPassengersNumber,
-            //     //     //     offered_price: offeredPrice,
-            //     //     //     offered_ride_info: offeredRideInfo
-            //     //     // }).then(() =>{
-            //     //     //     console.log("offered ride data added ot firestore")
-            //     //     // }).catch((error) => {
-            //     //     //     console.error("error adding offered ride data to firestore ", error);
-            //     //     // })
-
-            //     //     this.offeredRideUserDoc.set({
-            //     //         pickup_location: pickUp,
-            //     //         dropOff_location: dropOff,
-            //     //         offered_ride_date: offeredRideDate,
-            //     //         offered_ride_time: offeredRideTime,
-            //     //         offered_passengers_number: offeredPassengersNumber,
-            //     //         offered_price: offeredPrice,
-            //     //         offered_ride_info: offeredRideInfo
-            //     //     }).then(() =>{
-            //     //         console.log("offered ride data added ot firestore")
-            //     //     }).catch((error) => {
-            //     //         console.error("error adding offered ride data to firestore ", error);
-            //     //     })
-            //     // }
-
-
-               
-            // }
-    
     
             // this.props.navigation.navigate('Current')
             
@@ -317,3 +293,86 @@ const styles = StyleSheet.create({
         left: '35%',
       }
     })
+
+
+
+
+
+
+
+
+    let currentUser = firebase.auth().currentUser
+
+    // if(currentUser)
+    // {
+    //      // console.log('refence ', db.collection('users').doc(currentUser.uid))
+        
+    //     let offeredRideUserEmail = currentUser._user.email
+    //     console.log('current user email ', offeredRideUserEmail)
+
+    //     let userRideDoc = this.userRef.doc(offeredRideUserEmail)
+
+        
+
+    //     userRideDoc.onSnapshot(function (doc) {
+    //         if(doc.exists)
+    //         {
+    //             console.log("onSnapshot data : ", doc.data())
+    //         } else
+    //         {
+    //             console.log("No such user exists");
+    //         }
+            
+
+    //     }
+    //     )
+
+        // userRideDoc.get().then(function(doc) {
+        //     if (doc.exists) {
+        //         console.log("Document data:", doc.data());
+                
+                
+        //     } else {
+        //         // doc.data() will be undefined in this case
+        //         console.log("No such document!");
+        //     }
+        // }).catch(function(error) {
+        //     console.log("Error getting document:", error);
+        // });
+
+    //     this.offeredRideUserDoc = this.offeredRideRef.doc(offeredRideUserEmail)
+    //     // if(!this.offeredRideUserDoc.exists)
+    //     // {
+    //     //     // this.offeredRideUserDoc.collection('ride_offerring_user').doc(offeredRideUser).set({
+    //     //     //     pickup_location: pickUp,
+    //     //     //     dropOff_location: dropOff,
+    //     //     //     offered_ride_date: offeredRideDate,
+    //     //     //     offered_ride_time: offeredRideTime,
+    //     //     //     offered_passengers_number: offeredPassengersNumber,
+    //     //     //     offered_price: offeredPrice,
+    //     //     //     offered_ride_info: offeredRideInfo
+    //     //     // }).then(() =>{
+    //     //     //     console.log("offered ride data added ot firestore")
+    //     //     // }).catch((error) => {
+    //     //     //     console.error("error adding offered ride data to firestore ", error);
+    //     //     // })
+
+    //     //     this.offeredRideUserDoc.set({
+    //     //         pickup_location: pickUp,
+    //     //         dropOff_location: dropOff,
+    //     //         offered_ride_date: offeredRideDate,
+    //     //         offered_ride_time: offeredRideTime,
+    //     //         offered_passengers_number: offeredPassengersNumber,
+    //     //         offered_price: offeredPrice,
+    //     //         offered_ride_info: offeredRideInfo
+    //     //     }).then(() =>{
+    //     //         console.log("offered ride data added ot firestore")
+    //     //     }).catch((error) => {
+    //     //         console.error("error adding offered ride data to firestore ", error);
+    //     //     })
+    //     // }
+    
+
+               
+            // }
+    

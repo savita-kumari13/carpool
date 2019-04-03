@@ -6,9 +6,11 @@ import
   createAppContainer
 } from 'react-navigation'
 
-import RNGooglePlaces from 'react-native-google-places';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import DateTimePicker from 'react-native-modal-datetime-picker';
+import {Button} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon2 from 'react-native-vector-icons/Ionicons'
+
 
 const locationIcon = (<Icon name = "my-location" size = {20} color = "grey" style = {{marginRight: 20}}/>)
 
@@ -21,9 +23,9 @@ import {
   StatusBar,
   ScrollView,
   TextInput,
+  TouchableOpacity,
 } from 'react-native'
 
-import { Button} from 'react-native-paper';
 import _ from 'lodash';
 
 
@@ -38,8 +40,11 @@ export default class Search extends Component {
       leavingFrom: '',
       goingTo: '',
 
-      leaveFromLongitude: 0,
-      leaveFromLatitude: 0,
+      leavingFromPlaceId: '',
+      goingToPlaceId: '',
+
+      leavingFromLongitude: 0,
+      leavingFromLatitude: 0,
 
       goingToLatitude: 0,
       goingToLongitude: 0,
@@ -55,8 +60,28 @@ export default class Search extends Component {
 
       leavingFromloading: false,
       goingToLoading: false,
-      currentPlaceLoadingForLeaveFrom: false,
+      currentPlaceLoadingForLeavingFrom: false,
       currentPlaceLoadingForGoingTo: false,
+
+
+      showDateTimePickerAfterLeavingFrom: false,
+      showDateTimePickerAfterGoingTo: false,
+
+      showSearchAfterLeavingFrom: false,
+      showSearchAfterGoingTo: false,
+
+      pickedDate: new Date(),
+      isDateTimePickerVisible: false,
+      hours : new Date().getHours(),
+      minutes : new Date().getMinutes(),
+
+
+      monthNames : ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+              ],
+
+      daysNames : ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+            ],        
       
     };
     this.onChangeLeavingFromDebounced = _.debounce(this.onChangeLeavingFrom, 1000)
@@ -67,12 +92,19 @@ export default class Search extends Component {
 componentDidMount()
 {
 
+  this.setState({
+    hours: (this.state.hours <10?'0':'') + this.state.hours,
+    minutes: (this.state.minutes <10?'0':'') + this.state.minutes
+    
+})  
+
   this._navListener = this.props.navigation.addListener('didFocus', () => {
     StatusBar.setBarStyle('light-content');
     StatusBar.setBackgroundColor('#7963b6');
   });
 
   BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
+
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -108,11 +140,11 @@ _handleBackHandler = () => {
      {
       leavingFrom,
     })
-   const leaveApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${leavingFrom}&location=${this.state.leaveFromLatitude}, ${this.state.leaveFromLongitude}&radius=2000`;
+   const leaveApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${leavingFrom}&radius=2000`;
       
    try{
-    const leavResult = await fetch(leaveApiUrl);
-    const leavingFromJson = await leavResult.json();
+    const leaveResult = await fetch(leaveApiUrl);
+    const leavingFromJson = await leaveResult.json();
     console.log('leavingFromJson', leavingFromJson)
 
     this.setState({
@@ -129,7 +161,7 @@ _handleBackHandler = () => {
     {
      goingTo,
    })
-  const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${goingTo}&location=${this.state.goingToLatitude}, ${this.state.goingToLongitude}&radius=2000`;
+  const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${goingTo}&radius=2000`;
   
   try{
    const result = await fetch(apiUrl);
@@ -158,7 +190,7 @@ async getCurrentLocationForLeavingFrom() {
 
     this.state.currentLocationPredictions.map(currentLocationPrediction => (
       key = currentLocationPrediction.id,
-      this.setCurrentLocationToLeaveFrom(currentLocationPrediction.formatted_address)
+      this.setCurrentLocationToLeavingFrom(currentLocationPrediction.formatted_address)
     ))
   }catch(err) {
    console.log(err)
@@ -166,14 +198,18 @@ async getCurrentLocationForLeavingFrom() {
 
 }
 
-setCurrentLocationToLeaveFrom =(currentPlace) => {
+setCurrentLocationToLeavingFrom =(currentPlace) => {
   console.log('currentPlaceForLeavingPlace', currentPlace)
   this.setState({
     leavingFrom: currentPlace,
+    leavingFromLatitude: this.state.currentLocationLatitude,
+    leavingFromLongitude: this.state.currentLocationLongitude,
     leavingFromLoading: false,
     goingToLoading: false,
-    currentPlaceLoadingForLeaveFrom: false,
+    currentPlaceLoadingForLeavingFrom: false,
     currentPlaceLoadingForGoingTo: false,
+    showDateTimePickerAfterLeavingFrom: true,
+    showSearchAfterLeavingFrom: true
   })
 }
 
@@ -202,40 +238,103 @@ setCurrentLocationToGoingTo =(currentPlace) => {
   console.log('currentPlaceForGoingPlace', currentPlace)
   this.setState({
     goingTo: currentPlace,
+    goingToLatitude: this.state.currentLocationLatitude,
+    goingToLongitude: this.state.currentLocationLongitude,
     leavingFromLoading: false,
     goingToLoading: false,
-    currentPlaceLoadingForLeaveFrom: false,
+    currentPlaceLoadingForLeavingFrom: false,
     currentPlaceLoadingForGoingTo: false,
+    showDateTimePickerAfterGoingTo: true,
+    showSearchAfterGoingTo: true,
   })
 }
 
-setLeaveLocation (leavingPlace) {
+async setLeaveLocation (leavingPlace) {
+
+  console.log('selected leaving place : ', leavingPlace)
+  console.log('selected leaving place_id : ', leavingPlace.place_id)
   this.setState({
-    leavingFrom: leavingPlace,
+    leavingFromPlaceId: leavingPlace.place_id,
+    leavingFrom: leavingPlace.description,
     leavingFromLoading: false,
     goingToLoading: false,
-    currentPlaceLoadingForLeaveFrom: false,
+    currentPlaceLoadingForLeavingFrom: false,
+    currentPlaceLoadingForGoingTo: false,
+    showDateTimePickerAfterLeavingFrom: true,
+    showSearchAfterLeavingFrom: true,
   })
+
+  console.log('leaving place id : ', this.state.leavingFromPlaceId)
+
+  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${leavingPlace.place_id}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4`
+
+  try {
+
+  const placeIdResult = await fetch(placeIdApiUrl);
+  const placeIdJson = await placeIdResult.json();
+  console.log('place id json : ', placeIdJson)
+
+  this.setState({
+    leavingFromLatitude: placeIdJson.result.geometry.location.lat,
+    leavingFromLongitude: placeIdJson.result.geometry.location.lng
+  })
+   
+    
+  } catch (error) {
+    console.log(error)
+    
+  }
 }
 
-setGoingToLocation (goingPlace) {
+async setGoingToLocation (goingPlace) {
+
+  console.log('selected going place : ', goingPlace)
+  console.log('selected going place_id : ', goingPlace.place_id)
   this.setState({
-    goingTo: goingPlace,
+    goingToPlaceId: goingPlace.place_id,
+    goingTo: goingPlace.description,
+
     leavingFromLoading: false,
     goingToLoading: false,
-    currentPlaceLoadingForLeaveFrom: false,
-    currentPlaceLoadingForGoingTo: false
+
+    currentPlaceLoadingForLeavingFrom: false,
+    currentPlaceLoadingForGoingTo: false,
+
+    showDateTimePickerAfterGoingTo: true,
+    showSearchAfterGoingTo: true,
   })
+
+  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${goingPlace.place_id}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4`
+
+  try {
+
+  const placeIdResult = await fetch(placeIdApiUrl);
+  const placeIdJson = await placeIdResult.json();
+  console.log('place id json : ', placeIdJson)
+
+  this.setState({
+    goingToLatitude: placeIdJson.result.geometry.location.lat,
+    goingToLongitude: placeIdJson.result.geometry.location.lng
+  })
+   
+    
+  } catch (error) {
+    console.log(error)
+    
+  }
 }
 
 
 
-setLeaveFromLoading = () => {
+setleavingFromLoading = () => {
   this.setState({
     leavingFromLoading: true,
     goingToLoading: false,
-    currentPlaceLoadingForLeaveFrom: true,
-    currentPlaceLoadingForGoingTo: false
+
+    currentPlaceLoadingForLeavingFrom: true,
+    currentPlaceLoadingForGoingTo: false,
+    // showDateTimePickerAfterLeavingFrom: false,
+    // showDateTimePickerAfterGoingTo: false
   })
 }
 
@@ -243,9 +342,32 @@ setGoingToLoading = () => {
   this.setState({
     goingToLoading: true,
     leavingFromLoading: false,
-    currentPlaceLoadingForLeaveFrom: false,
-    currentPlaceLoadingForGoingTo: true
+
+    currentPlaceLoadingForLeavingFrom: false,
+    currentPlaceLoadingForGoingTo: true,
+    // showDateTimePickerAfterLeavingFrom: false,
+    // showDateTimePickerAfterGoingTo: false
   })
+}
+
+_showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
+ 
+_hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
+
+_handleDatePicked = (date) => {
+        console.log('Time has been picked: ', date.getMonth());
+        this.setState({
+            pickedDate: date ,
+            hours: ((date.getHours()) < 10? '0': '') + date.getHours(),
+            minutes: ((date.getMinutes()) < 10? '0': '') + date.getMinutes()
+        })
+  
+        this._hideDateTimePicker();
+      };
+
+searchLeavingFromAndGoingToLocation()
+{
+
 }
 
 
@@ -258,13 +380,13 @@ setGoingToLoading = () => {
         <Text
           style = {styles.suggestions}
           key = {leavingFromPrediction.id}
-          onPress = {() => this.setLeaveLocation(leavingFromPrediction.description)}>{leavingFromPrediction.description}</Text>))
+          onPress = {() => this.setLeaveLocation(leavingFromPrediction)}>{leavingFromPrediction.description}</Text>))
 
     const  goingToPredictions = this.state.goingToPredictions.map(goingToPrediction => (
       <Text
         style = {styles.suggestions}
         key = {goingToPrediction.id}
-        onPress = {() => this.setGoingToLocation(goingToPrediction.description)}>{goingToPrediction.description}</Text>))
+        onPress = {() => this.setGoingToLocation(goingToPrediction)}>{goingToPrediction.description}</Text>))
 
 
     return (
@@ -279,7 +401,7 @@ setGoingToLoading = () => {
             onChangeText={leavingFrom =>{
               this.setState({ leavingFrom });
               this.onChangeLeavingFromDebounced(leavingFrom)}}
-              onFocus = {this.setLeaveFromLoading}  
+              onFocus = {this.setleavingFromLoading}  
           />
           
           <TextInput
@@ -295,7 +417,7 @@ setGoingToLoading = () => {
           <View
           style = {{borderBottomColor:'#054752', borderBottomWidth: 1, margin: 10}}/>
 
-          {this.state.currentPlaceLoadingForLeaveFrom && <Text
+          {this.state.currentPlaceLoadingForLeavingFrom && <Text
             style = {{backgroundColor: "#fff",
                       padding: 10,
                       fontSize: 16,
@@ -318,6 +440,49 @@ setGoingToLoading = () => {
 
         {this.state.leavingFromLoading && leavingFromPredictions}
         {this.state.goingToLoading && goingToPredictions}
+
+        {this.state.showDateTimePickerAfterLeavingFrom && this.state.showDateTimePickerAfterGoingTo &&
+          <TouchableOpacity style = {styles.showTimePicker}
+                onPress={this._showDateTimePicker}>
+                <Text 
+                    style = {{
+                        color: '#737373',
+                        fontWeight: 'bold',
+                        fontSize: 17,
+                        fontFamily: "sans-serif-medium",
+                        }}>Date & Time</Text>
+
+                  <Text 
+                        style = {{
+                            color: '#7963b6',
+                            fontWeight: 'bold',
+                            marginTop: 5,
+                            fontSize: 17,
+                            fontFamily: "sans-serif-medium",
+                            }}>{this.state.daysNames[this.state.pickedDate.getDay()]}, {this.state.pickedDate.getDate()} {this.state.monthNames[this.state.pickedDate.getMonth()]}, {this.state.hours}:{this.state.minutes}
+                        </Text>        
+
+                <Icon2 name = "ios-arrow-down" size = {20} color = "#7963b6"
+                                            style = {{ position: 'absolute',
+                                                        right: 30,
+                                                        top: 20}}
+                                            />        
+            </TouchableOpacity>
+            }
+
+            <DateTimePicker
+                mode = 'datetime'
+                isVisible={this.state.isDateTimePickerVisible}
+                onConfirm={this._handleDatePicked}
+                onCancel={this._hideDateTimePicker}
+            />
+
+        {this.state.showSearchAfterLeavingFrom && this.state.showSearchAfterGoingTo &&
+         <Button mode = "contained" style = {styles.searchRide}
+                onPress = {() => {this.props.navigation.navigate('SearchList')}}>
+
+              <Text style = {{color: '#fff', fontWeight: 'bold' }}>Search</Text>
+        </Button>}
       
       </ScrollView>
       )
@@ -354,7 +519,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     marginHorizontal: 10,
     
-  }
+  },
+
+  searchRide: {
+    borderRadius: 30,
+        width: 100,
+        height: 40,
+        backgroundColor: "#7963b6",
+        justifyContent: 'center',
+        position: 'absolute',
+        bottom: '35%',
+        left: '35%',
+  },
+
+  showTimePicker: {
+    alignItems: 'flex-start' ,
+    borderColor: '#000',
+    backgroundColor: "#fff",
+    padding: 10,
+    borderBottomWidth: 0.5,
+    // height: 50,
+
+  },
 
 
 })
