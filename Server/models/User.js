@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const schema = mongoose.Schema;
 
 const UserSchema = new schema({
+
     name: {
         type: String,
         required: true,
@@ -15,12 +16,10 @@ const UserSchema = new schema({
     },
     password: {
         type: String,
-        required: true,
     },
     phone_number: {
         type: Number,
         unique: true,
-        required: true,
         trim: true
     },
     avatar: {
@@ -31,12 +30,12 @@ const UserSchema = new schema({
         default: Date.now
     }
 },
-    // {
-    //     collection: 'users'
-    // }
+    {
+        collection: 'users'
+    }
 )
 
 
-const User = mongoose.model('users', UserSchema);
+const User = mongoose.model('User', UserSchema);
 
 module.exports = User;

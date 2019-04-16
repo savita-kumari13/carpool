@@ -10,9 +10,10 @@ const validateLoginInput = require('../validation/login');
 const User = require('../models/User');
 
 userRouter.route('/register').post((req, res) => {
-
   const validateRegister = validateRegisterInput(req.body);
-  console.log('isValid : ', validateRegister.status)
+  console.log('validateRegister ? ', validateRegister)
+  console.log('status : ', validateRegister.status)
+
   if(!validateRegister.status) {
     return res.json(validateRegister);
   }
@@ -29,6 +30,7 @@ userRouter.route('/register').post((req, res) => {
       phone_number: req.body.phone_number,
       avatar
   });
+
   User.findOne({
     email : req.body.email
   }).then(user => {
@@ -43,63 +45,132 @@ userRouter.route('/register').post((req, res) => {
     return newUser.save();
   }).then(user=>{
     console.log(user);
-    // return token
+    const payload = {
+      id: user.id,
+      name: user.name,
+      phone_number: user.phone_number,
+      avatar: user.avatar
+    }
+    return jwt.sign(payload, 'secret', {
+      expiresIn: '1 day'
+      })
+  }).then(token => {
+      console.log('token : ', token)
+      return res.json(token)
   }).catch(err=>{
     return res.send(err);
   });
 });
 
 
-  userRouter.route('/login').post((req, res) => {
+userRouter.route('/login').post((req, res) => {
 
-    const { errors, isValid } = validateLoginInput(req.body);
+  const validateLogin = validateLoginInput(req.body);
+  console.log('validateLogin ? ', validateLogin)
+  console.log('isValid : ', validateLogin.status)
+  if(!validateLogin.status) {
+    return res.json(validateLogin);
+  }
 
-    if(!isValid) {
-        return res.status(400).json(errors);
+  const email = req.body.email;
+  const password = req.body.password;
+  const payload = {};
+
+  User.findOne({
+    email : req.body.email
+  }).then(user => {
+    if(!user) {
+        errors.email = 'User not found'
+        throw new Error("User doesn't exists");
     }
 
-    const email = req.body.email;
-    const password = req.body.password;
+    payload.id = user.id;
+    payload.name = user.name;
+    payload.phone_number = user.phone_number
+    payload.avatar = user.avatar
 
-    User.findOne({email})
-        .then(user => {
-            if(!user) {
-                errors.email = 'User not found'
-                return res.status(404).json(errors);
-            }
-            bcrypt.compare(password, user.password)
-                    .then(isMatch => {
-                        if(isMatch) {
-                            const payload = {
-                                id: user.id,
-                                name: user.name,
-                                phone_number: user.phone_number,
-                                avatar: user.avatar
-                            }
-                            jwt.sign(payload, 'secret', {
-                                expiresIn: 3600
-                            }, (err, token) => {
-                                if(err) {
-                                  console.error('There is some error in token', err);
-                                  res.json([])
-                                }
-                                else {
-                                  console.log('token : ', token)
-                                    res.json({
-                                        success: true,
-                                        //token: `Bearer ${token}`
-                                        token: token
-                                    });
-                                }
-                            });
-                        }
-                        else {
-                            errors.password = 'Incorrect Password';
-                            return res.status(400).json(errors);
-                        }
-                    });
-        });
+    return bcrypt.compare(password, user.password)
+  }).then(isMatch => {
+      if(!isMatch) {
+        errors.password = 'Incorrect password';
+        throw new Error("Incorrect password");
+      }
+      return jwt.sign(payload, 'secret', {
+        expiresIn: '1 day'
+    })
+  }).then(token => {
+    console.log('token : ', token)
+    return res.json(token)
+  }).catch(err => {
+      return res.send(err);
+    })
 });
+
+
+userRouter.route('/facebook/register').post((req, res) => {
+  console.log('user info : ', req.body)
+  const avatar = gravatar.url(req.body.email, {
+    s: '200',
+    r: 'pg',
+    d: 'mm'
+});
+  const newUser = new User({
+  
+    name: req.body.name,
+    email: req.body.email,
+    phone_number: req.body.phone_number,
+    avatar
+});
+
+  User.findOne({
+    email : req.body.email
+  }).then(user => {
+      if(user) {
+        throw new Error('Email already exists');
+      }
+      return newUser.save()
+    }).then(user => {
+      const payload = {
+        id: user.id,
+        name: user.name,
+        phone_number: user.phone_number,
+        avatar: user.avatar
+      }
+      return jwt.sign(payload, 'secret', {
+        expiresIn: '1 day'
+        })
+    }).then(token => {
+      console.log('token : ', token)
+      return res.json(token)
+  }).catch(err=>{
+    return res.send(err);
+  }); 
+})
+
+userRouter.route('/facebook/login').post((req, res) => {
+  console.log('user info : ', req.body)
+  const payload = {}
+  User.findOne({
+    email : req.body.email
+  }).then(user => {
+    if(!user) {
+        errors.email = 'User not found'
+        throw new Error("User doesn't exists");
+    }
+    payload.id = user.id;
+    payload.name = user.name;
+    payload.phone_number = user.phone_number
+    payload.avatar = user.avatar
+
+    return jwt.sign(payload, 'secret', {
+      expiresIn: '1 day'})
+  }).then(token => {
+    console.log('token : ', token)
+    return res.json(token)
+  }).catch(err => {
+      return res.send(err);
+    }) 
+})
 
 
 userRouter.get('/me', passport.authenticate('jwt', { session: false }), (req, res) => {
@@ -108,8 +179,7 @@ userRouter.get('/me', passport.authenticate('jwt', { session: false }), (req, re
       id: req.user.id,
       name: req.user.name,
       email: req.user.email,
-      phone_number: req.user.phone_number,
-      
+      phone_number: req.user.phone_number,   
   });
 });
 
@@ -118,15 +188,22 @@ userRouter.get('/me', passport.authenticate('jwt', { session: false }), (req, re
 
 userRouter.route('/').get(function (req, res) {
     console.log('Got the listing request')
-    User.find(function (err, users){
-    if(err){
-      console.log(err);
-      res.json([]);
-    }
-    else {
-      res.json(users);
-    }
-  });
+    User.findOne({
+      email: req.body.email
+    }).then(user => {
+      console.log('currently logged: ', email)
+    }).catch(err => {
+      console.log('errorrrrrrrr', err)
+    })
+  //   User.find(function (err, users){
+  //   if(err){
+  //     console.log(err);
+  //     res.json([]);
+  //   }
+  //   else {
+  //     res.json(users);
+  //   }
+  // });
 });
 
 module.exports = userRouter;

@@ -7,7 +7,11 @@ import {
   SafeAreaView,
   StyleSheet,
   StatusBar,
+  ScrollView,
+  AsyncStorage,
 } from 'react-native'
+import deviceStorage from '../../services/deviceStorage';
+
 
 export default class Profile extends Component {
 
@@ -40,12 +44,36 @@ _handleBackHandler = () => {
    return true;
  }
 
+ showTokenId = async() => {
+  const token = await AsyncStorage.getItem('id_token')
+
+  console.log('token : ', token)
+ }
+
 
   render() {
     return (
-      <View>
-        <SafeAreaView style={[styles.container, { backgroundColor: '#7963b6' }]}/>
-      </View>
+      <ScrollView contentContainerStyle = {styles.container}>
+        <SafeAreaView style= { backgroundColor = '#7963b6' }/>
+        <View style = {styles.profilePhotoView}
+        onPress = {this.showTokenId()}
+        >
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+          <Text>profileeeee</Text>
+        </View>
+        <View style  = {styles.profileContentView}>
+          <Text>profileeeee  Content</Text>
+        </View>
+
+      </ScrollView>
     )
   }
 }
@@ -53,10 +81,21 @@ _handleBackHandler = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+     flex: 1,
+    // alignItems: 'center',
+    // justifyContent: 'center',
   },
+
+  profilePhotoView: {
+    flex: 1/2,
+    backgroundColor: '#7963b6',
+  },
+
+  profileContentView: {
+    flex: 1,
+    // backgroundColor: 'grey'
+
+  }
 
 
 })

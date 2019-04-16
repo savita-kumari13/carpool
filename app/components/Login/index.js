@@ -3,8 +3,10 @@ import firebase from 'react-native-firebase';
 import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
 import { GoogleSignin, GoogleSigninButton, statusCodes } from 'react-native-google-signin';
 import { Button } from 'react-native-paper'
+import axios from 'axios'
+import AsyncStorage from '@react-native-community/async-storage'
+import { SocialIcon } from 'react-native-elements'
 
-import LinearGradient from 'react-native-linear-gradient';
 import {
     View,
     Text,
@@ -13,6 +15,7 @@ import {
     BackHandler,
     Alert,
     ScrollView,
+    Linking
 } from 'react-native'
 
 
@@ -30,12 +33,28 @@ export default class Login extends Component {
       password: '',
       passwordResetCode: '',
       errorMessage: null,
+
+      errors: {
+        name: null,
+        email: null,
+        password: null,
+        confirmPassword: null,
+      },
+
+      errorEmailShow: false,
+      errorPasswordShow: false,
+
+      errorEmailBorderFocused: false,
+      errorPasswordBorderFocused: false,
+
       isEmailFocused: false,
       isPasswordFocused: false,
     };
 
     this.handleBackPress = this.handleBackPress.bind(this);
-    this.userRef = firebase.firestore().collection('users');
+    this.route = "http://192.168.137.1:5570"
+    this.token = null
+    this.navigate = false
   }
 
   componentDidMount()
@@ -54,18 +73,87 @@ export default class Login extends Component {
   }
 
 
-  handleLogin = () => {
-    const { email, password } = this.state
-    firebase.auth().signInWithEmailAndPassword(email, password)
-      .then((user) => {
-        console.log('successfully signed in')
-        this.props.navigation.navigate('mainContainer')})
-      .catch((error) =>{
-        this.setState({ errorMessage: error.message });
-        alert('An error occured', error.message)
-        console.log('error in signInWithEmailAndPassword', error)
-      })
+  handleLogin = async() =>  {
+    const user = {
+      email: this.state.email,
+      password: this.state.password,
   }
+  await axios.post(`${this.route}/users/login`, user)
+  .then(res => {
+    console.log('res : ', res)
+    let response=res.data;
+    console.log('response = res.data : ', response)
+    console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
+    console.log('errors in response : ', response.hasOwnProperty('errors'))
+    if(response.hasOwnProperty('errors'))
+    {
+      if(response.errors.hasOwnProperty('email')){
+        this.setState({
+          errorEmailShow: true,
+          isEmailFocused: false,
+          errorEmailBorderFocused: true,
+        })
+      }
+      if(response.errors.hasOwnProperty(password)){
+        this.setState({
+          errorPasswordShow: true,
+          errorPasswordBorderFocused: true,
+        })
+      }
+
+      this.setState({
+        errors: {
+          email: response.errors.email,
+          password: response.errors.password,
+        }
+      })
+      throw new Error(Object.values(response.errors).join(', '));
+    }
+    else
+    {
+      this.token = response
+      this.navigate
+      this.setState({
+        email: '',
+        password: ''
+      });
+    }
+  })
+  .catch(err => {
+    console.log('error sending post request',err.message)
+    this.navigate = false
+  })
+
+  if(this.navigate){
+    try {
+      console.log('this.token : ', this.token)
+        await AsyncStorage.removeItem('id_token')
+        const storedToken = await AsyncStorage.getItem('id_token')
+        console.log('already stored token : ', storedToken)
+  
+        await AsyncStorage.setItem('id_token', JSON.stringify(this.token))
+        .then(() => console.log('token stored '))
+        .catch(err => console.log('error setting token in log in page : ', err))
+  
+        await AsyncStorage.getItem('id_token')
+        .then((token) => {
+          if(token !== null && token !== undefined && token != 'null'){
+            console.log('token : ', token)
+            console.log('navigating to main container....')
+            this.props.navigation.navigate('mainContainer')
+          }
+          else{
+            console.log('error in token in login page')
+          }
+        })
+        .catch(err => console.log('error getting new token in login page : ', err))
+      
+    } catch (error) {
+      console.log('error storing token', error)
+    }
+  }
+}
+
 
   forgotPassword = () => {
 
@@ -124,6 +212,157 @@ export default class Login extends Component {
     })
   }
 
+  handleFacebookLogin = async () => {
+    AccessToken.getCurrentAccessToken().then(() =>
+    {
+      LoginManager.logInWithReadPermissions(['public_profile', 'email']).then((result) =>
+        {
+          if (result.isCancelled)
+          {
+            return Promise.reject(new Error('The user cancelled the request'));
+          }
+          // Retrieve the access token
+          return AccessToken.getCurrentAccessToken();
+        }).then((data) =>
+        {
+          console.log('data : ', data)
+          const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
+          return firebase.auth().signInWithCredential(credential).then((user) =>
+          {
+            if(user.additionalUserInfo.isNewUser)
+            {
+              this.registerFacebookUser(user);                                       
+            }
+            else
+            {
+              this.loginFacebookUser(user)
+            }
+          })                                                                       
+        }).catch((error) => 
+        {
+          console.log('error.', error)
+        })
+    }).catch((error) => {
+          console.log('error ....', error)
+        });
+  }
+
+
+  async registerFacebookUser(user) {
+    console.log("new facebook user : ", user)
+    const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
+    await axios.post(`${this.route}/users/facebook/register`, {
+      name: fbName,
+      email: user.additionalUserInfo.profile.email,
+      phone_number: '',
+      // profile_picture: user._user.photoURL
+    }).then(res => {
+      console.log('res : ', res)
+      let response=res.data;
+      console.log('response = res.data : ', response)
+      console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
+      this.token = response
+      this.navigate = true
+      this.setState({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        phoneNumber: ''
+      });
+    }).catch(err => {
+      console.log('error sending post request',err.message)
+      this.navigate = false
+    })
+    if(this.navigate){
+      
+    try {
+      console.log('this.token : ', this.token)
+      const storedToken = await AsyncStorage.getItem('id_token')
+      console.log('already stored token : ', storedToken)
+      await AsyncStorage.removeItem('id_token')
+
+      await AsyncStorage.setItem('id_token', JSON.stringify(this.token))
+      .then(() => console.log('token stored '))
+      .catch(err => console.log('error setting token in log in page : ', err))
+
+      await AsyncStorage.getItem('id_token')
+      .then((token) => {
+        if(token !== null && token !== undefined && token != 'null'){
+          console.log('token : ', token)
+          console.log('navigating to main container....')
+          this.props.navigation.navigate('mainContainer')
+        }
+        else{
+          console.log('error in token in login page')
+        }
+      })
+      .catch(err => console.log('error getting new token in login page : ', err))
+    
+    } catch (error) {
+      console.log('error storing token', error)
+    }
+    }
+  }
+
+  async loginFacebookUser(user) {
+    console.log('logging in facebook user')
+    const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
+    await axios.post(`${this.route}/users/facebook/login`, {
+      name: fbName,
+      email: user.additionalUserInfo.profile.email,
+      phone_number: '',
+      // profile_picture: user._user.photoURL
+    }).then(res => {
+      console.log('res : ', res)
+      let response=res.data;
+      console.log('response = res.data : ', response)
+      console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
+      this.token = response
+      this.navigate = true
+      console.log('axios post req sent ..navigate : ', this.navigate)
+      this.setState({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        phoneNumber: ''
+      });
+    }).catch(err => {
+      console.log('error sending post request',err.message)
+      this.navigate = false
+    })
+    if(this.navigate){
+      try {
+        console.log('this.token : ', this.token)
+        const storedToken = await AsyncStorage.getItem('id_token')
+        console.log('already stored token : ', storedToken)
+        await AsyncStorage.removeItem('id_token')
+  
+        await AsyncStorage.setItem('id_token', JSON.stringify(this.token))
+        .then(() => console.log('token stored '))
+        .catch(err => console.log('error setting token in log in page : ', err))
+  
+        await AsyncStorage.getItem('id_token')
+        .then((token) => {
+          if(token !== null && token !== undefined && token != 'null'){
+            console.log('token : ', token)
+            console.log('navigating to main container....')
+            this.props.navigation.navigate('mainContainer')
+          }
+          else{
+            console.log('error in token in login page')
+          }
+        })
+        .catch(err => console.log('error getting new token in login page : ', err))
+      
+      } catch (error) {
+        console.log('error storing token', error)
+      }
+    }
+
+  }
+
  
 handleEmailFocus = () => this.setState({isEmailFocused: true})
 
@@ -136,164 +375,79 @@ handleEmailFocus = () => this.setState({isEmailFocused: true})
 
   render() {
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-          {this.state.errorMessage &&
-            <Text style={{ color: 'red' }}>
-              {this.state.errorMessage}
-            </Text>}
+      <ScrollView contentContainerStyle={styles.container}>
+        {this.state.errorMessage &&
+          <Text style={{ color: 'red' }}>
+            {this.state.errorMessage}
+          </Text>}
 
-            <View style={styles.inputContainer}>
-              <TextInput 
-                  onFocus={this.handleEmailFocus}
-                  onBlur={this.handleEmailBlur}
-                  style={[styles.inputs, 
-                          {borderBottomColor: this.state.isEmailFocused? '#7963b6': '#000',
-                          borderBottomWidth: this.state.isEmailFocused? 2: 1,}]}
-                  placeholder="E-mail"
-                  keyboardType="email-address"
-                  underlineColorAndroid='transparent'
-                  onChangeText={email => this.setState({email})}
-                  value={this.state.email}/>
-            </View>
+        <View style={styles.inputContainer}>
+          <TextInput 
+            onFocus={this.handleEmailFocus}
+            onBlur={this.handleEmailBlur}
+            style={[styles.inputs, 
+              {borderBottomColor: this.state.isEmailFocused? '#7963b6': '#000',
+              borderBottomWidth: this.state.isEmailFocused? 2: 1,}]}
+            placeholder="E-mail"
+            keyboardType="email-address"
+            underlineColorAndroid='transparent'
+            onChangeText={email => this.setState({email})}
+            value={this.state.email}/>
+        </View>
 
+        <View style={styles.inputContainer}>
+          <TextInput 
+            onFocus={this.handlePasswordFocus}
+            onBlur={this.handlePasswordBlur}
+            style={[styles.inputs, 
+              {borderBottomColor: this.state.isPasswordFocused? '#7963b6': '#000',
+              borderBottomWidth: this.state.isPasswordFocused? 2: 1,}]}
+              placeholder="Password"
+              secureTextEntry={true}
+              underlineColorAndroid='transparent'
+              onChangeText={password => this.setState({password})}
+              value={this.state.password}/>
+        </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput 
-                onFocus={this.handlePasswordFocus}
-                onBlur={this.handlePasswordBlur}
-                style={[styles.inputs, 
-                        {borderBottomColor: this.state.isPasswordFocused? '#7963b6': '#000',
-                        borderBottomWidth: this.state.isPasswordFocused? 2: 1,}]}
-                placeholder="Password"
-                secureTextEntry={true}
-                underlineColorAndroid='transparent'
-                onChangeText={password => this.setState({password})}
-                value={this.state.password}/>
-          </View>
+        <View style = {styles.buttonContainer}>
+          <Button
+            style={styles.loginBtn}
+            onPress={this.handleLogin}
+            mode = "contained">
+              <Text style = {{color: '#fff', fontWeight: 'bold' }}>LOG IN</Text>
+          </Button>   
+  
+          <Button 
+            style={[ styles.registerButton]}
+            mode = 'text'
+            onPress ={this.forgotPassword}>
+              <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>FORGOT YOUR PASSWORD?</Text>
+          </Button>
 
-          <View style = {styles.buttonContainer}>
-              <Button
-                  style={styles.loginBtn}
-                  onPress={this.handleLogin}
-                  mode = "contained">
-                    <Text style = {{color: '#fff', fontWeight: 'bold' }}>LOG IN</Text>
-              </Button>   
-     
-              <Button 
-                  style={[ styles.registerButton]}
-                  mode = 'text'
-                  onPress ={this.forgotPassword}>
-                 <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>FORGOT YOUR PASSWORD?</Text>
-              </Button>
-   
-              <Button 
-                  style={[ styles.registerButton]}
-                  mode = 'text'
-                  onPress ={() => this.props.navigation.navigate('signup')}>
-                 <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>NOT A MEMEBER YET? JOIN FOR FREE </Text>
-              </Button>
-                   
+          <Button 
+            style={[ styles.registerButton]}
+            mode = 'text'
+            onPress ={() => this.props.navigation.navigate('signup')}>
+              <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>NOT A MEMEBER YET? JOIN FOR FREE </Text>
+          </Button>
 
-          <Text style = {{fontWeight : 'bold' ,color: '#000'}}>OR</Text>
+        <Text style = {{fontWeight : 'bold' ,color: '#000'}}>OR</Text>
 
-
-          <View style={styles.btnstyle}>
-            <LoginButton style = {styles.fbButton}
-              onLoginFinished=
-              {
-                (error, result) =>
-                {
-                      if (error)
-                      {
-                        console.log("login has error: " + result.error);
-                      } else if (result.isCancelled)
-                      {
-                        console.log("login is cancelled.");
-                      } else
-                      {
-                            AccessToken.getCurrentAccessToken().then(
-                              (data) =>
-                              {
-                                    LoginManager.logInWithReadPermissions(['public_profile', 'email'])
-                                      .then((result) =>
-                                      {
-                                        if (result.isCancelled)
-                                        {
-                                          return Promise.reject(new Error('The user cancelled the request'));
-                                        }
-                                        // Retrieve the access token
-                                        return AccessToken.getCurrentAccessToken();
-                                      })
-                                      .then((data) =>
-                                      {
-                                          const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
-                                          return firebase.auth().signInWithCredential(credential).then((user) =>
-                                          {
-                                                console.log("user : ", user)
-
-                                                // this.userRef.where("email", "==", user.additionalUserInfo.profile.email).onSnapshot((snapshot) =>
-                                                if(user.additionalUserInfo.isNewUser)
-                                                {
-                                                  this.userRef.add({
-                                                    first_name: user.additionalUserInfo.profile.first_name,
-                                                    last_name: user.additionalUserInfo.profile.last_name,
-                                                    email: user.additionalUserInfo.profile.email,
-                                                    password: '',
-                                                    phone_number: ''
-                                                  }).then(() =>
-                                                  {
-                                                    this.setState({
-                                                      firstName: '',
-                                                      lastName: '',
-                                                      email: '',
-                                                      phoneNumber: '',
-                                                      password: ''
-                                                    });
-                                                  console.log('adding user data to firestore')
-                      
-                                                  }).catch((error) =>
-                                                  {
-
-                                                    this.setState({
-                                                      firstName: '',
-                                                      lastName: '',
-                                                      email: '',
-                                                      phoneNumber: '',
-                                                      password: ''
-                                                    });
-                                                    console.log('error adding user to firestore -- facebook', error)
-                                                  })
-                                                 
-                                                }
-                                                else
-                                                {
-                                                  console.log('logging in facebook user')
-
-                                                }
-                                                        
-                                          }).catch(error)
-                                          {
-                                            console.log('error.', error)
-                                          }                                                                       
-                                  }).catch(error)
-                                  {
-                                    console.log('error.', error)
-                                  }
-                              }).catch((error) => {
-                                    const { code, message } = error;
-                                  });
-                          }
-                }
-              }
-              onLogoutFinished={() => console.log("logout.")} >
-              </LoginButton>
-            </View>
-        </View>    
+        <SocialIcon
+          title='Sign In With Facebook'
+          button
+          type='facebook'
+          fontWeight = 'bold'
+          onPress = {this.handleFacebookLogin}
+          style = {styles.fbButton}
+        />  
+      </View>
 
         </ScrollView>
     )
   }
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -301,9 +455,15 @@ const styles = StyleSheet.create({
     // justifyContent: 'center',
     alignItems: 'center',
     paddingTop: '50%',
-
-
   },
+
+  iconStyles : {
+    borderRadius: 30,
+    width: 280,
+    height: 40,
+    backgroundColor: "#3b5998",
+  },
+
   inputContainer: {
     backgroundColor: 'rgba(0,0,0,0)',
     height:45,
@@ -349,8 +509,8 @@ buttonContainer:{
 },
 
 fbButton:{
-  height: 35,
-  width: 250,
+  height: 40,
+  width: 270,
   marginTop: 10,
   borderRadius: 30,
   justifyContent: 'center',

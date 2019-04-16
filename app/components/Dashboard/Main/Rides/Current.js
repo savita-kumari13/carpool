@@ -1,7 +1,10 @@
 import React, { Component } from 'react'
 import firebase from 'react-native-firebase';
 import { NavigationActions ,} from 'react-navigation'
+import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
 import { Button, Surface,} from 'react-native-paper';
+import axios from 'axios'
+
 
 import { 
     Text,
@@ -12,44 +15,51 @@ import {
     StyleSheet,
     StatusBar,
 } from 'react-native'
+import AsyncStorage from '@react-native-community/async-storage'
 
 export default class Current extends Component {
 
-    constructor(props) {
-        super(props)
-        this._handleBackHandler = this._handleBackHandler.bind(this);
-    }
+  constructor(props) {
+      super(props)
+      this._handleBackHandler = this._handleBackHandler.bind(this);
+      this.route = "http://192.168.137.1:5570"
+      this.token = null
+  }
+
+
+  componentDidMount()
+  {
   
-
-    componentDidMount()
-    {
-    
-      this._navListener = this.props.navigation.addListener('didFocus', () => {
-        StatusBar.setBarStyle('light-content');
-        StatusBar.setBackgroundColor('#7963b6');
-      });
-      BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
+    this._navListener = this.props.navigation.addListener('didFocus', () => {
+      StatusBar.setBarStyle('light-content');
+      StatusBar.setBackgroundColor('#7963b6');
+    });
+    BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
+  }
+  
+  componentWillUnmount()
+  {
+  
+    this._navListener.remove();
+  
+    BackHandler.removeEventListener('hardwareBackPress', this._handleBackHandler);
+  }
+  
+  _handleBackHandler = () => {
+    BackHandler.exitApp();
     }
-    
-    componentWillUnmount()
-    {
-    
-      this._navListener.remove();
-    
-      BackHandler.removeEventListener('hardwareBackPress', this._handleBackHandler);
-    }
-    
-    _handleBackHandler = () => {
-      BackHandler.exitApp();
-     }
 
-    signOut = () => {
-        firebase.auth().signOut().then(res => {
-          console.log('user logged out successfully')
-        }).catch(error => {
-          console.log('error in signOut', error)
-        })
-      }
+
+  signOut = async () => {
+    const token = await AsyncStorage.getItem('id_token')
+    console.log('current token : ', token)
+    await AsyncStorage.removeItem('id_token')
+    .then(() => {
+      console.log('signing out user...')
+      this.props.navigation.navigate('login')
+    })
+    .catch(err => console.log('error in signing out user'))
+  }
 
   render() {
     return (
@@ -81,11 +91,7 @@ export default class Current extends Component {
             onPress = {() => {this.props.navigation.navigate('Search')}}>
             <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>FIND A RIDE</Text>
           </Button>
-          
         </View>    
-
-
-
       </View>
     )
   }
@@ -96,6 +102,16 @@ const styles = StyleSheet.create({
       flex: 1,
       // alignItems: 'center',
       // justifyContent: 'center',
+    },
+
+    fbButton:{
+      height: 35,
+      backgroundColor: '#7963b6',
+      width: 250,
+      marginTop: 10,
+      borderRadius: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
 
     surface: {

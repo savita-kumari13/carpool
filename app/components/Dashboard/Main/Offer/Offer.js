@@ -15,6 +15,7 @@ import {
 import {  Button,} from 'react-native-paper';
 
 import _ from 'lodash';
+import apiKey from '../../../apiKey'
 
 import IconLocation from 'react-native-vector-icons/MaterialIcons';
 import IconNext from 'react-native-vector-icons/Ionicons'
@@ -117,7 +118,7 @@ _handleBackHandler = () => {
     {
      pickUp,
    })
-  const pickUpApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${pickUp}&radius=2000`;
+  const pickUpApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}&input=${pickUp}&radius=2000`;
   
   
   try{
@@ -140,7 +141,7 @@ async onChangeDropOff(dropOff) {
     {
      dropOff,
    })
-  const dropOffApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${dropOff}&radius=2000`;
+  const dropOffApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}&input=${dropOff}&radius=2000`;
   
   try{
    const dropOffResult = await fetch(dropOffApiUrl);
@@ -156,7 +157,7 @@ async onChangeDropOff(dropOff) {
 }
 
 async getCurrentLocationForPickUp() {
-  const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.state.currentLocationLatitude},${this.state.currentLocationLongitude}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&location_type=ROOFTOP`;
+  const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.state.currentLocationLatitude},${this.state.currentLocationLongitude}&key=${apiKey}&location_type=ROOFTOP`;
 
   try{
     const result = await fetch(apiUrl);
@@ -192,7 +193,7 @@ setCurrentLocationToPickUp =(currentPlace) => {
 
 
 async getCurrentLocationForDropOff() {
-  const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.state.currentLocationLatitude},${this.state.currentLocationLongitude}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&location_type=ROOFTOP`;
+  const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.state.currentLocationLatitude},${this.state.currentLocationLongitude}&key=${apiKey}&location_type=ROOFTOP`;
 
   try{
     const result = await fetch(apiUrl);
@@ -241,7 +242,7 @@ async setPickUpLocation (pickUpPlace) {
   })
   console.log('pick Up place id : ', this.state.pickUpPlaceId)
 
-  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${pickUpPlace.place_id}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4`
+  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${pickUpPlace.place_id}&key=${apiKey}`
 
   try {
 
@@ -276,7 +277,7 @@ async setDropOffLocation (dropOffPlace) {
     showNextIconAfterDropOff: true,
   })
 
-  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${dropOffPlace.place_id}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4`
+  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${dropOffPlace.place_id}&key=${apiKey}`
 
   try {
 

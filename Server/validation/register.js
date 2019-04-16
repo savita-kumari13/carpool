@@ -40,10 +40,10 @@ module.exports = function validateRegisterInput(data){
     }
 
     if(Validator.isEmpty(data.confirm_password)) {
-        errors.confirm_password = 'Password is required';
+        errors.confirm_password = 'Confirm your password';
     }
 
-    console.log('errors in signing up user : ', errors)
+    // console.log('errors in signing up user : ', errors)
     return {
         errors: errors,
         status: isEmpty(errors)

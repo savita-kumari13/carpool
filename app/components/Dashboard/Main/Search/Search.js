@@ -9,7 +9,9 @@ import
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import {Button} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import Icon2 from 'react-native-vector-icons/Ionicons'
+import Icon2 from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-community/async-storage'
+import apiKey from '../../../apiKey'
 
 
 const locationIcon = (<Icon name = "my-location" size = {20} color = "grey" style = {{marginRight: 20}}/>)
@@ -116,7 +118,7 @@ componentDidMount()
       console.log('currentLocationLatitude', this.state.currentLocationLatitude)
       console.log('currentLocationLongitude', this.state.currentLocationLongitude)
     },
-    error => this.setState({error: error.message}),
+    error => console.log('error getting current location', error),
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
   );
 
@@ -126,7 +128,6 @@ componentWillUnmount()
 {
 
   this._navListener.remove();
-
   BackHandler.removeEventListener('hardwareBackPress', this._handleBackHandler);
 }
 
@@ -135,50 +136,49 @@ _handleBackHandler = () => {
    return true;
  }
 
- async onChangeLeavingFrom(leavingFrom) {
-   this.setState(
-     {
-      leavingFrom,
-    })
-   const leaveApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${leavingFrom}&radius=2000`;
-      
-   try{
-    const leaveResult = await fetch(leaveApiUrl);
-    const leavingFromJson = await leaveResult.json();
-    console.log('leavingFromJson', leavingFromJson)
-
-    this.setState({
-      leavingFromPredictions: leavingFromJson.predictions,
-    });
-   }catch(err) {
-     console.log(err)
-   }
-
- }
-
- async onChangeGoingTo(goingTo) {
+async onChangeLeavingFrom(leavingFrom) {
   this.setState(
     {
-     goingTo,
-   })
-  const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&input=${goingTo}&radius=2000`;
-  
+    leavingFrom,
+  })
+  const leaveApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}&input=${leavingFrom}&radius=2000`;
+    
   try{
-   const result = await fetch(apiUrl);
-   const goingToJson = await result.json();
-   console.log('goinToJson', goingToJson)
-   this.setState({
-     goingToPredictions: goingToJson.predictions
-   });
+  const leaveResult = await fetch(leaveApiUrl);
+  const leavingFromJson = await leaveResult.json();
+  console.log('leavingFromJson', leavingFromJson)
+
+  this.setState({
+    leavingFromPredictions: leavingFromJson.predictions,
+  });
   }catch(err) {
     console.log(err)
   }
 
 }
 
+async onChangeGoingTo(goingTo) {
+  this.setState(
+    {
+      goingTo,
+    })
+  const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}&input=${goingTo}&radius=2000`;
+
+  try{
+    const result = await fetch(apiUrl);
+    const goingToJson = await result.json();
+    console.log('goinToJson', goingToJson)
+    this.setState({
+      goingToPredictions: goingToJson.predictions
+    });
+  }catch(err) {
+    console.log(err)
+  }
+}
+
 
 async getCurrentLocationForLeavingFrom() {
-  const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.state.currentLocationLatitude},${this.state.currentLocationLongitude}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&location_type=ROOFTOP`;
+  const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.state.currentLocationLatitude},${this.state.currentLocationLongitude}&key=${apiKey}&location_type=ROOFTOP`;
 
   try{
     const result = await fetch(apiUrl);
@@ -195,7 +195,6 @@ async getCurrentLocationForLeavingFrom() {
   }catch(err) {
    console.log(err)
  }
-
 }
 
 setCurrentLocationToLeavingFrom =(currentPlace) => {
@@ -214,7 +213,7 @@ setCurrentLocationToLeavingFrom =(currentPlace) => {
 }
 
 async getCurrentLocationForGoingTo() {
-  const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.state.currentLocationLatitude},${this.state.currentLocationLongitude}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4&location_type=ROOFTOP`;
+  const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.state.currentLocationLatitude},${this.state.currentLocationLongitude}&key=${apiKey}&location_type=ROOFTOP`;
 
   try{
     const result = await fetch(apiUrl);
@@ -250,7 +249,6 @@ setCurrentLocationToGoingTo =(currentPlace) => {
 }
 
 async setLeaveLocation (leavingPlace) {
-
   console.log('selected leaving place : ', leavingPlace)
   console.log('selected leaving place_id : ', leavingPlace.place_id)
   this.setState({
@@ -266,23 +264,20 @@ async setLeaveLocation (leavingPlace) {
 
   console.log('leaving place id : ', this.state.leavingFromPlaceId)
 
-  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${leavingPlace.place_id}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4`
+  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${leavingPlace.place_id}&key=${apiKey}`
 
   try {
+    const placeIdResult = await fetch(placeIdApiUrl);
+    const placeIdJson = await placeIdResult.json();
+    console.log('place id json : ', placeIdJson)
 
-  const placeIdResult = await fetch(placeIdApiUrl);
-  const placeIdJson = await placeIdResult.json();
-  console.log('place id json : ', placeIdJson)
-
-  this.setState({
-    leavingFromLatitude: placeIdJson.result.geometry.location.lat,
-    leavingFromLongitude: placeIdJson.result.geometry.location.lng
-  })
-   
-    
+    this.setState({
+      leavingFromLatitude: placeIdJson.result.geometry.location.lat,
+      leavingFromLongitude: placeIdJson.result.geometry.location.lng
+    })
+      
   } catch (error) {
-    console.log(error)
-    
+      console.log(error)  
   }
 }
 
@@ -304,23 +299,19 @@ async setGoingToLocation (goingPlace) {
     showSearchAfterGoingTo: true,
   })
 
-  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${goingPlace.place_id}&key=AIzaSyAS9LdNhY87gL7k9dbldqRieSRXXlosMl4`
+  const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${goingPlace.place_id}&key=${apiKey}`
 
   try {
+    const placeIdResult = await fetch(placeIdApiUrl);
+    const placeIdJson = await placeIdResult.json();
+    console.log('place id json : ', placeIdJson)
 
-  const placeIdResult = await fetch(placeIdApiUrl);
-  const placeIdJson = await placeIdResult.json();
-  console.log('place id json : ', placeIdJson)
-
-  this.setState({
-    goingToLatitude: placeIdJson.result.geometry.location.lat,
-    goingToLongitude: placeIdJson.result.geometry.location.lng
-  })
-   
-    
+    this.setState({
+      goingToLatitude: placeIdJson.result.geometry.location.lat,
+      goingToLongitude: placeIdJson.result.geometry.location.lng
+    })  
   } catch (error) {
-    console.log(error)
-    
+      console.log(error)  
   }
 }
 
@@ -355,137 +346,143 @@ _showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
 _hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
 
 _handleDatePicked = (date) => {
-        console.log('Time has been picked: ', date.getMonth());
-        this.setState({
-            pickedDate: date ,
-            hours: ((date.getHours()) < 10? '0': '') + date.getHours(),
-            minutes: ((date.getMinutes()) < 10? '0': '') + date.getMinutes()
-        })
-  
-        this._hideDateTimePicker();
-      };
+  this.setState({
+      pickedDate: date ,
+      hours: ((date.getHours()) < 10? '0': '') + date.getHours(),
+      minutes: ((date.getMinutes()) < 10? '0': '') + date.getMinutes()
+  })
 
-searchLeavingFromAndGoingToLocation()
+  this._hideDateTimePicker();
+};
+
+async searchLeavingFromAndGoingToLocation()
 {
-
+  console.log('picked date time : ', this.state.pickedDate)
+  await AsyncStorage.setItem('leave_from_longitude', JSON.stringify(this.state.leavingFromLongitude))
+  await AsyncStorage.setItem('leave_from_latitude', JSON.stringify(this.state.leavingFromLatitude))
+  await AsyncStorage.setItem('going_to_longitude', JSON.stringify(this.state.goingToLongitude))
+  await AsyncStorage.setItem('going_to_latitude', JSON.stringify(this.state.goingToLatitude))
+  await AsyncStorage.setItem('searched_ride_date_time', JSON.stringify(this.state.pickedDate))
+  this.props.navigation.navigate('SearchList')
 }
 
 
 
 
-  render() {
+render() {
 
-    const  leavingFromPredictions = this.state.leavingFromPredictions.map(leavingFromPrediction => (
+  const  leavingFromPredictions = this.state.leavingFromPredictions.map(leavingFromPrediction => (    
+    <Text
+      style = {styles.suggestions}
+      key = {leavingFromPrediction.id}
+      onPress = {() => this.setLeaveLocation(leavingFromPrediction)}>{leavingFromPrediction.description}</Text>))
+
+  const  goingToPredictions = this.state.goingToPredictions.map(goingToPrediction => (
+    <Text
+      style = {styles.suggestions}
+      key = {goingToPrediction.id}
+      onPress = {() => this.setGoingToLocation(goingToPrediction)}>{goingToPrediction.description}</Text>))
+
+
+  return (
+    <ScrollView contentContainerStyle = {styles.container}>
+      <SafeAreaView style={[ { backgroundColor: '#7963b6' }]}/>
+        <Text style = {styles.findRide}>Find a ride</Text>
+
+        <TextInput
+          placeholder='Leaving from'
+          value={this.state.leavingFrom}
+          style = {styles.textInput}
+          onChangeText={leavingFrom =>{
+            this.setState({ leavingFrom });
+            this.onChangeLeavingFromDebounced(leavingFrom)}}
+            onFocus = {this.setleavingFromLoading}  
+        />
         
-        <Text
-          style = {styles.suggestions}
-          key = {leavingFromPrediction.id}
-          onPress = {() => this.setLeaveLocation(leavingFromPrediction)}>{leavingFromPrediction.description}</Text>))
+        <TextInput
+          placeholder='Going To'
+          value={this.state.goingTo}
+          style = {styles.textInput}
+          onChangeText={goingTo =>{
+            this.setState({ goingTo });
+            this.onChangegoingToDebounced(goingTo)}}
+            onFocus = {this.setGoingToLoading} 
+        />
 
-    const  goingToPredictions = this.state.goingToPredictions.map(goingToPrediction => (
-      <Text
-        style = {styles.suggestions}
-        key = {goingToPrediction.id}
-        onPress = {() => this.setGoingToLocation(goingToPrediction)}>{goingToPrediction.description}</Text>))
+        <View
+        style = {{borderBottomColor:'#054752', borderBottomWidth: 1, margin: 10}}/>
 
+        {this.state.currentPlaceLoadingForLeavingFrom && <Text
+          style = {{backgroundColor: "#fff",
+                    padding: 10,
+                    fontSize: 16,
+                    borderBottomWidth: 0.5,
+                    marginLeft: 10,
+                    }}
+          onPress = {() => this.getCurrentLocationForLeavingFrom()}
+        >{locationIcon}Use current location</Text>}
 
-    return (
-      <ScrollView contentContainerStyle = {styles.container}>
-        <SafeAreaView style={[ { backgroundColor: '#7963b6' }]}/>
-          <Text style = {styles.findRide}>Find a ride</Text>
-
-          <TextInput
-            placeholder='Leaving from'
-            value={this.state.leavingFrom}
-            style = {styles.textInput}
-            onChangeText={leavingFrom =>{
-              this.setState({ leavingFrom });
-              this.onChangeLeavingFromDebounced(leavingFrom)}}
-              onFocus = {this.setleavingFromLoading}  
-          />
-          
-          <TextInput
-            placeholder='Going To'
-            value={this.state.goingTo}
-            style = {styles.textInput}
-            onChangeText={goingTo =>{
-              this.setState({ goingTo });
-              this.onChangegoingToDebounced(goingTo)}}
-              onFocus = {this.setGoingToLoading} 
-          />
-
-          <View
-          style = {{borderBottomColor:'#054752', borderBottomWidth: 1, margin: 10}}/>
-
-          {this.state.currentPlaceLoadingForLeavingFrom && <Text
-            style = {{backgroundColor: "#fff",
-                      padding: 10,
-                      fontSize: 16,
-                      borderBottomWidth: 0.5,
-                      marginLeft: 10,
-                      }}
-            onPress = {() => this.getCurrentLocationForLeavingFrom()}
-          >{locationIcon}Use current location</Text>}
-
-          {this.state.currentPlaceLoadingForGoingTo && <View><Text
-            style = {{backgroundColor: "#fff",
-            padding: 10,
-            fontSize: 16,
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderBottomWidth: 0.5,
-            marginLeft: 10,}}
-            onPress = {() => this.getCurrentLocationForGoingTo()}
-          >{locationIcon}Use current location</Text></View>}
+        {this.state.currentPlaceLoadingForGoingTo && <View><Text
+          style = {{backgroundColor: "#fff",
+          padding: 10,
+          fontSize: 16,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderBottomWidth: 0.5,
+          marginLeft: 10,}}
+          onPress = {() => this.getCurrentLocationForGoingTo()}
+        >{locationIcon}Use current location</Text></View>}
 
         {this.state.leavingFromLoading && leavingFromPredictions}
         {this.state.goingToLoading && goingToPredictions}
 
         {this.state.showDateTimePickerAfterLeavingFrom && this.state.showDateTimePickerAfterGoingTo &&
           <TouchableOpacity style = {styles.showTimePicker}
-                onPress={this._showDateTimePicker}>
-                <Text 
-                    style = {{
-                        color: '#737373',
-                        fontWeight: 'bold',
-                        fontSize: 17,
-                        fontFamily: "sans-serif-medium",
-                        }}>Date & Time</Text>
+            onPress={this._showDateTimePicker}>
+            <Text 
+              style = {{
+                color: '#737373',
+                fontWeight: 'bold',
+                fontSize: 17,
+                fontFamily: "sans-serif-medium",
+                }}>Date & Time
+            </Text>
 
-                  <Text 
-                        style = {{
-                            color: '#7963b6',
-                            fontWeight: 'bold',
-                            marginTop: 5,
-                            fontSize: 17,
-                            fontFamily: "sans-serif-medium",
-                            }}>{this.state.daysNames[this.state.pickedDate.getDay()]}, {this.state.pickedDate.getDate()} {this.state.monthNames[this.state.pickedDate.getMonth()]}, {this.state.hours}:{this.state.minutes}
-                        </Text>        
+            <Text 
+              style = {{
+                color: '#7963b6',
+                fontWeight: 'bold',
+                marginTop: 5,
+                fontSize: 17,
+                fontFamily: "sans-serif-medium",
+                  }}>{this.state.daysNames[this.state.pickedDate.getDay()]}, {this.state.pickedDate.getDate()} {this.state.monthNames[this.state.pickedDate.getMonth()]}, {this.state.hours}:{this.state.minutes}
+            </Text>        
 
-                <Icon2 name = "ios-arrow-down" size = {20} color = "#7963b6"
-                                            style = {{ position: 'absolute',
-                                                        right: 30,
-                                                        top: 20}}
-                                            />        
-            </TouchableOpacity>
-            }
+            <Icon2 name = "ios-arrow-down" 
+              size = {20} color = "#7963b6"
+              style = {{ position: 'absolute',
+                          right: 30,
+                          top: 20}}
+                                        />        
+          </TouchableOpacity>
+        }
 
-            <DateTimePicker
-                mode = 'datetime'
-                isVisible={this.state.isDateTimePickerVisible}
-                onConfirm={this._handleDatePicked}
-                onCancel={this._hideDateTimePicker}
-            />
+        <DateTimePicker
+          mode = 'datetime'
+          isVisible={this.state.isDateTimePickerVisible}
+          onConfirm={this._handleDatePicked}
+          onCancel={this._hideDateTimePicker}
+        />
 
         {this.state.showSearchAfterLeavingFrom && this.state.showSearchAfterGoingTo &&
-         <Button mode = "contained" style = {styles.searchRide}
-                onPress = {() => {this.props.navigation.navigate('SearchList')}}>
-
-              <Text style = {{color: '#fff', fontWeight: 'bold' }}>Search</Text>
-        </Button>}
-      
-      </ScrollView>
-      )
+          <Button mode = "contained" style = {styles.searchRide}
+            onPress = {() => {this.searchLeavingFromAndGoingToLocation()}}>
+            <Text style = {{color: '#fff', fontWeight: 'bold' }}
+            >Search</Text>
+          </Button>}
+    
+    </ScrollView>
+    )
   }
 }
 

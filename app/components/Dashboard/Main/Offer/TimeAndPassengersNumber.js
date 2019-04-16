@@ -30,9 +30,12 @@ export default class TimeAndPassengersNumber extends Component {
             isDisabledMinusIcon: false,
             isLessThanZero: '#7963b6',
 
-            monthNames : ["January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
+            monthNames : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
               ],
+
+            daysNames : ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+              ],  
         }
     }
 
@@ -52,8 +55,6 @@ export default class TimeAndPassengersNumber extends Component {
    
     _handleDatePicked = (date) => {
       
-
-      console.log('Time has been picked: ', date.getMonth());
       this.setState({
           pickedDate: date ,
           hours: ((date.getHours()) < 10? '0': '') + date.getHours(),
@@ -131,27 +132,32 @@ export default class TimeAndPassengersNumber extends Component {
 
             <TouchableOpacity style = {styles.showTimePicker}
                 onPress={this._showDateTimePicker}>
+
                 <Text 
                     style = {{
-                        color: '#054752',
-                        fontWeight: 'bold',
-                        fontSize: 23,
-                        fontFamily: "sans-serif-condensed",
-                        }}>{this.state.pickedDate.getDate()} {this.state.monthNames[this.state.pickedDate.getMonth()]}
-                        </Text>
+                      color: '#7963b6',
+                      fontWeight: 'bold',
+                      fontSize: 20,
+                      paddingLeft: '30%',
+                      fontFamily: "sans-serif-medium",
+                        }}>Date & Time</Text>
 
-                  <Text 
-                        style = {{
-                            color: '#054752',
-                            fontWeight: 'bold',
-                            fontSize: 23,
-                            fontFamily: "sans-serif-condensed",
-                            }}>{this.state.hours}:{this.state.minutes}
-                        </Text>        
+                <Text 
+                    style = {{
+                      color: '#054752',
+                      fontWeight: 'bold',
+                      marginTop: 5,
+                      fontSize: 30,
+                      paddingLeft: '18%',
+                      fontFamily: "sans-serif-condensed",
+                        }}>{this.state.daysNames[this.state.pickedDate.getDay()]}, {this.state.pickedDate.getDate()} {this.state.monthNames[this.state.pickedDate.getMonth()]}, {this.state.hours}:{this.state.minutes}
+                        </Text>
+     
 
                 <Icon2 name = "ios-arrow-down" size = {20} color = "#7963b6"
                                             style = {{ position: 'absolute',
-                                                        right: 30,}}
+                                                        right: '20%',
+                                                      top: 20}}
                                             />        
             </TouchableOpacity>
 
@@ -162,7 +168,7 @@ export default class TimeAndPassengersNumber extends Component {
                 onCancel={this._hideDateTimePicker}
             />
 
-            <View style = {{marginTop: 50}}>
+            <View style = {{marginTop: '10%'}}>
                 <Text style = {styles.howManyPassengers}>So how many CarPool passengers can you take?</Text>
                     <View style = {styles.passengerNo}>
                         <Button  
@@ -216,17 +222,9 @@ container: {
   },
 
   showTimePicker: {
-    borderRadius: 40,
-    width: '80%',
-    height: 80,
     backgroundColor: "#fff",
-    marginTop: 50,
-    marginLeft: '10%',
-    // flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center' ,
-    borderWidth: 1,
-    borderColor: 'grey',
+    padding: 10,
+    marginTop: '10%',
 
   },
 
@@ -240,7 +238,7 @@ container: {
   },
 
   passengerNo: {
-      marginTop: 50,
+      marginTop: "10%",
       flexDirection: 'row',
       justifyContent: 'space-around',
       alignItems: 'center'

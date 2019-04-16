@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import {Geolocation, } from 'react-native-geolocation-service';
+import AsyncStorage from '@react-native-community/async-storage'
 
 
 export default class Loading extends Component {
@@ -18,16 +19,13 @@ export default class Loading extends Component {
   constructor(props)
   {
     super(props);
-    this.state = {
-      // hasLocationPermission: false
-    }
-  }
+    this.isValid = false
 
-  
+  }
 
     componentDidMount = () => {
 
-      async function requestLocationPermission() {
+      requestLocationPermission = async () => {
         try {
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,{
@@ -36,8 +34,7 @@ export default class Loading extends Component {
                     buttonNeutral: 'Ask Me Later',
                     buttonNegative: 'Cancel',
                     buttonPositive: 'OK',
-                }
-            )
+                })
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 //To Check, If Permission is granted
                 navigator.geolocation.getCurrentPosition(
@@ -51,18 +48,27 @@ export default class Loading extends Component {
                   { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
               );
                 console.log('You can use the location');
+
+                const token = await AsyncStorage.getItem('id_token')
+                .then((token) => {
+                  if(token !== null && token !== undefined){
+                    console.log('token : ', token)
+                    console.log('navigating to main container....')
+                    this.props.navigation.navigate('mainContainer')
+                  }
+                  else{
+                    this.props.navigation.navigate('login')
+                  }  
+                })
+                .catch(err => console.log('error getting token in loading page : ', err))
             } else {
                 alert("Permission Denied");
             }
         } catch (err) {
-            alert("err",err);
             console.warn(err)
         }
     }
     requestLocationPermission();
-
-     
-      
 
       firebase.auth().onAuthStateChanged((user) => {
         if(user)
@@ -71,7 +77,7 @@ export default class Loading extends Component {
         }
         this.props.navigation.navigate(user ? 'mainContainer' : 'login')
       })
-    }
+  }
 
 
   render() 

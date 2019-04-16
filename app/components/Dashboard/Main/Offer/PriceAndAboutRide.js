@@ -9,11 +9,12 @@ import {
     ScrollView,
 } from 'react-native'
 
+
 import { Button,} from 'react-native-paper';
 
 import Icon from 'react-native-vector-icons/EvilIcons'
-import firebase, { Firebase } from 'react-native-firebase';
-
+import firebase  from 'react-native-firebase';
+import axios from 'axios'
 
 export default class PriceAndAboutRide extends Component {
 
@@ -27,10 +28,9 @@ export default class PriceAndAboutRide extends Component {
 
             aboutText: '',
         }
-        firebase.firestore.enableLogging(true)
-        firebase.firestore.setLogLevel('debug');
-        this.userRef = firebase.firestore().collection('users')
-        this.offeredRideRef = firebase.firestore().collection('offered_ride')
+
+        this.route = "http://192.168.137.1:5570"
+        
     }
 
     decreasePrice() {
@@ -61,112 +61,89 @@ export default class PriceAndAboutRide extends Component {
         }
     }
 
-    async savePriceAndRideInfo() {
+async savePriceAndRideInfo() {
+    try {
+        await AsyncStorage.setItem('offered_price', JSON.stringify(this.state.price))
 
-        try {
+        await AsyncStorage.setItem('offered_ride_info', this.state.aboutText)
 
-            await AsyncStorage.setItem('offered_price', JSON.stringify(this.state.price))
+        let pickUpLocationName = await AsyncStorage.getItem('pickup_location_name')
+        let dropOffLocationName = await AsyncStorage.getItem('dropoff_location_name')
 
-            await AsyncStorage.setItem('offered_ride_info', this.state.aboutText)
+        let pickUpLocationLatitudeToParse = await AsyncStorage.getItem('pickup_location_latitude')
+        let pickUpLocationLongitudeToParse = await AsyncStorage.getItem('pickup_location_longitude')
 
-            let pickUpLocationName = await AsyncStorage.getItem('pickup_location_name')
-            let dropOffLocationName = await AsyncStorage.getItem('dropoff_location_name')
+        let dropOffLocationLatitudeToParse = await AsyncStorage.getItem('dropoff_location_latitude')
+        let dropOffLocationLongitudeToParse = await AsyncStorage.getItem('dropoff_location_longitude')
 
-            let pickUpLocationLatitudeToParse = await AsyncStorage.getItem('pickup_location_latitude')
-            let pickUpLocationLongitudeToParse = await AsyncStorage.getItem('pickup_location_longitude')
+        let offeredRideDateTimeToParse = await AsyncStorage.getItem('offered_ride_date_time')
+        let offeredPassengersNumberToParse = await AsyncStorage.getItem('passengers_number')
+        let offeredPriceToParse = await AsyncStorage.getItem('offered_price')
+        let offeredRideInfo = await AsyncStorage.getItem('offered_ride_info')
 
-            let dropOffLocationLatitudeToParse = await AsyncStorage.getItem('dropoff_location_latitude')
-            let dropOffLocationLongitudeToParse = await AsyncStorage.getItem('dropoff_location_longitude')
+        let pickUpLocationLatitude = JSON.parse(pickUpLocationLatitudeToParse)
+        let pickUpLocationLongitude = JSON.parse(pickUpLocationLongitudeToParse)
 
-            let offeredRideDateTimeToParse = await AsyncStorage.getItem('offered_ride_date_time')
-            let offeredPassengersNumberToParse = await AsyncStorage.getItem('passengers_number')
-            let offeredPriceToParse = await AsyncStorage.getItem('offered_price')
-            let offeredRideInfo = await AsyncStorage.getItem('offered_ride_info')
+        let dropOffLocationLatitude = JSON.parse(dropOffLocationLatitudeToParse)
+        let dropOffLocationLongitude = JSON.parse(dropOffLocationLongitudeToParse)
 
-            let pickUpLocationLatitude = JSON.parse(pickUpLocationLatitudeToParse)
-            let pickUpLocationLongitude = JSON.parse(pickUpLocationLongitudeToParse)
+        let offeredRideDateTimeString = JSON.parse(offeredRideDateTimeToParse)
+        let offeredRideDateTimeObject = new Date(offeredRideDateTimeString)
 
-            let dropOffLocationLatitude = JSON.parse(dropOffLocationLatitudeToParse)
-            let dropOffLocationLongitude = JSON.parse(dropOffLocationLongitudeToParse)
+        console.log('offeredDateTimeObject : ', offeredRideDateTimeObject)
+        console.log('offeredRideDateTimeObject : type :  ', typeof(offeredRideDateTimeObject))
+        
 
-            let offeredRideDateTimeString = JSON.parse(offeredRideDateTimeToParse)
-            let offeredRideDateTimeObject = new Date(offeredRideDateTimeString)
-            console.log('offeredRideDateTimeString  : ', offeredRideDateTimeString)
-            console.log('offeredRideDateTimeObject : ',offeredRideDateTimeObject)
-            console.log('firebase firestore', firebase.firestore)
-            // let offeredRideDateTime = new firebase.firestore.Timestamp.fromDate(offeredRideDateTimeObject)
-            
+        let offeredPassengersNumber = JSON.parse(offeredPassengersNumberToParse)
+        let offeredPrice = JSON.parse(offeredPriceToParse)
 
-            let offeredPassengersNumber = JSON.parse(offeredPassengersNumberToParse)
-            let offeredPrice = JSON.parse(offeredPriceToParse)
-    
-            console.log('pickUp : ', pickUpLocationName)
-            console.log('dropOff : ', dropOffLocationName)
+        console.log('pickUp : ', pickUpLocationName)
+        console.log('dropOff : ', dropOffLocationName)
 
-            console.log('pickUpLocationLatitude : ', pickUpLocationLatitude)
-            console.log('pickUpLocationLongitude : ', pickUpLocationLongitude)
+        console.log('pickUpLocationLatitude : ', pickUpLocationLatitude)
+        console.log('pickUpLocationLongitude : ', pickUpLocationLongitude)
 
-            console.log('dropOffLocationLatitude : ', dropOffLocationLatitude)
-            console.log('dropOffLocationLongitude : ', dropOffLocationLongitude)
+        console.log('dropOffLocationLatitude : ', dropOffLocationLatitude)
+        console.log('dropOffLocationLongitude : ', dropOffLocationLongitude)
 
-            // console.log('offeredRideDateTime in timestamp : ', offeredRideDateTime)
-            // console.log('offeredRideDateTime : type :  ', typeof(offeredRideDateTime))
-            console.log('offeredPassengersNumber : ', offeredPassengersNumber)
-            console.log('offeredPrice : ', offeredPrice)
-            console.log('offeredRideInfo : ', offeredRideInfo)
+        // console.log('offeredRideDateTime in timestamp : ', offeredRideDateTime)
+        
+        console.log('offeredPassengersNumber : ', offeredPassengersNumber)
+        console.log('offeredPrice : ', offeredPrice)
+        console.log('offeredRideInfo : ', offeredRideInfo)
 
+        const token = await AsyncStorage.getItem('id_token')
+        
+        const authToken = token.replace(/^"(.*)"$/, '$1');
+        console.log('token to send as authorizaton header : ', authToken)
 
-            let currentUser = firebase.auth().currentUser
-
-            if(currentUser)
-            {
-                // console.log("currentUser ", currentUser)
-                // console.log(this.userRef.get().then(user=>{
-                //     console.log(user);
-                // }).catch(console.log));
-                // return;
-                this.userRef.where("email", "==", currentUser._user.email).onSnapshot((querySnapshot) =>
-                {
-                    console.log('querysnapshot : ', querySnapshot)
-                    querySnapshot.forEach((doc) => {
-                        console.log('queysnapshot doc : ', doc.data())
-
-                        let userFirstName = doc.data().first_name
-                        let userLastName = doc.data().last_name
-                        let userPhoneNumber = doc.data().phone_number
-
-                        this.offeredRideRef.add({
-                            pick_up_location: {
-                                name: pickUpLocationName,
-                                lat_lng: new firebase.firestore.GeoPoint( pickUpLocationLatitude, pickUpLocationLongitude)
-                            },
-                            drop_off_location: {
-                                name: dropOffLocationName,
-                                lat_lng: new firebase.firestore.GeoPoint(dropOffLocationLatitude, dropOffLocationLongitude)
-                            },
-                            offered_ride_date_time: offeredRideDateTimeObject,
-                            offered_ride_price: offeredPrice,
-                            offered_ride_passengers_no : offeredPassengersNumber,
-                            offered_ride_user: {
-                                first_name: userFirstName,
-                                last_name: userLastName,
-                                phone_number: userPhoneNumber
-                            }
-                        })
-                    })
-                })
-            }
-            
-
-            
-
-    
-            // this.props.navigation.navigate('Current')
-            
-        } catch (error) {
-            console.log('Error in AsyncStorage ', error)
+        const offeredRide = {
+            pick_up_name: pickUpLocationName,
+            pick_up_coordinates: [pickUpLocationLongitude, pickUpLocationLatitude],
+            drop_off_name: dropOffLocationName,
+            drop_off_coordinates: [dropOffLocationLongitude, dropOffLocationLatitude],
+            offered_ride_passengers_no: offeredPassengersNumber,
+            offered_ride_price: offeredPrice,
+            offered_ride_info: offeredRideInfo,
+            offered_ride_date_time: offeredRideDateTimeObject,
         }
+
+        await axios.post(`${this.route}/rides/offer_ride`,
+            offeredRide,
+            {headers: {Authorization : `Bearer ${authToken}` }}
+        )
+        .then(res => {
+            console.log('res received : ', res)
+        }).catch(error => {
+            console.log('error sending offered ride request ', error)
+        })
+
+        // this.props.navigation.navigate('Current')
+        
+    } catch (error) {
+        console.log('Error in AsyncStorage ', error)
     }
+}
 
 
   render() {

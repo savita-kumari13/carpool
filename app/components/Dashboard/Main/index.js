@@ -140,7 +140,7 @@ const MainTabNavigator = createBottomTabNavigator(
         }
       },
 
-      initialRouteName: 'Search',
+      initialRouteName: 'Rides',
 
       tabBarOptions: {
         activeTintColor: '#7963b6',
@@ -234,7 +234,7 @@ const MainTabNavigator = createBottomTabNavigator(
 
   
     {
-      initialRouteName: 'PriceAndAboutRide',
+      initialRouteName: 'MainScreen',
       headerMode: 'screen'
 
     }
