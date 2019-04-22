@@ -78,14 +78,6 @@ class App extends Component {
         }
     }
     requestLocationPermission();
-
-      // firebase.auth().onAuthStateChanged((user) => {
-      //   if(user)
-      //   {
-      //     console.log('user logged in as', user)
-      //   }
-      //   this.props.navigation.navigate(user ? 'mainContainer' : 'login')
-      // })
   }
 
 

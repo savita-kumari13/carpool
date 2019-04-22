@@ -2,9 +2,8 @@ import React, { Component } from 'react'
 import firebase from 'react-native-firebase';
 import { LoginButton, AccessToken, LoginManager, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { Button } from 'react-native-paper'
-import axios from 'axios'
 import AsyncStorage from '@react-native-community/async-storage'
-
+import axios from '../axios'
 import { SocialIcon } from 'react-native-elements'
 
 import {
@@ -58,12 +57,6 @@ export default class SignUp extends Component {
       isNameFocused: false,
       isPhoneFocused: false,
     };
-
-    this.route = "http://192.168.137.1:5570"
-    this.token = null
-    this.navigate = false
-
-    // this.userRef = firebase.firestore().collection('users');
   }
 
 
@@ -84,14 +77,6 @@ export default class SignUp extends Component {
     {
 
       BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
-
-      axios.get(`${this.route}/users`)
-      .then(response => {
-        console.log('response received ', response)
-      })
-      .catch(function (error) {
-        console.log('error in getting back response',error);
-      })
     }
   
     componentWillUnmount()
@@ -106,9 +91,6 @@ export default class SignUp extends Component {
       // BackHandler.exitApp();
     }
 
-   
-
-
     handleSignUp = async() =>
     { 
       const user = {
@@ -118,36 +100,33 @@ export default class SignUp extends Component {
         confirm_password: this.state.confirmPassword,
         phone_number: this.state.phoneNumber
 
-    }
-    await axios.post(`${this.route}/users/register`, user)
+      }
+    await axios.post(`/users/register`, user)
     .then(res => {
-      console.log('res : ', res)
-      let response=res.data;
-      console.log('response = res.data : ', response)
-      console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
-      console.log('errors in response : ', response.hasOwnProperty('errors'))
-        if(typeof(response) === 'object')
+      console.log('res ', res)
+      let resData=res.data;
+        if(!resData.status)
         {
-          if(response.errors.hasOwnProperty('name')){
+          if(resData.response.errors.hasOwnProperty('name')){
             this.setState({
               errorNameShow: true,
               errorNameBorderFocused: true,
             })
           }
-          if(response.errors.hasOwnProperty('email')){
+          if(resData.response.errors.hasOwnProperty('email')){
             this.setState({
               errorEmailShow: true,
               isEmailFocused: false,
               errorEmailBorderFocused: true,
             })
           }
-          if(response.errors.hasOwnProperty('password')){
+          if(resData.response.errors.hasOwnProperty('password')){
             this.setState({
               errorPasswordShow: true,
               errorPasswordBorderFocused: true,
             })
           }
-          if(response.errors.hasOwnProperty('confirm_password')){
+          if(resData.response.errors.hasOwnProperty('confirm_password')){
             this.setState({
               errorConfirmPasswordShow: true,
               errorConfirmPasswordBorderFocused: true,
@@ -156,18 +135,16 @@ export default class SignUp extends Component {
 
         this.setState({
           errors: {
-            name: response.errors.name,
-            email: response.errors.email,
-            password: response.errors.password,
-            confirmPassword: response.errors.confirm_password,
+            name: resData.response.errors.name,
+            email: resData.response.errors.email,
+            password: resData.response.errors.password,
+            confirmPassword: resData.response.errors.confirm_password,
           }
         })
-        throw new Error(Object.values(response.errors).join(', '));
+        throw new Error(Object.values(resData.response.errors).join(', '));
       }
       else
       {
-        this.token = response
-        this.navigate = true
         this.setState({
           name: '',
           email: '',
@@ -175,6 +152,7 @@ export default class SignUp extends Component {
           confirmPassword: '',
           phoneNumber: ''
         });
+        this.props.navigation.navigate('mainContainer')
       }
       
     })
@@ -182,23 +160,6 @@ export default class SignUp extends Component {
       console.log('error sending post request',err.message)
       this.navigate = false
     })
-    if(this.navigate){
-      try {
-        await AsyncStorage.removeItem('id_token')
-        const storedToken = await AsyncStorage.getItem('id_token')
-        console.log('already stored token : ', storedToken)
-  
-        await AsyncStorage.setItem('id_token', JSON.stringify(this.token)).then(console.log).catch(console.log)
-  
-        const newToken =  AsyncStorage.getItem('id_token').then(console.log).catch(console.log)
-        console.log('new stored token : ', newToken)
-  
-        this.props.navigation.navigate('mainContainer')
-      
-      } catch (error) {
-      console.log('error storing token', error)
-      }
-    }
   }
 
   handleFacebookLogin = async () => {
@@ -214,7 +175,6 @@ export default class SignUp extends Component {
           return AccessToken.getCurrentAccessToken();
         }).then((data) =>
         {
-          console.log('data : ', data)
           const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
           return firebase.auth().signInWithCredential(credential).then((user) =>
           {
@@ -240,18 +200,13 @@ export default class SignUp extends Component {
   async registerFacebookUser(user) {
     console.log("new facebook user : ", user)
     const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
-    await axios.post(`${this.route}/users/facebook/register`, {
+    await axios.post(`/users/facebook/register`, {
       name: fbName,
       email: user.additionalUserInfo.profile.email,
       phone_number: '',
       // profile_picture: user._user.photoURL
     }).then(res => {
       console.log('res : ', res)
-      let response=res.data;
-      console.log('response = res.data : ', response)
-      console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
-      this.token = response
-      this.navigate = true
       this.setState({
         name: '',
         email: '',
@@ -259,56 +214,23 @@ export default class SignUp extends Component {
         confirmPassword: '',
         phoneNumber: ''
       });
+      console.log('navigating to main container....')
+      this.props.navigation.navigate('mainContainer')
     }).catch(err => {
       console.log('error sending post request',err.message)
-      this.navigate = false
     })
-
-    if(this.navigate){
-      try {
-        console.log('this.token : ', this.token)
-          await AsyncStorage.removeItem('id_token')
-          const storedToken = await AsyncStorage.getItem('id_token')
-          console.log('already stored token : ', storedToken)
-    
-          await AsyncStorage.setItem('id_token', JSON.stringify(this.token))
-          .then(() => console.log('token stored '))
-          .catch(err => console.log('error setting token in log in page : ', err))
-    
-          await AsyncStorage.getItem('id_token')
-          .then((token) => {
-            if(token !== null && token !== undefined && token != 'null'){
-              console.log('token : ', token)
-              console.log('navigating to main container....')
-              this.props.navigation.navigate('mainContainer')
-            }
-            else{
-              console.log('error in token in login page')
-            }
-          })
-          .catch(err => console.log('error getting new token in login page : ', err))
-        
-      } catch (error) {
-        console.log('error storing token', error)
-      }
-    }
   }
 
   async loginFacebookUser(user) {
     console.log('logging in facebook user')
     const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
-    axios.post(`${this.route}/users/facebook/login`, {
+    await axios.post(`/users/facebook/login`, {
       name: fbName,
       email: user.additionalUserInfo.profile.email,
       phone_number: '',
       // profile_picture: user._user.photoURL
     }).then(res => {
       console.log('res : ', res)
-      let response=res.data;
-      console.log('response = res.data : ', response)
-      console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
-      this.token = response
-      this.navigate = true
       this.setState({
         name: '',
         email: '',
@@ -316,38 +238,11 @@ export default class SignUp extends Component {
         confirmPassword: '',
         phoneNumber: ''
       });
+      console.log('navigating to main container....')
+      this.props.navigation.navigate('mainContainer')
     }).catch(err => {
       console.log('error sending post request',err.message)
-      this.navigate = false
     })
-    if(this.navigate){
-      try {
-        console.log('this.token : ', this.token)
-          await AsyncStorage.removeItem('id_token')
-          const storedToken = await AsyncStorage.getItem('id_token')
-          console.log('already stored token : ', storedToken)
-    
-          await AsyncStorage.setItem('id_token', JSON.stringify(this.token))
-          .then(() => console.log('token stored '))
-          .catch(err => console.log('error setting token in log in page : ', err))
-    
-          await AsyncStorage.getItem('id_token')
-          .then((token) => {
-            if(token !== null && token !== undefined && token != 'null'){
-              console.log('token : ', token)
-              console.log('navigating to main container....')
-              this.props.navigation.navigate('mainContainer')
-            }
-            else{
-              console.log('error in token in login page')
-            }
-          })
-          .catch(err => console.log('error getting new token in login page : ', err))
-        
-      } catch (error) {
-        console.log('error storing token', error)
-      }
-    }
   }
 
 

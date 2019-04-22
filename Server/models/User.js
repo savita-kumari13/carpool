@@ -19,7 +19,6 @@ const UserSchema = new schema({
     },
     phone_number: {
         type: Number,
-        unique: true,
         trim: true
     },
     avatar: {

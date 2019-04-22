@@ -3,9 +3,10 @@ import firebase from 'react-native-firebase';
 import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
 import { GoogleSignin, GoogleSigninButton, statusCodes } from 'react-native-google-signin';
 import { Button } from 'react-native-paper'
-import axios from 'axios'
+// import axios from 'axios'
 import AsyncStorage from '@react-native-community/async-storage'
 import { SocialIcon } from 'react-native-elements'
+import axios from '../axios'
 
 import {
     View,
@@ -52,9 +53,6 @@ export default class Login extends Component {
     };
 
     this.handleBackPress = this.handleBackPress.bind(this);
-    this.route = "http://192.168.137.1:5570"
-    this.token = null
-    this.navigate = false
   }
 
   componentDidMount()
@@ -78,23 +76,21 @@ export default class Login extends Component {
       email: this.state.email,
       password: this.state.password,
   }
-  await axios.post(`${this.route}/users/login`, user)
+  await axios.post(`/users/login`, user)
   .then(res => {
     console.log('res : ', res)
-    let response=res.data;
-    console.log('response = res.data : ', response)
-    console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
-    console.log('errors in response : ', response.hasOwnProperty('errors'))
-    if(response.hasOwnProperty('errors'))
+    let resData=res.data;
+
+    if(!resData.status)
     {
-      if(response.errors.hasOwnProperty('email')){
+      if(resData.response.errors.hasOwnProperty('email')){
         this.setState({
           errorEmailShow: true,
           isEmailFocused: false,
           errorEmailBorderFocused: true,
         })
       }
-      if(response.errors.hasOwnProperty(password)){
+      if(resData.response.errors.hasOwnProperty('password')){
         this.setState({
           errorPasswordShow: true,
           errorPasswordBorderFocused: true,
@@ -111,47 +107,17 @@ export default class Login extends Component {
     }
     else
     {
-      this.token = response
-      this.navigate
       this.setState({
         email: '',
         password: ''
       });
+      console.log('navigating to main container....')
+      this.props.navigation.navigate('mainContainer')
     }
   })
   .catch(err => {
     console.log('error sending post request',err.message)
-    this.navigate = false
   })
-
-  if(this.navigate){
-    try {
-      console.log('this.token : ', this.token)
-        await AsyncStorage.removeItem('id_token')
-        const storedToken = await AsyncStorage.getItem('id_token')
-        console.log('already stored token : ', storedToken)
-  
-        await AsyncStorage.setItem('id_token', JSON.stringify(this.token))
-        .then(() => console.log('token stored '))
-        .catch(err => console.log('error setting token in log in page : ', err))
-  
-        await AsyncStorage.getItem('id_token')
-        .then((token) => {
-          if(token !== null && token !== undefined && token != 'null'){
-            console.log('token : ', token)
-            console.log('navigating to main container....')
-            this.props.navigation.navigate('mainContainer')
-          }
-          else{
-            console.log('error in token in login page')
-          }
-        })
-        .catch(err => console.log('error getting new token in login page : ', err))
-      
-    } catch (error) {
-      console.log('error storing token', error)
-    }
-  }
 }
 
 
@@ -251,18 +217,13 @@ export default class Login extends Component {
   async registerFacebookUser(user) {
     console.log("new facebook user : ", user)
     const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
-    await axios.post(`${this.route}/users/facebook/register`, {
+    await axios.post(`/users/facebook/register`, {
       name: fbName,
       email: user.additionalUserInfo.profile.email,
       phone_number: '',
       // profile_picture: user._user.photoURL
     }).then(res => {
       console.log('res : ', res)
-      let response=res.data;
-      console.log('response = res.data : ', response)
-      console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
-      this.token = response
-      this.navigate = true
       this.setState({
         name: '',
         email: '',
@@ -270,57 +231,23 @@ export default class Login extends Component {
         confirmPassword: '',
         phoneNumber: ''
       });
+      console.log('navigating to main container....')
+      this.props.navigation.navigate('mainContainer')
     }).catch(err => {
       console.log('error sending post request',err.message)
-      this.navigate = false
     })
-    if(this.navigate){
-      
-    try {
-      console.log('this.token : ', this.token)
-      const storedToken = await AsyncStorage.getItem('id_token')
-      console.log('already stored token : ', storedToken)
-      await AsyncStorage.removeItem('id_token')
-
-      await AsyncStorage.setItem('id_token', JSON.stringify(this.token))
-      .then(() => console.log('token stored '))
-      .catch(err => console.log('error setting token in log in page : ', err))
-
-      await AsyncStorage.getItem('id_token')
-      .then((token) => {
-        if(token !== null && token !== undefined && token != 'null'){
-          console.log('token : ', token)
-          console.log('navigating to main container....')
-          this.props.navigation.navigate('mainContainer')
-        }
-        else{
-          console.log('error in token in login page')
-        }
-      })
-      .catch(err => console.log('error getting new token in login page : ', err))
-    
-    } catch (error) {
-      console.log('error storing token', error)
-    }
-    }
   }
 
   async loginFacebookUser(user) {
     console.log('logging in facebook user')
     const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
-    await axios.post(`${this.route}/users/facebook/login`, {
+    await axios.post(`/users/facebook/login`, {
       name: fbName,
       email: user.additionalUserInfo.profile.email,
       phone_number: '',
       // profile_picture: user._user.photoURL
     }).then(res => {
       console.log('res : ', res)
-      let response=res.data;
-      console.log('response = res.data : ', response)
-      console.log('type of response ? OBJECT ?? : ', typeof(response) === 'object' )
-      this.token = response
-      this.navigate = true
-      console.log('axios post req sent ..navigate : ', this.navigate)
       this.setState({
         name: '',
         email: '',
@@ -328,39 +255,11 @@ export default class Login extends Component {
         confirmPassword: '',
         phoneNumber: ''
       });
+      console.log('navigating to main container....')
+      this.props.navigation.navigate('mainContainer')
     }).catch(err => {
       console.log('error sending post request',err.message)
-      this.navigate = false
     })
-    if(this.navigate){
-      try {
-        console.log('this.token : ', this.token)
-        const storedToken = await AsyncStorage.getItem('id_token')
-        console.log('already stored token : ', storedToken)
-        await AsyncStorage.removeItem('id_token')
-  
-        await AsyncStorage.setItem('id_token', JSON.stringify(this.token))
-        .then(() => console.log('token stored '))
-        .catch(err => console.log('error setting token in log in page : ', err))
-  
-        await AsyncStorage.getItem('id_token')
-        .then((token) => {
-          if(token !== null && token !== undefined && token != 'null'){
-            console.log('token : ', token)
-            console.log('navigating to main container....')
-            this.props.navigation.navigate('mainContainer')
-          }
-          else{
-            console.log('error in token in login page')
-          }
-        })
-        .catch(err => console.log('error getting new token in login page : ', err))
-      
-      } catch (error) {
-        console.log('error storing token', error)
-      }
-    }
-
   }
 
  

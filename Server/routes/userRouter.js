@@ -15,7 +15,7 @@ userRouter.route('/register').post((req, res) => {
   console.log('status : ', validateRegister.status)
 
   if(!validateRegister.status) {
-    return res.json(validateRegister);
+    return res.json({status: false, response: {errors: validateRegister.errors}, messages: []});
   }
   console.log('user info : ', req.body)
   const avatar = gravatar.url(req.body.email, {
@@ -52,13 +52,12 @@ userRouter.route('/register').post((req, res) => {
       avatar: user.avatar
     }
     return jwt.sign(payload, 'secret', {
-      expiresIn: '1 day'
+      expiresIn: '60'
       })
   }).then(token => {
-      console.log('token : ', token)
-      return res.json(token)
+    return res.json({status: true, response: {token: token}, messages: ["You have been registered successfully"]});
   }).catch(err=>{
-    return res.send(err);
+    return res.json({status: true, response: {}, messages: [err.message]});
   });
 });
 
@@ -69,7 +68,7 @@ userRouter.route('/login').post((req, res) => {
   console.log('validateLogin ? ', validateLogin)
   console.log('isValid : ', validateLogin.status)
   if(!validateLogin.status) {
-    return res.json(validateLogin);
+    return res.json({status: false, response: {errors: validateRegister.errors}, messages: []});
   }
 
   const email = req.body.email;
@@ -96,13 +95,13 @@ userRouter.route('/login').post((req, res) => {
         throw new Error("Incorrect password");
       }
       return jwt.sign(payload, 'secret', {
-        expiresIn: '1 day'
+        expiresIn: '60'
     })
   }).then(token => {
     console.log('token : ', token)
-    return res.json(token)
+    return res.json({status: true, response: {token: token}, messages: ["You have been registered successfully"]});
   }).catch(err => {
-      return res.send(err);
+    return res.json({status: true, response: {}, messages: [err.message]});
     })
 });
 
@@ -114,8 +113,7 @@ userRouter.route('/facebook/register').post((req, res) => {
     r: 'pg',
     d: 'mm'
 });
-  const newUser = new User({
-  
+  const newUser = new User({ 
     name: req.body.name,
     email: req.body.email,
     phone_number: req.body.phone_number,
@@ -141,9 +139,9 @@ userRouter.route('/facebook/register').post((req, res) => {
         })
     }).then(token => {
       console.log('token : ', token)
-      return res.json(token)
+      return res.json({status: true, response: {token: token}, messages: ["You have been registered successfully"]});
   }).catch(err=>{
-    return res.send(err);
+    return res.json({status: true, response: {}, messages: [err.message]});
   }); 
 })
 
@@ -166,9 +164,9 @@ userRouter.route('/facebook/login').post((req, res) => {
       expiresIn: '1 day'})
   }).then(token => {
     console.log('token : ', token)
-    return res.json(token)
+    return res.json({status: true, response: {token: token}, messages: ["You have been registered successfully"]});
   }).catch(err => {
-      return res.send(err);
+    return res.json({status: true, response: {}, messages: [err.message]});
     }) 
 })
 
@@ -195,15 +193,6 @@ userRouter.route('/').get(function (req, res) {
     }).catch(err => {
       console.log('errorrrrrrrr', err)
     })
-  //   User.find(function (err, users){
-  //   if(err){
-  //     console.log(err);
-  //     res.json([]);
-  //   }
-  //   else {
-  //     res.json(users);
-  //   }
-  // });
 });
 
 module.exports = userRouter;

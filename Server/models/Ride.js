@@ -14,6 +14,15 @@ const pointSchema = new mongoose.Schema({
     }
   });
 
+const userSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User',
+  },
+  name: String,
+  phone_number: Number,
+})
+
 
 const RidesSchema = new schema({
 
@@ -51,11 +60,7 @@ offered_ride_date_time: {
   required: true,
 },
 
-user: { 
-  type: mongoose.Schema.Types.ObjectId, 
-  ref: 'User'
-},
-
+user: userSchema,
 },
 
 {

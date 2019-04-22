@@ -26,6 +26,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  Clipboard,
 } from 'react-native'
 
 import _ from 'lodash';
@@ -358,6 +359,10 @@ _handleDatePicked = (date) => {
 async searchLeavingFromAndGoingToLocation()
 {
   console.log('picked date time : ', this.state.pickedDate)
+  console.log('leave......', this.state.leavingFrom)
+  console.log('going......', this.state.goingTo)
+  await AsyncStorage.setItem('leave_from_location', JSON.stringify(this.state.leavingFrom))
+  await AsyncStorage.setItem('going_to_location', JSON.stringify(this.state.goingTo))
   await AsyncStorage.setItem('leave_from_longitude', JSON.stringify(this.state.leavingFromLongitude))
   await AsyncStorage.setItem('leave_from_latitude', JSON.stringify(this.state.leavingFromLatitude))
   await AsyncStorage.setItem('going_to_longitude', JSON.stringify(this.state.goingToLongitude))
@@ -436,7 +441,7 @@ render() {
         {this.state.leavingFromLoading && leavingFromPredictions}
         {this.state.goingToLoading && goingToPredictions}
 
-        {this.state.showDateTimePickerAfterLeavingFrom && this.state.showDateTimePickerAfterGoingTo &&
+        {/* {this.state.showDateTimePickerAfterLeavingFrom && this.state.showDateTimePickerAfterGoingTo && */}
           <TouchableOpacity style = {styles.showTimePicker}
             onPress={this._showDateTimePicker}>
             <Text 
@@ -465,7 +470,7 @@ render() {
                           top: 20}}
                                         />        
           </TouchableOpacity>
-        }
+        {/* } */}
 
         <DateTimePicker
           mode = 'datetime'
@@ -474,12 +479,13 @@ render() {
           onCancel={this._hideDateTimePicker}
         />
 
-        {this.state.showSearchAfterLeavingFrom && this.state.showSearchAfterGoingTo &&
+        {/* {this.state.showSearchAfterLeavingFrom && this.state.showSearchAfterGoingTo && */}
           <Button mode = "contained" style = {styles.searchRide}
             onPress = {() => {this.searchLeavingFromAndGoingToLocation()}}>
             <Text style = {{color: '#fff', fontWeight: 'bold' }}
             >Search</Text>
-          </Button>}
+          </Button>
+          {/* } */}
     
     </ScrollView>
     )

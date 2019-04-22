@@ -7,6 +7,7 @@ import {
     AsyncStorage,
     TouchableOpacity,
     ScrollView,
+    Alert
 } from 'react-native'
 
 
@@ -14,7 +15,7 @@ import { Button,} from 'react-native-paper';
 
 import Icon from 'react-native-vector-icons/EvilIcons'
 import firebase  from 'react-native-firebase';
-import axios from 'axios'
+import axios from '../../../axios'
 
 export default class PriceAndAboutRide extends Component {
 
@@ -27,10 +28,7 @@ export default class PriceAndAboutRide extends Component {
             isLessThanZero: '#7963b6',
 
             aboutText: '',
-        }
-
-        this.route = "http://192.168.137.1:5570"
-        
+        }       
     }
 
     decreasePrice() {
@@ -112,11 +110,6 @@ async savePriceAndRideInfo() {
         console.log('offeredPrice : ', offeredPrice)
         console.log('offeredRideInfo : ', offeredRideInfo)
 
-        const token = await AsyncStorage.getItem('id_token')
-        
-        const authToken = token.replace(/^"(.*)"$/, '$1');
-        console.log('token to send as authorizaton header : ', authToken)
-
         const offeredRide = {
             pick_up_name: pickUpLocationName,
             pick_up_coordinates: [pickUpLocationLongitude, pickUpLocationLatitude],
@@ -128,14 +121,23 @@ async savePriceAndRideInfo() {
             offered_ride_date_time: offeredRideDateTimeObject,
         }
 
-        await axios.post(`${this.route}/rides/offer_ride`,
-            offeredRide,
-            {headers: {Authorization : `Bearer ${authToken}` }}
+        await axios.post(`/rides/offer_ride`,
+            offeredRide
         )
         .then(res => {
             console.log('res received : ', res)
         }).catch(error => {
             console.log('error sending offered ride request ', error)
+            if(error.response.status === 401){      
+                Alert.alert(
+                    'Token expired',
+                    'Please login again',
+                    [
+                      {text: 'OK', onPress: () => this.props.navigation.navigate('login')},
+                    ],
+                    {cancelable: false},
+                  );
+            }
         })
 
         // this.props.navigation.navigate('Current')
@@ -144,7 +146,6 @@ async savePriceAndRideInfo() {
         console.log('Error in AsyncStorage ', error)
     }
 }
-
 
   render() {
 
@@ -176,8 +177,7 @@ async savePriceAndRideInfo() {
                 <Text style = {{
                             color: '#054752',
                             fontWeight: 'bold',
-                            fontSize: 70,
-                            
+                            fontSize: 70,     
                             fontFamily: "sans-serif-condensed",}}>{this.state.price}</Text>
 
                 <Button  
@@ -194,10 +194,8 @@ async savePriceAndRideInfo() {
                 <ScrollView>
                     <TextInput
                         multiline = {true}
-                        numberOfLines = {6}
-                        
-                        value = {this.state.aboutText}
-                        
+                        numberOfLines = {6}                       
+                        value = {this.state.aboutText}                      
                         placeholder = "Hello! I'm going to visit my family. I travel with a dog and I have a lot of space in the boot!"
                         onChangeText = {(aboutText) => {this.setState({aboutText})}}
                     ></TextInput>
@@ -209,10 +207,7 @@ async savePriceAndRideInfo() {
                             <Text style = {{color: '#fff', fontWeight: 'bold' }}>Post ride</Text>
 
                 </Button>
-
             </View>
-
-
         </ScrollView>        
     )
   }
