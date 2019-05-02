@@ -7,6 +7,7 @@ import { Button } from 'react-native-paper'
 import AsyncStorage from '@react-native-community/async-storage'
 import { SocialIcon } from 'react-native-elements'
 import axios from '../axios'
+import NavigationService from '../../../NavigationService';
 
 import {
     View,
@@ -112,7 +113,7 @@ export default class Login extends Component {
         password: ''
       });
       console.log('navigating to main container....')
-      this.props.navigation.navigate('mainContainer')
+      NavigationService.navigate('MainContainer', {})
     }
   })
   .catch(err => {
@@ -232,7 +233,7 @@ export default class Login extends Component {
         phoneNumber: ''
       });
       console.log('navigating to main container....')
-      this.props.navigation.navigate('mainContainer')
+      NavigationService.navigate('MainContainer', {})
     }).catch(err => {
       console.log('error sending post request',err.message)
     })
@@ -256,7 +257,7 @@ export default class Login extends Component {
         phoneNumber: ''
       });
       console.log('navigating to main container....')
-      this.props.navigation.navigate('mainContainer')
+      NavigationService.navigate('MainContainer', {})
     }).catch(err => {
       console.log('error sending post request',err.message)
     })
@@ -326,7 +327,7 @@ handleEmailFocus = () => this.setState({isEmailFocused: true})
           <Button 
             style={[ styles.registerButton]}
             mode = 'text'
-            onPress ={() => this.props.navigation.navigate('signup')}>
+            onPress ={() => NavigationService.navigate('SignUp', {})}>
               <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>NOT A MEMEBER YET? JOIN FOR FREE </Text>
           </Button>
 

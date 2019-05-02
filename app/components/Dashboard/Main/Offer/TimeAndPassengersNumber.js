@@ -44,8 +44,7 @@ export default class TimeAndPassengersNumber extends Component {
        
         this.setState({
             hours: (this.state.hours <10?'0':'') + this.state.hours,
-            minutes: (this.state.minutes <10?'0':'') + this.state.minutes
-            
+            minutes: (this.state.minutes <10?'0':'') + this.state.minutes    
         })        
     }
 

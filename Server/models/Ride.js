@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const schema = mongoose.Schema;
 
-const pointSchema = new mongoose.Schema({
+const pointSchema = new schema({
     type: {
       type: String,
       default: 'Point',
@@ -14,15 +14,26 @@ const pointSchema = new mongoose.Schema({
     }
   });
 
-const userSchema = new mongoose.Schema({
+const userSchema = new schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User',
   },
   name: String,
   phone_number: Number,
+  preferences: Object
 })
 
+const bookedUserSchema = new schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User',
+  },
+  name: String,
+  phone_number: Number,
+  preferences: Object,
+  seats_booked: Number
+});
 
 const RidesSchema = new schema({
 
@@ -60,7 +71,9 @@ offered_ride_date_time: {
   required: true,
 },
 
-user: userSchema,
+offered_user: userSchema,
+
+booked_user: [bookedUserSchema]
 },
 
 {

@@ -10,8 +10,6 @@ import {
   ScrollView,
   AsyncStorage,
 } from 'react-native'
-import deviceStorage from '../../services/deviceStorage';
-
 
 export default class Profile extends Component {
 
@@ -42,12 +40,6 @@ componentWillUnmount()
 _handleBackHandler = () => {
   this.props.navigation.dispatch(NavigationActions.back())
    return true;
- }
-
- showTokenId = async() => {
-  const token = await AsyncStorage.getItem('id_token')
-
-  console.log('token : ', token)
  }
 
 

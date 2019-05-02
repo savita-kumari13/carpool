@@ -5,6 +5,7 @@ import { Button } from 'react-native-paper'
 import AsyncStorage from '@react-native-community/async-storage'
 import axios from '../axios'
 import { SocialIcon } from 'react-native-elements'
+import NavigationService from '../../../NavigationService'
 
 import {
     View,
@@ -86,7 +87,7 @@ export default class SignUp extends Component {
   
     handleBackPress = () =>
     {
-      this.props.navigation.navigate('login')
+      NavigationService.navigate('Login', {})
       return true;
       // BackHandler.exitApp();
     }
@@ -152,13 +153,12 @@ export default class SignUp extends Component {
           confirmPassword: '',
           phoneNumber: ''
         });
-        this.props.navigation.navigate('mainContainer')
+        NavigationService.navigate('MainContainer', {})
       }
       
     })
     .catch(err => {
       console.log('error sending post request',err.message)
-      this.navigate = false
     })
   }
 
@@ -215,7 +215,7 @@ export default class SignUp extends Component {
         phoneNumber: ''
       });
       console.log('navigating to main container....')
-      this.props.navigation.navigate('mainContainer')
+      NavigationService.navigate('MainContainer', {})
     }).catch(err => {
       console.log('error sending post request',err.message)
     })
@@ -239,7 +239,7 @@ export default class SignUp extends Component {
         phoneNumber: ''
       });
       console.log('navigating to main container....')
-      this.props.navigation.navigate('mainContainer')
+      NavigationService.navigate('MainContainer', {})
     }).catch(err => {
       console.log('error sending post request',err.message)
     })

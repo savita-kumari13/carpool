@@ -24,6 +24,9 @@ const UserSchema = new schema({
     avatar: {
         type: String
     },
+    preferences: {
+        type: Object
+    },
     date: {
         type: Date,
         default: Date.now

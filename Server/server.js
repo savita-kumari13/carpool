@@ -6,7 +6,7 @@ const cors = require('cors');
 const passport = require('passport')
 const port = 5570;
 
-const config = require('./database/DB');
+const config = require('./config');
 const UserRouter = require('./routes/userRouter')
 const RideRouter = require('./routes/rideRouter')
 

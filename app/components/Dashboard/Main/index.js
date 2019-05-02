@@ -24,6 +24,10 @@ import Calendarr from './Offer/Calendarr';
 import PriceAndAboutRide from './Offer/PriceAndAboutRide';
 import TimeAndPassengersNumber from './Offer/TimeAndPassengersNumber';
 import SearchList from './Search/SearchList';
+import UserAndRideInfo from './Search/UserAndRideInfo'
+import UserBio from './Search/UserBio';
+import BookRide from './Search/BookRide';
+import bookedUserPreferences from './Search/bookedUserPreferences';
 
 const backArrow = <Icon name = "ios-arrow-round-back" 
               size = {25} color = "#000000" 
@@ -223,11 +227,69 @@ const MainTabNavigator = createBottomTabNavigator(
               size = {40} color = "#7963b6" 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
-          />
-        
-        
+          />     
       })
-    }
+    },
+
+    UserAndRideInfo: {
+      screen: UserAndRideInfo,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />     
+      })
+    },
+
+    UserBio: {
+      screen: UserBio,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />     
+      })
+    },
+
+    BookRide: {
+      screen: BookRide,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />     
+      })
+    },
+
+    bookedUserPreferences: {
+      screen: bookedUserPreferences,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#7963b6" 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />     
+      })
+    },
 
   },
  

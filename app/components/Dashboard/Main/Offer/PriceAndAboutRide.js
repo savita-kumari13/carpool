@@ -88,28 +88,9 @@ async savePriceAndRideInfo() {
         let offeredRideDateTimeString = JSON.parse(offeredRideDateTimeToParse)
         let offeredRideDateTimeObject = new Date(offeredRideDateTimeString)
 
-        console.log('offeredDateTimeObject : ', offeredRideDateTimeObject)
-        console.log('offeredRideDateTimeObject : type :  ', typeof(offeredRideDateTimeObject))
-        
-
         let offeredPassengersNumber = JSON.parse(offeredPassengersNumberToParse)
         let offeredPrice = JSON.parse(offeredPriceToParse)
-
-        console.log('pickUp : ', pickUpLocationName)
-        console.log('dropOff : ', dropOffLocationName)
-
-        console.log('pickUpLocationLatitude : ', pickUpLocationLatitude)
-        console.log('pickUpLocationLongitude : ', pickUpLocationLongitude)
-
-        console.log('dropOffLocationLatitude : ', dropOffLocationLatitude)
-        console.log('dropOffLocationLongitude : ', dropOffLocationLongitude)
-
-        // console.log('offeredRideDateTime in timestamp : ', offeredRideDateTime)
         
-        console.log('offeredPassengersNumber : ', offeredPassengersNumber)
-        console.log('offeredPrice : ', offeredPrice)
-        console.log('offeredRideInfo : ', offeredRideInfo)
-
         const offeredRide = {
             pick_up_name: pickUpLocationName,
             pick_up_coordinates: [pickUpLocationLongitude, pickUpLocationLatitude],
@@ -126,21 +107,10 @@ async savePriceAndRideInfo() {
         )
         .then(res => {
             console.log('res received : ', res)
+            this.props.navigation.navigate('Current')
         }).catch(error => {
             console.log('error sending offered ride request ', error)
-            if(error.response.status === 401){      
-                Alert.alert(
-                    'Token expired',
-                    'Please login again',
-                    [
-                      {text: 'OK', onPress: () => this.props.navigation.navigate('login')},
-                    ],
-                    {cancelable: false},
-                  );
-            }
         })
-
-        // this.props.navigation.navigate('Current')
         
     } catch (error) {
         console.log('Error in AsyncStorage ', error)
@@ -265,86 +235,4 @@ const styles = StyleSheet.create({
         left: '35%',
       }
     })
-
-
-
-
-
-
-
-
-    let currentUser = firebase.auth().currentUser
-
-    // if(currentUser)
-    // {
-    //      // console.log('refence ', db.collection('users').doc(currentUser.uid))
-        
-    //     let offeredRideUserEmail = currentUser._user.email
-    //     console.log('current user email ', offeredRideUserEmail)
-
-    //     let userRideDoc = this.userRef.doc(offeredRideUserEmail)
-
-        
-
-    //     userRideDoc.onSnapshot(function (doc) {
-    //         if(doc.exists)
-    //         {
-    //             console.log("onSnapshot data : ", doc.data())
-    //         } else
-    //         {
-    //             console.log("No such user exists");
-    //         }
-            
-
-    //     }
-    //     )
-
-        // userRideDoc.get().then(function(doc) {
-        //     if (doc.exists) {
-        //         console.log("Document data:", doc.data());
-                
-                
-        //     } else {
-        //         // doc.data() will be undefined in this case
-        //         console.log("No such document!");
-        //     }
-        // }).catch(function(error) {
-        //     console.log("Error getting document:", error);
-        // });
-
-    //     this.offeredRideUserDoc = this.offeredRideRef.doc(offeredRideUserEmail)
-    //     // if(!this.offeredRideUserDoc.exists)
-    //     // {
-    //     //     // this.offeredRideUserDoc.collection('ride_offerring_user').doc(offeredRideUser).set({
-    //     //     //     pickup_location: pickUp,
-    //     //     //     dropOff_location: dropOff,
-    //     //     //     offered_ride_date: offeredRideDate,
-    //     //     //     offered_ride_time: offeredRideTime,
-    //     //     //     offered_passengers_number: offeredPassengersNumber,
-    //     //     //     offered_price: offeredPrice,
-    //     //     //     offered_ride_info: offeredRideInfo
-    //     //     // }).then(() =>{
-    //     //     //     console.log("offered ride data added ot firestore")
-    //     //     // }).catch((error) => {
-    //     //     //     console.error("error adding offered ride data to firestore ", error);
-    //     //     // })
-
-    //     //     this.offeredRideUserDoc.set({
-    //     //         pickup_location: pickUp,
-    //     //         dropOff_location: dropOff,
-    //     //         offered_ride_date: offeredRideDate,
-    //     //         offered_ride_time: offeredRideTime,
-    //     //         offered_passengers_number: offeredPassengersNumber,
-    //     //         offered_price: offeredPrice,
-    //     //         offered_ride_info: offeredRideInfo
-    //     //     }).then(() =>{
-    //     //         console.log("offered ride data added ot firestore")
-    //     //     }).catch((error) => {
-    //     //         console.error("error adding offered ride data to firestore ", error);
-    //     //     })
-    //     // }
-    
-
-               
-            // }
     

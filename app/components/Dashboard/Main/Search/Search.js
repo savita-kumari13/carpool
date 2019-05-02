@@ -358,9 +358,6 @@ _handleDatePicked = (date) => {
 
 async searchLeavingFromAndGoingToLocation()
 {
-  console.log('picked date time : ', this.state.pickedDate)
-  console.log('leave......', this.state.leavingFrom)
-  console.log('going......', this.state.goingTo)
   await AsyncStorage.setItem('leave_from_location', JSON.stringify(this.state.leavingFrom))
   await AsyncStorage.setItem('going_to_location', JSON.stringify(this.state.goingTo))
   await AsyncStorage.setItem('leave_from_longitude', JSON.stringify(this.state.leavingFromLongitude))

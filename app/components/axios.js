@@ -1,6 +1,7 @@
 import config from '../config/constants'
 import axios from 'axios';
 import AsyncStorage from '@react-native-community/async-storage';
+import NavigationService from '../../NavigationService';
 
 var CPAxios=axios.create({
   baseURL: config.API_HOST,
@@ -28,6 +29,7 @@ CPAxios.interceptors.response.use(function (response) {
   console.log(error, error.response.status);
   if(error.response.status === 401){
     return AsyncStorage.removeItem('id_token').then(_=>{
+      NavigationService.navigate('Login', {})
       return Promise.reject(error);
     })
   }

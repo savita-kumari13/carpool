@@ -6,15 +6,7 @@ import {
       createAppContainer
 } from  'react-navigation';
 
-import {
-  View,
-  StyleSheet,
-  Text,
-  ActivityIndicator,
-  PermissionsAndroid,
-  Linking,
-  
-} from 'react-native';
+import NavigationService from './NavigationService';
 
 import Dashboard from './app/components/Dashboard';
 import Loading from './app/components/Loading';
@@ -23,93 +15,33 @@ import Login from './app/components/Login';
 import Main from './app/components/Dashboard/Main';
 import PhoneAuth from './app/components/PhoneAuth';
 
-import {Geolocation, } from 'react-native-geolocation-service';
-import AsyncStorage from '@react-native-community/async-storage'
+import axios from './app/components/axios';
+import UserAndRideInfo from './app/components/Dashboard/Main/Search/UserAndRideInfo';
 
 
-class App extends Component {
-
-  constructor(props)
-  {
-    super(props);
-
-  }
-
-    componentDidMount = () => {
-      requestLocationPermission = async () => {
-        try {
-            const granted = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,{
-                    title: 'Location Access Required',
-                    message: 'PoolCar needs to Access your location',
-                    buttonNeutral: 'Ask Me Later',
-                    buttonNegative: 'Cancel',
-                    buttonPositive: 'OK',
-                })
-            if (granted === PermissionsAndroid.RESULTS.GRANTED)
-            {
-              navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    console.log(position);
-                },
-                (error) => {
-                    console.log('error getting current location', error.message);
-                },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
-              console.log('You can use the location');
-              
-              await AsyncStorage.getItem('id_token')
-              .then((token) => {
-                if(token != null && token != undefined && token != 'null'){
-                  console.log('type of token : ', typeof token)
-                  console.log('navigating to main container....')
-                  this.props.navigation.navigate('mainContainer')
-                }
-                else{
-                  this.props.navigation.navigate('login') 
-                }  
-              })
-              .catch(err => console.log('error getting token in loading page : ', err))
-            } else {
-                alert("Permission Denied");
-            }
-        } catch (err) {
-            console.warn(err)
-        }
-    }
-    requestLocationPermission();
-  }
-
-
-
+export default class App extends Component {   
   render() 
   {
     return (
-        <View style={styles.container}>
-            <Text>Loading</Text>
-            <ActivityIndicator size="large" />
-        </View>
+      <AppContainer
+        ref={navigatorRef => {
+          NavigationService.setTopLevelNavigator(navigatorRef);
+        }}
+      />
     )
   }
 }
 
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }
-  })
-
-
 const AppStackContainer = createStackNavigator(
   {
-    home: App,
-    signup: SignUp,
-    login: Login,
-    dashboard: Dashboard,
-    mainContainer: MainContainer,
-    phoneAuth: PhoneAuth,
+    home: Loading,
+    SignUp: SignUp,
+    Login: Login,
+    axios: axios,
+    Dashboard: Dashboard,
+    MainContainer: MainContainer,
+    PhoneAuth: PhoneAuth,
+    //UserAndRideInfo: UserAndRideInfo
   },
 
   {
@@ -121,4 +53,5 @@ const AppStackContainer = createStackNavigator(
 
 )
 
-export default AppContainer = createAppContainer(AppStackContainer)
+const AppContainer = createAppContainer(AppStackContainer)
+

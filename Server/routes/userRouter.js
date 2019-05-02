@@ -6,8 +6,15 @@ const passport = require('passport');
 const userRouter = express.Router();
 const validateRegisterInput = require('../validation/register');
 const validateLoginInput = require('../validation/login');
-
+const config = require('../config')
 const User = require('../models/User');
+
+const preferences = {
+  smoking: config.smoking.DONT_KNOW,
+  pets: config.pets.DONT_KNOW,
+  chattiness: config.chattiness.DONT_KNOW,
+  music: config.music.DONT_KNOW
+}
 
 userRouter.route('/register').post((req, res) => {
   const validateRegister = validateRegisterInput(req.body);
@@ -28,7 +35,8 @@ userRouter.route('/register').post((req, res) => {
       email: req.body.email,
       password: req.body.password,
       phone_number: req.body.phone_number,
-      avatar
+      avatar,
+      preferences
   });
 
   User.findOne({
@@ -45,14 +53,16 @@ userRouter.route('/register').post((req, res) => {
     return newUser.save();
   }).then(user=>{
     console.log(user);
+    console.log('user preference  : ', user_preferences)
     const payload = {
       id: user.id,
       name: user.name,
       phone_number: user.phone_number,
-      avatar: user.avatar
+      avatar: user.avatar,
+      user_preferences: preferences
     }
-    return jwt.sign(payload, 'secret', {
-      expiresIn: '60'
+    return jwt.sign(payload, config.secretKey, {
+      expiresIn: '1 day'
       })
   }).then(token => {
     return res.json({status: true, response: {token: token}, messages: ["You have been registered successfully"]});
@@ -87,6 +97,7 @@ userRouter.route('/login').post((req, res) => {
     payload.name = user.name;
     payload.phone_number = user.phone_number
     payload.avatar = user.avatar
+    payload.user_preferences = user.preferences
 
     return bcrypt.compare(password, user.password)
   }).then(isMatch => {
@@ -94,11 +105,10 @@ userRouter.route('/login').post((req, res) => {
         errors.password = 'Incorrect password';
         throw new Error("Incorrect password");
       }
-      return jwt.sign(payload, 'secret', {
-        expiresIn: '60'
+      return jwt.sign(payload, config.secretKey, {
+        expiresIn: '1 day'
     })
   }).then(token => {
-    console.log('token : ', token)
     return res.json({status: true, response: {token: token}, messages: ["You have been registered successfully"]});
   }).catch(err => {
     return res.json({status: true, response: {}, messages: [err.message]});
@@ -117,7 +127,8 @@ userRouter.route('/facebook/register').post((req, res) => {
     name: req.body.name,
     email: req.body.email,
     phone_number: req.body.phone_number,
-    avatar
+    avatar,
+    preferences
 });
 
   User.findOne({
@@ -132,9 +143,10 @@ userRouter.route('/facebook/register').post((req, res) => {
         id: user.id,
         name: user.name,
         phone_number: user.phone_number,
-        avatar: user.avatar
+        avatar: user.avatar,
+        user_preferences: preferences
       }
-      return jwt.sign(payload, 'secret', {
+      return jwt.sign(payload, config.secretKey, {
         expiresIn: '1 day'
         })
     }).then(token => {
@@ -159,9 +171,11 @@ userRouter.route('/facebook/login').post((req, res) => {
     payload.name = user.name;
     payload.phone_number = user.phone_number
     payload.avatar = user.avatar
+    payload.user_preferences = user.preferences
 
-    return jwt.sign(payload, 'secret', {
-      expiresIn: '1 day'})
+    return jwt.sign(payload, config.secretKey, {
+      expiresIn: '1 day'
+    })
   }).then(token => {
     console.log('token : ', token)
     return res.json({status: true, response: {token: token}, messages: ["You have been registered successfully"]});
@@ -171,14 +185,10 @@ userRouter.route('/facebook/login').post((req, res) => {
 })
 
 
-userRouter.get('/me', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log("Success! You can not see this without a token")
-  return res.json("Success! You can not see this without a token",{
-      id: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-      phone_number: req.user.phone_number,   
-  });
+userRouter.route('/auth').post(passport.authenticate('jwt', { session: false }), (req, res) => {
+  console.log("Success! You can not see this without a token auth")
+  // console.log('res : ', res)
+  return res.json({status: true, response: {}, messages: []})
 });
 
 
