@@ -13,6 +13,7 @@ import {
     Text,
     TextInput,
     StyleSheet,
+    ToastAndroid,
     Alert,
     //Button,
     Image,
@@ -65,6 +66,7 @@ export default class SignUp extends Component {
       isConfirmPasswordFocused: false,
       isNameFocused: false,
       isPhoneFocused: false,
+      isSigningUp: false
     };
   }
 
@@ -110,54 +112,64 @@ export default class SignUp extends Component {
         phone_number: this.state.phoneNumber
 
       }
+      this.setState({
+        isSigningUp: true
+      })
     await axios.post(`/users/register`, user)
     .then(res => {
       let resData=res.data;
         if(!resData.status)
         {
-          if(resData.response.errors.hasOwnProperty('name')){
-            this.setState({
-              errorNameShow: true,
-              errorNameBorderFocused: true,
-            })
+          if(resData.response.hasOwnProperty('errors'))
+          {
+            if(resData.response.errors.hasOwnProperty('name')){
+              this.setState({
+                errorNameShow: true,
+                errorNameBorderFocused: true,
+              })
+            }
+            if(resData.response.errors.hasOwnProperty('email')){
+              this.setState({
+                errorEmailShow: true,
+                isEmailFocused: false,
+                errorEmailBorderFocused: true,
+              })
+            }
+            if(resData.response.errors.hasOwnProperty('password')){
+              this.setState({
+                errorPasswordShow: true,
+                errorPasswordBorderFocused: true,
+              })
+            }
+            if(resData.response.errors.hasOwnProperty('confirm_password')){
+              this.setState({
+                errorConfirmPasswordShow: true,
+                errorConfirmPasswordBorderFocused: true,
+              })
+            }
+  
+            if(resData.response.errors.hasOwnProperty('phone_number')){
+              this.setState({
+                errorPhoneNumberShow: true,
+                errorPhoneNumberBorderFocused: true,
+              })
+            }
+  
+  
+          this.setState({
+            errors: {
+              name: resData.response.errors.name,
+              email: resData.response.errors.email,
+              password: resData.response.errors.password,
+              confirmPassword: resData.response.errors.confirm_password,
+              phone_number: resData.response.errors.phone_number
+            }
+          })
+          throw new Error(Object.values(resData.response.errors).join(', '));
           }
-          if(resData.response.errors.hasOwnProperty('email')){
-            this.setState({
-              errorEmailShow: true,
-              isEmailFocused: false,
-              errorEmailBorderFocused: true,
-            })
-          }
-          if(resData.response.errors.hasOwnProperty('password')){
-            this.setState({
-              errorPasswordShow: true,
-              errorPasswordBorderFocused: true,
-            })
-          }
-          if(resData.response.errors.hasOwnProperty('confirm_password')){
-            this.setState({
-              errorConfirmPasswordShow: true,
-              errorConfirmPasswordBorderFocused: true,
-            })
-          }
-
-          if(resData.response.errors.hasOwnProperty('phone_number')){
-            this.setState({
-              errorPhoneNumberShow: true,
-              errorPhoneNumberBorderFocused: true,
-            })
-          }
-
-        this.setState({
-          errors: {
-            name: resData.response.errors.name,
-            email: resData.response.errors.email,
-            password: resData.response.errors.password,
-            confirmPassword: resData.response.errors.confirm_password,
-            phone_number: resData.response.errors.phone_number
-          }
-        })
-        throw new Error(Object.values(resData.response.errors).join(', '));
+          else{
+            ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
+          }       
       }
       else
       {
@@ -166,14 +178,19 @@ export default class SignUp extends Component {
           email: '',
           password: '',
           confirmPassword: '',
-          phoneNumber: ''
+          phoneNumber: '',
         });
         NavigationService.navigate('MainContainer', {})
       }
-      
+      this.setState({
+        isSigningUp: false
+      })
     })
     .catch(err => {
       console.log('error sending post request',err.message)
+      this.setState({
+        isSigningUp: false
+      })
     })
   }
 
@@ -409,8 +426,9 @@ export default class SignUp extends Component {
       <View style = {{alignItems: 'center',justifyContent: 'center', marginTop: 30 }}>
         <Button 
           style={[styles.registerButton]}
-          onPress={this.handleSignUp}>
-            <Text style = {{color: '#fff', fontWeight: 'bold' }} >SIGN UP</Text>
+          onPress={this.handleSignUp}
+          disabled = {this.state.isSigningUp}>
+          { this.state.isSigningUp ? <Text style = {{color: '#fff', fontWeight: 'bold' }}>SIGNING UP...</Text> : <Text style = {{color: '#fff', fontWeight: 'bold' }}>SIGN UP</Text>}
         </Button>
       </View>    
 
@@ -423,23 +441,28 @@ export default class SignUp extends Component {
         </Button>
       </View>
 
-      <Text style = {{fontWeight : 'bold' ,color: '#000', marginHorizontal: 170}}>OR</Text>
-      {/* <View style = {{flex : 1, flexDirection: "row", justifyContent: 'space-between'}}>
+      {/* <Text style = {{fontWeight : 'bold' ,color: '#000', marginHorizontal: 170}}>OR</Text> */}
+      <View style = {{flexDirection: "row", justifyContent: 'center',}}>
         <View style={{
-              // marginTop: 10,
+              marginTop: 7,
               borderBottomColor: '#cccccc',
-              width: 10,
+              height: 1,
+              width: 120,
+              marginLeft: 10,
               borderBottomWidth: 1,
-              backgroundColor: 'grey'
+              backgroundColor: '#cccccc'
           }}/>
-        <Text style = {{fontWeight : 'bold' ,color: '#000', }}>OR</Text>
+        <Text style = {{fontWeight : 'bold' ,color: '#000', marginLeft: 10,}}>OR</Text>
         <View style={{
-            // marginTop: 10,
+            marginTop: 7,
             borderBottomColor: '#cccccc',
+            height: 1,
+            width: 120,
+            marginLeft: 10,
             borderBottomWidth: 1,
-            backgroundColor: 'grey'
+            backgroundColor: '#cccccc'
         }}/>
-      </View> */}
+      </View>
       <View style = {{alignItems: 'center',justifyContent: 'center', marginTop: 10 }}>
         <SocialIcon
           title='Sign In With Facebook'
@@ -522,7 +545,7 @@ registerButton:{
   height: 40,
   backgroundColor: "#7963b6",
   justifyContent: 'center',
-  alignItems: 'center'
+  // alignItems: 'center'
 
 },
 

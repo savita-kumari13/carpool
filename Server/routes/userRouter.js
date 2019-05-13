@@ -43,7 +43,7 @@ userRouter.route('/register').post((req, res) => {
   }
   const newUser = new User({
       name: req.body.name,
-      email: req.body.email,
+      email: (req.body.email.toLowerCase()),
       password: req.body.password,
       phone_number: req.body.phone_number,
       avatar: config.profile,
@@ -53,7 +53,7 @@ userRouter.route('/register').post((req, res) => {
   });
 
   User.findOne({
-    email : req.body.email
+    email : req.body.email.toLowerCase()
   }).then(user => {
       if(user) {
         throw new Error('Email already exists');
@@ -81,11 +81,13 @@ userRouter.route('/register').post((req, res) => {
       messages: ["You have been registered successfully"]
     });
   }).catch(err=>{
-    return res.json({
-      status: true,
-      response: {},
-      messages: [err.message]
-    });
+    setTimeout(function(){
+      return res.json({
+        status: false,
+        response: {},
+        messages: [err.message]
+      });
+    }, 5000)    
   });
 });
 
@@ -133,7 +135,7 @@ userRouter.route('/login').post((req, res) => {
     });
   }).catch(err => {
     return res.json({
-      status: true,
+      status: false,
       response: {},
       messages: [err.message]
     });

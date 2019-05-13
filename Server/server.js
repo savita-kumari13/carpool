@@ -77,80 +77,15 @@ app.post('/forgot_password', (req, res) => {
           pass: config.gmail.password
         }
       });
+      var htmlBody=fs.readFileSync('./emailBody.html',{encoding: 'utf8'});
+      htmlBody = htmlBody.replace('{{app_host}}', config.app_host);
+      console.log(htmlBody);
       var mailOptions = {
         from: config.gmail.email,
         to: req.body.email,
         subject: 'Reset password instructions',
         text: 'That was easy!',
-        // html: '<h1>Welcome</h1><p>Click url </p>' + config.app_host + '/reset_password' + '?token=' + user.token
-          html: fs.readFileSync('./emailBody.html',(err, template) => {
-            console.log('template ', template)
-            template = template.replace('{{app_host}}', config.app_host)
-          })
-
-      //   html: '<div class="m_-3826978243865701881webkit" style="max-width:600px;Margin:0 auto">' +
-      //   '<table class="m_-3826978243865701881outer" align="center" cellpadding="0" cellspacing="0" border="0" style="border-spacing:0;font-family:gt-eesti,ArialMT,Helvetica,Arial,sans-serif;Margin:0 auto;padding:24px;width:100%;max-width:500px">'+
-      //     "<tbody>"+
-      //     '<tr>'+
-      //       '<td>'+
-      //         '<table style="margin-bottom:10px;width:100%" width="100%">'+
-      //           '<tbody><tr>'+
-      //             '<td>'+
-      //               "<img src='http://192.168.43.100:5570/carpool.png' style='display:block' alt='Carpool' width='125' height='125' class='CToWUd'/>"+
-      //             '</td>'+
-      //           '</tr>'+
-      //         '</tbody></table>'+
-      //       '</td>'+
-      //     '</tr>'+
-      //     '<tr>'+
-      //       '<td style="text-align:justify;word-break:break-word">'+
-      //         '<table style="margin-bottom:20px;width:100%" width="100%">'+
-      //           '<tbody>'+
-      //             '<tr>'+
-      //               '<td>'+
-      //                 '<table style="width:110%;margin-bottom:20px" width="100%" cellpadding="0" cellspacing="0">'+
-      //                   '<tbody><tr>'+
-      //                     '<td>'+
-      //                       '<h1 style="font-size:26px;line-height:30px;color:#054752;word-break:normal">You can now change your password. Just click below.</h1>'+
-      //                     '</td>'+
-      //                   '</tr>'+
-      //                 '</tbody></table>'+
-      //               '</td>'+
-      //             '</tr>'+
-      
-      //             '<tr>'+
-      //               '<td>'+
-      //                 '<center>'+
-      //                   '<table style="background-color:#fff;margin-bottom:20px;table-layout:fixed" align="center" width="" cellspacing="0" cellpadding="0">'+
-      //                     '<tbody>'+
-      //                       '<tr>'+
-      //                         '<td style="background-color:#7963b6;color:#fff;text-align:center;border-radius:48px;padding:16px 24px;border-color:transparent;font-weight:bold;font-size:16px;line-height:1">'+
-      //                           "<a href=" + config.app_host  + '/reset_password' + '?token=' + user.token + 'style="color:#fff;text-decoration:inherit!important" target="_blank" '+">Change my password</a>"+
-      //                        '</td>'+
-      //                       '</tr>'+
-      //                     '</tbody>'+
-      //                   '</table>'+
-      //                 '</center>'+
-      //               '</td>'+
-      //             '</tr>'+
-      //           '</tbody>'+
-      //         '</table>'+
-      //       '</td>'+
-      //     '</tr>'+
-      //     '<tr>'+
-      //       '<td>'+
-      //         '</td></tr><tr>'+
-      //         '<td>'+
-      //             '<table width="100%" style="margin-bottom:20px;width:100%">'+
-      //                 '<tbody><tr>'+
-      //                     '<td width="100%">'+
-      //                         '<div style="width:100%;height:1px;background-color:#ddd" color="#DDD" width="100%"></div>'+
-      //                     '</td></tr>'+
-      //             '</tbody></table>'+
-      //         '</td>'+
-      //     '</tr>'+
-      //   '</tbody></table>'+
-      // '</div>'
+        html: htmlBody
       }; 
 
       console.log(config.app_host + '/users/reset_password' + '?token=' + user.token)

@@ -49,6 +49,7 @@ export default class Login extends Component {
 
       isEmailFocused: false,
       isPasswordFocused: false,
+      isLoging: false
     };
 
     this.handleBackPress = this.handleBackPress.bind(this);
@@ -80,29 +81,35 @@ export default class Login extends Component {
     console.log('res : ', res)
     let resData=res.data;
 
-    if(!resData.status)
+    if(resData.response.hasOwnProperty('errors'))
     {
-      if(resData.response.errors.hasOwnProperty('email')){
-        this.setState({
-          errorEmailShow: true,
-          isEmailFocused: false,
-          errorEmailBorderFocused: true,
-        })
-      }
-      if(resData.response.errors.hasOwnProperty('password')){
-        this.setState({
-          errorPasswordShow: true,
-          errorPasswordBorderFocused: true,
-        })
-      }
-
-      this.setState({
-        errors: {
-          email: response.errors.email,
-          password: response.errors.password,
+      if(!resData.status)
+      {
+        if(resData.response.errors.hasOwnProperty('email')){
+          this.setState({
+            errorEmailShow: true,
+            isEmailFocused: false,
+            errorEmailBorderFocused: true,
+          })
         }
-      })
-      throw new Error(Object.values(response.errors).join(', '));
+        if(resData.response.errors.hasOwnProperty('password')){
+          this.setState({
+            errorPasswordShow: true,
+            errorPasswordBorderFocused: true,
+          })
+        }
+  
+        this.setState({
+          errors: {
+            email: response.errors.email,
+            password: response.errors.password,
+          }
+        })
+        throw new Error(Object.values(response.errors).join(', '));
+      }
+      else{
+        ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
+      } 
     }
     else
     {
