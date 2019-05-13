@@ -4,17 +4,14 @@ import {
     View,
     StyleSheet,
     TextInput,
-    AsyncStorage,
     TouchableOpacity,
     ScrollView,
     Alert
 } from 'react-native'
 
-
 import { Button,} from 'react-native-paper';
-
+import AsyncStorage from '@react-native-community/async-storage'
 import Icon from 'react-native-vector-icons/EvilIcons'
-import firebase  from 'react-native-firebase';
 import axios from '../../../axios'
 
 export default class PriceAndAboutRide extends Component {
@@ -65,32 +62,22 @@ async savePriceAndRideInfo() {
 
         await AsyncStorage.setItem('offered_ride_info', this.state.aboutText)
 
-        let pickUpLocationName = await AsyncStorage.getItem('pickup_location_name')
-        let dropOffLocationName = await AsyncStorage.getItem('dropoff_location_name')
+        let pickUpLocationName = (await AsyncStorage.getItem('pickup_location_name'))
+        let dropOffLocationName = (await AsyncStorage.getItem('dropoff_location_name'))
 
-        let pickUpLocationLatitudeToParse = await AsyncStorage.getItem('pickup_location_latitude')
-        let pickUpLocationLongitudeToParse = await AsyncStorage.getItem('pickup_location_longitude')
+        let pickUpLocationLatitude = JSON.parse(await AsyncStorage.getItem('pickup_location_latitude'))
+        let pickUpLocationLongitude = JSON.parse(await AsyncStorage.getItem('pickup_location_longitude'))
 
-        let dropOffLocationLatitudeToParse = await AsyncStorage.getItem('dropoff_location_latitude')
-        let dropOffLocationLongitudeToParse = await AsyncStorage.getItem('dropoff_location_longitude')
+        let dropOffLocationLatitude = JSON.parse(await AsyncStorage.getItem('dropoff_location_latitude'))
+        let dropOffLocationLongitude = JSON.parse(await AsyncStorage.getItem('dropoff_location_longitude'))
 
-        let offeredRideDateTimeToParse = await AsyncStorage.getItem('offered_ride_date_time')
-        let offeredPassengersNumberToParse = await AsyncStorage.getItem('passengers_number')
-        let offeredPriceToParse = await AsyncStorage.getItem('offered_price')
-        let offeredRideInfo = await AsyncStorage.getItem('offered_ride_info')
-
-        let pickUpLocationLatitude = JSON.parse(pickUpLocationLatitudeToParse)
-        let pickUpLocationLongitude = JSON.parse(pickUpLocationLongitudeToParse)
-
-        let dropOffLocationLatitude = JSON.parse(dropOffLocationLatitudeToParse)
-        let dropOffLocationLongitude = JSON.parse(dropOffLocationLongitudeToParse)
-
-        let offeredRideDateTimeString = JSON.parse(offeredRideDateTimeToParse)
+        let offeredRideDateTimeString = JSON.parse(await AsyncStorage.getItem('offered_ride_date_time'))
         let offeredRideDateTimeObject = new Date(offeredRideDateTimeString)
-
-        let offeredPassengersNumber = JSON.parse(offeredPassengersNumberToParse)
-        let offeredPrice = JSON.parse(offeredPriceToParse)
-        
+        let offeredPassengersNumber = JSON.parse(await AsyncStorage.getItem('passengers_number'))
+        let offeredPrice = JSON.parse(await AsyncStorage.getItem('offered_price'))
+        let offeredRideInfo = (await AsyncStorage.getItem('offered_ride_info'))
+        let offeredRideCar = JSON.parse(await AsyncStorage.getItem('car'))
+ 
         const offeredRide = {
             pick_up_name: pickUpLocationName,
             pick_up_coordinates: [pickUpLocationLongitude, pickUpLocationLatitude],
@@ -100,15 +87,14 @@ async savePriceAndRideInfo() {
             offered_ride_price: offeredPrice,
             offered_ride_info: offeredRideInfo,
             offered_ride_date_time: offeredRideDateTimeObject,
+            offered_ride_car: offeredRideCar
         }
 
-        await axios.post(`/rides/offer_ride`,
-            offeredRide
-        )
+        await axios.post(`/rides/offer_ride`,offeredRide)
         .then(res => {
-            console.log('res received : ', res)
             this.props.navigation.navigate('Current')
-        }).catch(error => {
+        })
+        .catch(error => {
             console.log('error sending offered ride request ', error)
         })
         

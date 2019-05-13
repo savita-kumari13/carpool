@@ -464,8 +464,7 @@ render() {
               size = {20} color = "#7963b6"
               style = {{ position: 'absolute',
                           right: 30,
-                          top: 20}}
-                                        />        
+                          top: 20}}/>        
           </TouchableOpacity>
         {/* } */}
 

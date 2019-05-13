@@ -1,9 +1,7 @@
 import React, { Component } from 'react'
 import firebase from 'react-native-firebase';
 import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
-import { GoogleSignin, GoogleSigninButton, statusCodes } from 'react-native-google-signin';
 import { Button } from 'react-native-paper'
-// import axios from 'axios'
 import AsyncStorage from '@react-native-community/async-storage'
 import { SocialIcon } from 'react-native-elements'
 import axios from '../axios'
@@ -320,7 +318,7 @@ handleEmailFocus = () => this.setState({isEmailFocused: true})
           <Button 
             style={[ styles.registerButton]}
             mode = 'text'
-            onPress ={this.forgotPassword}>
+            onPress ={() => this.props.navigation.navigate('ForgotPassword')}>
               <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>FORGOT YOUR PASSWORD?</Text>
           </Button>
 
@@ -398,7 +396,13 @@ registerButton: {
 inputs:{
     height:45,
     marginLeft:16,
-    flex:1,
+    height:45,
+    marginLeft:16,
+    padding: 0,
+    flex: 1,
+    fontSize: 16,
+    color: '#054752',
+    fontWeight: 'bold'
 },
 buttonContainer:{
   // marginTop:10,
@@ -418,21 +422,4 @@ fbButton:{
 },
 
 })
-
-
-
-
- {/* <Button title="Login" onPress={this.handleLogin}
-        ViewComponent={require('react-native-linear-gradient').default}
-        //ViewComponent={LinearGradient} // Don't forget this!
-        linearGradientProps={{
-          colors: ['#FF9800', '#F44336'],
-          start: [1, 0],
-          end: [0.2, 0],
-        }} /> */}
-
-
-
-
-
         

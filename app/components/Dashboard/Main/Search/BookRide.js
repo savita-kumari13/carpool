@@ -164,17 +164,11 @@ async bookingRide(){
   
   await axios.post('/rides/book', bookRide)
   .then(res => {
-    console.log('book ride res : ', res)
-    rideData = res.data.response.rides
-    // setBookedRide(res.data.response.rides)
+    this.props.navigation.navigate('Current');
   })
   .catch(err => {
     console.log('error sending booking ride request', err)
   })
-  console.log('rideData ', rideData)
-  await AsyncStorage.setItem('booked_ride_data', JSON.stringify(rideData))
-  await AsyncStorage.setItem('current_ride', JSON.stringify(true))
-  this.props.navigation.navigate('Current')
 }
 
 

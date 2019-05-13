@@ -1,6 +1,14 @@
 module.exports = {
     DB: 'mongodb://localhost:27017/PoolCarDb',
+    // app_host: 'http://192.168.137.1:5570',
+    app_host: 'http://192.168.43.100:5570',
     secretKey : 'yfbrbW%^%W^47665fhgfTZHDZRSDHF',
+    uploadFolder: './upload/profile_photo',
+    profile: 'user_default_profile_photo.jpg',
+    gmail: {
+        email: 'saa1310vi@gmail.com',
+        password: 'myaccount@',
+    },
     smoking: {
         DONT_KNOW: "Don't know",
         NO_SMOKING: "No smoking in the car please",
@@ -21,4 +29,10 @@ module.exports = {
         SILENCE: "Silence is golden",
         ALL_ABOUT_PLAYLIST: "It's all about the playlist"
     },
+    status: {
+        PENDING: "Pending",
+        ON_GOING: "On going",
+        COMPLETED: "Completed",
+        CANCELLED: "Cancelled"
+    }
 }

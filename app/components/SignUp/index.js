@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-community/async-storage'
 import axios from '../axios'
 import { SocialIcon } from 'react-native-elements'
 import NavigationService from '../../../NavigationService'
+import CountryPicker from 'react-native-country-picker-modal';
 
 import {
     View,
@@ -33,7 +34,12 @@ export default class SignUp extends Component {
       email: '', 
       password: '',
       confirmPassword: '',
-      phoneNumber: '+91',
+      phoneNumber: '',
+      enterCode: false,
+      country: {
+        cca2: 'IN',
+        callingCode: '91'
+      },
 
       errors: {
         name: null,
@@ -46,11 +52,13 @@ export default class SignUp extends Component {
       errorEmailShow: false,
       errorPasswordShow: false,
       errorConfirmPasswordShow: false,
+      errorPhoneNumberShow: false,
 
       errorNameBorderFocused: false,
       errorEmailBorderFocused: false,
       errorPasswordBorderFocused: false,
       errorConfirmPasswordBorderFocused: false,
+      errorPhoneNumberBorderFocused: false,
 
       isEmailFocused: false,
       isPasswordFocused: false,
@@ -104,7 +112,6 @@ export default class SignUp extends Component {
       }
     await axios.post(`/users/register`, user)
     .then(res => {
-      console.log('res ', res)
       let resData=res.data;
         if(!resData.status)
         {
@@ -134,12 +141,20 @@ export default class SignUp extends Component {
             })
           }
 
+          if(resData.response.errors.hasOwnProperty('phone_number')){
+            this.setState({
+              errorPhoneNumberShow: true,
+              errorPhoneNumberBorderFocused: true,
+            })
+          }
+
         this.setState({
           errors: {
             name: resData.response.errors.name,
             email: resData.response.errors.email,
             password: resData.response.errors.password,
             confirmPassword: resData.response.errors.confirm_password,
+            phone_number: resData.response.errors.phone_number
           }
         })
         throw new Error(Object.values(resData.response.errors).join(', '));
@@ -245,6 +260,38 @@ export default class SignUp extends Component {
     })
   }
 
+  _changeCountry = (country) => {
+    this.setState({ country });
+  }
+
+  _renderCountryPicker = () => {
+    if (this.state.enterCode)
+      return (
+        <View/>
+      );
+    return (
+      <CountryPicker
+        ref={'countryPicker'}
+        closeable
+        onChange={this._changeCountry}
+        cca2={this.state.country.cca2}
+        translation='eng'/>
+    );
+  }
+
+  _renderCallingCode = () => {
+    if (this.state.enterCode)
+      return (
+        <View />
+      );
+    return (
+      <View style={styles.callingCodeView}>
+        <Text style={styles.callingCodeText}>+{this.state.country.callingCode}</Text>
+      </View>
+    );
+
+  }
+
 
     handleNameFocus = () => this.setState({isNameFocused: true, errorNameBorderFocused: false})
     handleNameBlur = () => this.setState({isNameFocused: false, errorNameBorderFocused: false})
@@ -336,43 +383,73 @@ export default class SignUp extends Component {
       </Text>}
 
       <View style={styles.inputContainer}>
-        <TextInput
-          onFocus={this.handlePhoneFocus}
-          onBlur={this.handlePhoneBlur}
-          style={[styles.inputs, 
-            {borderBottomColor: this.state.isPhoneFocused? '#7963b6': '#000',
-            borderBottomWidth: this.state.isPhoneFocused? 2: 1,}]}
-          onChangeText={phoneNumber => this.setState({ phoneNumber })}
-          placeholder={'Phone number '}
-          value={this.state.phoneNumber}
-          keyboardType = "phone-pad"/>
+        <View style={{ flexDirection: 'row', marginTop: 20, marginLeft: 18 }}>
+          {this._renderCountryPicker()}
+          {this._renderCallingCode()}
+          <TextInput
+            onFocus={this.handlePhoneFocus}
+            onBlur={this.handlePhoneBlur}
+            value={this.state.phoneNumber}
+            keyboardType = "phone-pad"
+            style={[styles.textInput, 
+              {borderBottomColor: (this.state.isPhoneFocused? '#7963b6': this.state.errorPhoneNumberBorderFocused? 'red': '#000'),
+              borderBottomWidth: this.state.isPhoneFocused? 2: 1,}]}
+            onChangeText={phoneNumber => this.setState({ phoneNumber: phoneNumber, errorPhoneNumberShow: false, errorPhoneNumberBorderFocused: false })}
+            placeholder={'Phone number '}
+            selectionColor={'#7963b6'}
+            maxLength={this.state.enterCode ? 6 : 20} />
+        </View>
       </View>
 
-      <View style = {styles.buttonContainer}>
+      {this.state.errorPhoneNumberShow &&
+      <Text style={{ color: 'red', marginHorizontal: 20  }}>
+        {this.state.errors.phone_number}
+      </Text>}
+
+      <View style = {{alignItems: 'center',justifyContent: 'center', marginTop: 30 }}>
         <Button 
           style={[styles.registerButton]}
           onPress={this.handleSignUp}>
             <Text style = {{color: '#fff', fontWeight: 'bold' }} >SIGN UP</Text>
-        </Button>    
+        </Button>
+      </View>    
 
+      <View style = {{alignItems: 'center',justifyContent: 'center', marginTop: 0 }}>
         <Button 
           style={[styles.loginButton]}
           mode = 'text'
-          onPress = {() => this.props.navigation.navigate('login') }>
+          onPress = {() => this.props.navigation.navigate('Login') }>
             <Text style = {{color: '#7963b6', fontWeight: 'bold' }}> ALREADY A MEMBER? LOG IN</Text>
         </Button>
+      </View>
 
       <Text style = {{fontWeight : 'bold' ,color: '#000', marginHorizontal: 170}}>OR</Text>
-
+      {/* <View style = {{flex : 1, flexDirection: "row", justifyContent: 'space-between'}}>
+        <View style={{
+              // marginTop: 10,
+              borderBottomColor: '#cccccc',
+              width: 10,
+              borderBottomWidth: 1,
+              backgroundColor: 'grey'
+          }}/>
+        <Text style = {{fontWeight : 'bold' ,color: '#000', }}>OR</Text>
+        <View style={{
+            // marginTop: 10,
+            borderBottomColor: '#cccccc',
+            borderBottomWidth: 1,
+            backgroundColor: 'grey'
+        }}/>
+      </View> */}
+      <View style = {{alignItems: 'center',justifyContent: 'center', marginTop: 10 }}>
         <SocialIcon
-            title='Sign In With Facebook'
-            button
-            type='facebook'
-            fontWeight = 'bold'
-            onPress = {this.handleFacebookLogin}
-            style = {styles.fbButton}
+          title='Sign In With Facebook'
+          button
+          type='facebook'
+          fontWeight = 'bold'
+          onPress = {this.handleFacebookLogin}
+          style = {styles.fbButton}
           /> 
-        </View>
+      </View>
     </ScrollView>
     )
   }
@@ -383,9 +460,31 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     // justifyContent: 'center',
     // alignItems: 'center',
-    paddingTop: 150,
+    paddingTop: 90,
 
   },
+
+  callingCodeView: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+  callingCodeText: {
+    fontSize: 16,
+    color: '#054752',
+    fontWeight: 'bold',
+    paddingRight: 10
+  },
+
+  textInput: {
+    borderBottomWidth: 2,
+    padding: 0,
+    flex: 1,
+    fontSize: 16,
+    color: '#054752',
+    fontWeight: 'bold'
+  },
+
   inputContainer: {
     backgroundColor: 'rgba(0,0,0,0)',
     height:45,
@@ -404,8 +503,11 @@ loginRegister:{
 inputs:{
     height:45,
     marginLeft:16,
-    borderBottomWidth: 2,
-    flex:1,
+    padding: 0,
+    flex: 1,
+    fontSize: 16,
+    color: '#054752',
+    fontWeight: 'bold'
 },
 inputIcon:{
   width:20,
@@ -413,19 +515,14 @@ inputIcon:{
   justifyContent: 'center'
 },
 
-buttonContainer:{
-  flex: 1,
-  alignItems: 'center',
-  marginTop: 20,
-},
 
 registerButton:{
-
   borderRadius: 30,
-  width: 300,
+  width: 280,
   height: 40,
   backgroundColor: "#7963b6",
   justifyContent: 'center',
+  alignItems: 'center'
 
 },
 
@@ -437,7 +534,7 @@ registerText:{
 
 loginButton: {
 borderRadius: 30,
-width: 300,
+width: 280,
 height: 40,
 backgroundColor: "#fff",
 marginTop: 10,
@@ -446,7 +543,7 @@ justifyContent: 'center'
 
 fbButton:{
 height: 40,
-width: 270,
+width: 280,
 marginTop: 10,
 borderRadius: 30,
 justifyContent: 'center',

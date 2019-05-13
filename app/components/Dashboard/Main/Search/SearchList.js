@@ -11,44 +11,19 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import axios from '../../../axios'
-import StepIndicator from 'react-native-step-indicator';
 
 import ArrowIcon from 'react-native-vector-icons/Ionicons'
-import DotIcon from 'react-native-vector-icons/Entypo'
+import SearchIcon from 'react-native-vector-icons/Ionicons'
 import RupeeIcon from 'react-native-vector-icons/FontAwesome'
-import NavigationService from '../../../../../NavigationService';
-
-const customStyles = {
-  stepIndicatorSize: 8,
-  currentStepIndicatorSize: 8,
-  separatorStrokeWidth: 3,
-  currentStepStrokeWidth: 2,
-  stepStrokeWidth: 2,
-  stepStrokeCurrentColor: '#054752',
-  stepStrokeFinishedColor: '#054752',
-  stepStrokeUnFinishedColor: '#054752',
-  separatorFinishedColor: '#054752',
-  separatorUnFinishedColor: '#054752',
-  stepIndicatorFinishedColor: '#ffffff',
-  stepIndicatorUnFinishedColor: '#ffffff',
-  stepIndicatorCurrentColor: '#ffffff',
-  stepIndicatorLabelFontSize: 0,
-  currentStepIndicatorLabelFontSize: 0,
-  stepIndicatorLabelCurrentColor: '#054752',
-  stepIndicatorLabelFinishedColor: '#054752',
-  stepIndicatorLabelUnFinishedColor: '#054752',
-  labelColor: '#054752',
-  labelSize: 16,
-  currentStepLabelColor: '#054752',
-  labelAlign: 'center'
-}
-
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import config from '../../../../config/constants'
 
 export default class SearchList extends Component {
 
   constructor(props){
     super(props)
     this.state = {
+      uri: config.API_HOST + '/user_default_profile_photo.jpg',
       rideId: null,
       leaveLocation: '',
       goingLocation: '',
@@ -59,9 +34,9 @@ export default class SearchList extends Component {
       todayTommorow: false,
       passengerNo: 0,
       ridesListVisible: false,
+      noRides: false,
       rides: [],
       preferences: [],
-      currentPosition: 0,
 
       monthNames : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -122,20 +97,19 @@ export default class SearchList extends Component {
       await axios.post(`/rides/search_ride`, searchedRide,
       ).then(res => {
         const resData = res.data
+        console.log('searched rides ', res)        
         if(resData && resData.response && resData.response.rides && (resData.response.rides).length > 0){
           this.setState({
             rides: res.data.response.rides,
-            ridesListVisible: true
+            ridesListVisible: true,
           });
-          console.log("ridelistVisible ", this.state.ridesListVisible)
         }
         else{
           this.setState({
-            bookedRideVisible: false
+            bookedRideVisible: false,
+            noRides: true
           })
         }
-        console.log(res.data.response.rides)
-        
       }).catch(err => {
         console.log('error sending search request : ', err)
       })
@@ -155,7 +129,9 @@ export default class SearchList extends Component {
     await AsyncStorage.setItem('user_name', JSON.stringify(item.offered_user.name))
     await AsyncStorage.setItem('phone_number', JSON.stringify(item.offered_user.phone_number))
     await AsyncStorage.setItem('preferences', JSON.stringify(item.offered_user.preferences))
+    await AsyncStorage.setItem('avatar', JSON.stringify(item.offered_user.avatar))
     await AsyncStorage.setItem('booked_user', JSON.stringify(item.booked_user))
+    await AsyncStorage.setItem('bio', JSON.stringify(item.offered_user.bio))
     this.props.navigation.navigate('UserAndRideInfo')
   }
 
@@ -163,29 +139,54 @@ export default class SearchList extends Component {
     if(item.offered_ride_passengers_no != 0){
       return(
         <TouchableOpacity style = {styles.rideItemView} onPress = {() => {this.saveUserRideInfo(item)}}>
-            <View style = {{marginTop: 20, marginLeft: 5, justifyContent: 'space-between',}}>
-               <StepIndicator
-                  customStyles={customStyles}
-                  direction='vertical'
-                  stepCount={2}
-                  currentPosition={this.state.currentPosition}
-                  labels={[item.pick_up_name, item.drop_off_name]}
+          <View style = {{ flexDirection: 'column',}}>
+            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
+              <Ionicons.Button
+                name="md-pin"
+                backgroundColor='transparent'
+                underlayColor='transparent'
+                color={'#3d5c5c'}
+                size={16}
               />
+              <View style={{flexWrap: 'wrap', flex: 1}}>
+                <Text style={{color: '#054752', fontSize: 16, marginLeft: -5, flexWrap: 'wrap'}}>{item.pick_up_name}</Text>
+              </View>
+            </View>
+
+            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10,}}>
+              <Ionicons.Button
+                name="md-pin"
+                backgroundColor='transparent'
+                underlayColor='transparent'
+                color={'#3d5c5c'}
+                size={16}
+              />
+              <View style={{flexWrap: 'wrap', flex: 1}}>
+                <Text style={{color: '#054752', fontSize: 16, marginLeft: -5,}}>{item.drop_off_name}</Text>
+              </View>
+            </View>
           </View>
 
-          <View style = {{flexDirection: "row", marginTop: 20, justifyContent: 'space-between' }} >
+          <View style={{
+            marginTop: 10,
+            // marginHorizontal: -10,
+            borderBottomColor: '#cccccc',
+            borderBottomWidth: 0.5,
+        }}/>
+
+          <View style = {{flexDirection: "row", marginTop: 10, justifyContent: 'space-between' }} >
             <View style = {{flexDirection: "row", }}>
-              <Image style={styles.avatar} source={{uri: 'https://bootdey.com/img/Content/avatar/avatar6.png'}}/>
+              <Image style={styles.avatar} source={{uri: config.API_HOST + '/' + item.offered_user.avatar }}/>
               <Text style = {{
                 fontSize: 16,
                 marginTop: 10,
-                marginLeft: 5,
+                marginLeft: 10,
                 fontWeight: 'bold',
                 color: '#054752',
                 }}>{item.offered_user.name}</Text>
             </View>
 
-            <View style = {{flexDirection: "row", padding: 10 }}>
+            <View style = {{flexDirection: "row", paddingTop: 5, paddingRight: 10 }}>
               <RupeeIcon name = 'rupee' size = {14} color = '#054752' style = {{marginTop: 7}} />
               <Text style = {{
                 marginLeft: 2,
@@ -199,7 +200,6 @@ export default class SearchList extends Component {
         </TouchableOpacity>
     )
     }
-    
   }
 
    
@@ -236,11 +236,15 @@ export default class SearchList extends Component {
           keyExtractor={(ride) => { return ride._id; }}
         /> }
 
-        {!this.state.ridesListVisible &&
-        <View>
-          <Image
-                style={{width: 30, height: 30}}
-                source={require('../../../../../icons/person_searching.png')}/>
+        {this.state.noRides &&
+        <View style={{flex: 1, alignItems: 'center'}}>
+          <SearchIcon name = 'ios-search' size = {170} style = {{marginTop: 90,}} color = '#054752'/>
+          <Text style = {{ 
+            color: '#054752',
+            fontWeight: 'bold',
+            fontSize: 35,
+            marginTop: 30,
+            fontFamily: "sans-serif-medium",}}>No rides yet!</Text>
         </View>}
       </ScrollView>     
     )
@@ -257,7 +261,7 @@ const styles = StyleSheet.create({
   date: {
     color: '#527a7a',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: "sans-serif-medium",
   },
 

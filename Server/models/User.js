@@ -1,8 +1,22 @@
 const mongoose = require('mongoose');
 const schema = mongoose.Schema;
 
-const UserSchema = new schema({
+const preferencesSchema = new schema({
+    smoking: String,
+    pets: String,
+    chattiness: String,
+    music: String,
+  })
 
+const carSchema= new schema({
+    make: String,
+    model: String,
+    type: String,
+    color: String,
+    registered_year: Number
+  })
+
+const UserSchema = new schema({
     name: {
         type: String,
         required: true,
@@ -24,9 +38,16 @@ const UserSchema = new schema({
     avatar: {
         type: String
     },
-    preferences: {
-        type: Object
+
+    bio:{
+        type: String
     },
+    
+    preferences: preferencesSchema,
+
+    cars: [carSchema],
+    token: String,
+
     date: {
         type: Date,
         default: Date.now

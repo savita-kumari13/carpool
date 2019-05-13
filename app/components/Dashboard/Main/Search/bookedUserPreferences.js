@@ -5,18 +5,21 @@ import {
     StyleSheet,
     Image,
     ScrollView,
-
+    Linking,
 } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import config from '../../../../config/constants'
+import call from 'react-native-phone-call'
 
 export default class bookedUserPreferences extends Component {
     constructor(props){
         super(props)
         this.state = {
-            userAbout: '',
+            bookedUserBio: '',
+            avatar: '',
             bookedUser: [],
 
+            showUserBio: false,
             chattinessVisible: false,
 
             musicOkVisible: false,
@@ -35,9 +38,15 @@ export default class bookedUserPreferences extends Component {
             const booked_user = JSON.parse(await AsyncStorage.getItem('booked_user'))
             if(booked_user !== null){
                 this.setState({
-                    bookedUser: booked_user
+                    bookedUser: booked_user,
+                    avatar: booked_user.avatar
                 })
-                console.log('zzzzzzzzzzzzzzzzbbsibdibcdscdscd', this.state.bookedUser)
+                if(booked_user.bio !== undefined && booked_user.bio !== null && booked_user.bio != 'null' && booked_user.bio != ''){
+                    this.setState({
+                        bookedUserBio: booked_user.bio,
+                        showUserBio: true
+                    })
+                }
                 if(this.state.bookedUser.preferences.chattiness === config.CHATTINESS.DONT_KNOW ||
                     this.state.bookedUser.preferences.chattiness === config.CHATTINESS.QUIT_TYPE ||
                     this.state.bookedUser.preferences.chattiness === config.CHATTINESS.LOVE_TO_CHAT)
@@ -100,17 +109,24 @@ export default class bookedUserPreferences extends Component {
         <View style={styles.header}>
             <View style={styles.headerContent}>
                 <Image style={styles.avatar}
-                  source={{uri: 'https://bootdey.com/img/Content/avatar/avatar6.png'}}/>
+                  source={{uri: config.API_HOST + '/' + this.state.avatar}}/>
                 <Text style={styles.name}>{this.state.bookedUser.name} </Text>
             </View>
           </View>
 
+          {this.state.showUserBio &&
           <View>
-              <Text>Userrrr BIOO</Text>
-          </View>
+              <Text style = {{
+                fontSize: 16,
+                marginTop: 15,
+                marginLeft: 10,
+                fontWeight: 'bold',
+                color: '#737373',
+                }}>{this.state.bookedUserBio}</Text>
+          </View>}
 
         <View style={{
-            marginTop: 30,
+            marginTop: this.state.showUserBio ? 25: 20,
             borderBottomColor: '#cccccc',
             borderBottomWidth: 1,
         }}/>

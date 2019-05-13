@@ -4,16 +4,13 @@ import {
     View,
     TouchableOpacity ,
     StyleSheet,
-    AsyncStorage,
 } from 'react-native'
 
 import { TextInput, Button,} from 'react-native-paper';
-
 import DateTimePicker from 'react-native-modal-datetime-picker';
-
-
 import Icon from 'react-native-vector-icons/EvilIcons'
 import Icon2 from 'react-native-vector-icons/Ionicons'
+import AsyncStorage from '@react-native-community/async-storage'
 
 export default class TimeAndPassengersNumber extends Component {
 
@@ -39,13 +36,11 @@ export default class TimeAndPassengersNumber extends Component {
         }
     }
 
-    componentDidMount(){
-
-       
-        this.setState({
-            hours: (this.state.hours <10?'0':'') + this.state.hours,
-            minutes: (this.state.minutes <10?'0':'') + this.state.minutes    
-        })        
+    componentDidMount(){ 
+      this.setState({
+          hours: (this.state.hours <10?'0':'') + this.state.hours,
+          minutes: (this.state.minutes <10?'0':'') + this.state.minutes    
+      })        
     }
 
     _showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
@@ -92,15 +87,12 @@ export default class TimeAndPassengersNumber extends Component {
   }
 
     async saveOfferedRideTimeAndPassengersNumber() {
-
       try {
-        console.log('picked date time : ', this.state.pickedDate)
-        console.log('picked date time : JSON ', JSON.stringify(this.state.pickedDate))
         await AsyncStorage.setItem('offered_ride_date_time', JSON.stringify(this.state.pickedDate))
         await AsyncStorage.setItem('passengers_number', JSON.stringify(this.state.passengersNumber))
 
-        console.log('Price Screen')
-        this.props.navigation.navigate('PriceAndAboutRide')
+        console.log('Driving car Screen')
+        this.props.navigation.navigate('DrivingCar')
         
       } catch (error) {
         console.log('Error in AsyncStorage ', error)
@@ -119,15 +111,14 @@ export default class TimeAndPassengersNumber extends Component {
     const plusIcon = <Icon name = "plus" size = {60}
                     color = "#7963b6"
                     onPress = {() =>
-                            {console.log('PassengersNumber increased')
-                            this.increasePassengersNumber()}}
+                      {console.log('PassengersNumber increased')
+                      this.increasePassengersNumber()}}
                     /> 
 
 
     return (
         <View style = {styles.container}>
             <Text style = {styles.goingTime}>When are you going?</Text>
-
 
             <TouchableOpacity style = {styles.showTimePicker}
                 onPress={this._showDateTimePicker}>
@@ -154,10 +145,10 @@ export default class TimeAndPassengersNumber extends Component {
      
 
                 <Icon2 name = "ios-arrow-down" size = {20} color = "#7963b6"
-                                            style = {{ position: 'absolute',
-                                                        right: '20%',
-                                                      top: 20}}
-                                            />        
+                  style = {{ position: 'absolute',
+                              right: '20%',
+                            top: 20}}
+                  />        
             </TouchableOpacity>
 
             <DateTimePicker
@@ -167,7 +158,13 @@ export default class TimeAndPassengersNumber extends Component {
                 onCancel={this._hideDateTimePicker}
             />
 
-            <View style = {{marginTop: '10%'}}>
+            <View style={{
+              marginTop: 40,
+              marginHorizontal: 20,
+              borderBottomColor: '#cccccc',
+              borderBottomWidth: 0.5,
+            }}/>
+            <View style = {{marginTop: 40}}>
                 <Text style = {styles.howManyPassengers}>So how many CarPool passengers can you take?</Text>
                     <View style = {styles.passengerNo}>
                         <Button  
@@ -191,12 +188,12 @@ export default class TimeAndPassengersNumber extends Component {
             </View>
 
             <Icon2 name = "ios-arrow-dropright-circle" size = {50} color = "#7963b6"
-                                        style = {{position: 'absolute',
-                                        bottom:20,
-                                        right:20,}}
-                                        onPress = {() =>
-                                        {this.saveOfferedRideTimeAndPassengersNumber()}}
-                                        />
+              style = {{position: 'absolute',
+              bottom:20,
+              right:20,}}
+              onPress = {() =>
+              {this.saveOfferedRideTimeAndPassengersNumber()}}
+              />
       </View>
     )
   }
@@ -208,13 +205,13 @@ container: {
     flex: 1,
     // alignItems: 'center',
     // justifyContent: 'center',
-    paddingTop: 30,
+    paddingTop: 40,
   },
 
   goingTime: {
     fontWeight: 'bold',
     fontFamily: "sans-serif-medium",
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#054752',
     marginLeft: 30,
@@ -223,14 +220,14 @@ container: {
   showTimePicker: {
     backgroundColor: "#fff",
     padding: 10,
-    marginTop: '10%',
+    marginTop: 40,
 
   },
 
   howManyPassengers: {
     fontWeight: 'bold',
     fontFamily: "sans-serif-medium",
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#054752',
     marginLeft: 30,

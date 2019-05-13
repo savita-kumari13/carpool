@@ -5,7 +5,6 @@ import {
     StyleSheet,
     Image,
     ScrollView,
-
 } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import config from '../../../../config/constants'
@@ -16,12 +15,14 @@ export default class UserBio extends Component {
         this.state = {
             userName: '',
             userAbout: '',
+            avatar: '',
+            bio: '',
             userPreferences: [],
 
+            showUserBio: false,
             smokeOkVisible: false,
             noSmokeVisible: false,
 
-            petsVisible: false,
             petsOkVisible: false,
             noPetsVisible: false,
 
@@ -30,40 +31,54 @@ export default class UserBio extends Component {
 
     componentDidMount(){
         gettingUSerBio = async() =>{
-            const user_name = JSON.parse(await AsyncStorage.getItem('user_name'))
-            const user_preferences = JSON.parse(await AsyncStorage.getItem('preferences'))
-            this.setState({
-                userName: user_name,
-                userPreferences: user_preferences
-            })
-            if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING)
-            {
+            try {
+                const user_name = JSON.parse(await AsyncStorage.getItem('user_name'))
+                const user_preferences = JSON.parse(await AsyncStorage.getItem('preferences'))
+                const user_avatar = JSON.parse(await AsyncStorage.getItem('avatar'))
+                const user_bio = JSON.parse(await AsyncStorage.getItem('bio'))
+                if(user_bio !== undefined && user_bio !== null && user_bio != 'null' && user_bio != ''){
+                    this.setState({
+                        showUserBio: true
+                    })
+                }
                 this.setState({
-                    noSmokeVisible: true,
-                    smokeOkVisible: false
+                    userName: user_name,
+                    userPreferences: user_preferences,
+                    avatar: user_avatar,
+                    bio: user_bio
                 })
+                if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING)
+                {
+                    this.setState({
+                        noSmokeVisible: true,
+                        smokeOkVisible: false
+                    })
+                }
+                if( this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
+                {
+                    this.setState({
+                        smokeOkVisible: true,
+                        noSmokeVisible: false,
+                    })
+                }
+                if(this.state.userPreferences.pets === config.PETS.NO_PETS )
+                {
+                    this.setState({
+                        noPetsVisible: true,
+                        petsOkVisible: false,
+                    })
+                }
+                if( this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
+                {
+                    this.setState({
+                        petsOkVisible: true,
+                        noPetsVisible: false,
+                    })
+                }
+            } catch (error) {
+                console.log('error in async storage ', error)
             }
-            if( this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
-            {
-                this.setState({
-                    smokeOkVisible: true,
-                    noSmokeVisible: false,
-                })
-            }
-            if(this.state.userPreferences.pets === config.PETS.NO_PETS )
-            {
-                this.setState({
-                    noPetsVisible: true,
-                    petsOkVisible: false,
-                })
-            }
-            if( this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
-            {
-                this.setState({
-                    petsOkVisible: true,
-                    noPetsVisible: false,
-                })
-            }
+            
         }
         gettingUSerBio()
     }
@@ -74,15 +89,23 @@ export default class UserBio extends Component {
         <View style={styles.header}>
             <View style={styles.headerContent}>
                 <Image style={styles.avatar}
-                  source={{uri: 'https://bootdey.com/img/Content/avatar/avatar6.png'}}/>
+                  source={{uri: config.API_HOST + '/' + this.state.avatar}}/>
                 <Text style={styles.name}>{this.state.userName} </Text>
             </View>
           </View>
+          {this.state.showUserBio &&
           <View>
-              <Text>Userrrr BIOO</Text>
-          </View>
+              <Text style = {{
+                fontSize: 16,
+                marginTop: 15,
+                marginLeft: 10,
+                fontWeight: 'bold',
+                color: '#737373',
+                }}>{this.state.bio}</Text>
+          </View>}
+
         <View style={{
-            marginTop: 30,
+            marginTop: this.state.showUserBio ? 20: 25,
             borderBottomColor: '#cccccc',
             borderBottomWidth: 1,
         }}/>
@@ -188,6 +211,6 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     color: '#527a7a',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 17,
     }
 })

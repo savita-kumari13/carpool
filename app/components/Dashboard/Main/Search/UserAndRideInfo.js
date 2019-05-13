@@ -5,17 +5,17 @@ import {
     ScrollView,
     StyleSheet,
     Image,
+    FlatList,
     TouchableWithoutFeedback,
+    Linking,
     } from 'react-native'
 import { Button } from 'react-native-paper'
 import AsyncStorage from '@react-native-community/async-storage'
 import axios from '../../../axios'
-import NavigationService from '../../../../../NavigationService';
 import config from '../../../../config/constants'
 
-import ArrowIcon from 'react-native-vector-icons/Ionicons'
 import ArrowIcon2 from 'react-native-vector-icons/Ionicons'
-import LineIcon from 'react-native-vector-icons/Entypo'
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import RupeeIcon from 'react-native-vector-icons/FontAwesome'
 
 export default class UserAndRideInfo extends Component {
@@ -25,6 +25,7 @@ export default class UserAndRideInfo extends Component {
         this.state = {
             leaveLocation: '',
             goingLocation: '',
+            avatar: '',
             price: 0,
             passengerNo: 0,
             info: '',
@@ -59,120 +60,124 @@ export default class UserAndRideInfo extends Component {
           }
         }
 
-    componentDidMount(){
-        gettingUserRideDetails = async() =>{       
-            const leave_location = JSON.parse(await AsyncStorage.getItem('leave'))
-            const going_location = JSON.parse(await AsyncStorage.getItem('going'))
-            const ride_price = JSON.parse(await AsyncStorage.getItem('price'))
-            const passenger_no = JSON.parse(await AsyncStorage.getItem('passenger'))
-            const ride_info = JSON.parse(await AsyncStorage.getItem('info'))
-            if(ride_info != 'null' && ride_info !== null && ride_info !== undefined )
-            {
-                this.setState({
-                    infoVisible: true,
-                })
-            }
-            const booked_users = JSON.parse(await AsyncStorage.getItem('booked_user'))
-            if(booked_users.length > 0){
-                console.log('booked user ', booked_users)
-                    this.setState({
-                        alreadyBooked: true,
-                        bookedUsers: booked_users
-                    })
-            }
-            const ride_date = JSON.parse(await AsyncStorage.getItem('date'))
-            const pickedDate = new Date(ride_date)
-            const user_name = JSON.parse(await AsyncStorage.getItem('user_name'))
-            const user_phone_number = JSON.parse(await AsyncStorage.getItem('user_phone_number'))
-            const user_preferences = JSON.parse(await AsyncStorage.getItem('preferences'))
-
+componentDidMount(){
+    gettingUserRideDetails = async() =>{       
+        const leave_location = (await AsyncStorage.getItem('leave'))
+        const going_location = (await AsyncStorage.getItem('going'))
+        const ride_price = JSON.parse(await AsyncStorage.getItem('price'))
+        const passenger_no = JSON.parse(await AsyncStorage.getItem('passenger'))
+        const ride_info = JSON.parse(await AsyncStorage.getItem('info'))
+        if(ride_info != 'null' && ride_info !== null && ride_info !== undefined )
+        {
             this.setState({
-                leaveLocation: leave_location,
-                goingLocation: going_location,
-                price: ride_price,
-                passengerNo: passenger_no,
-                date: pickedDate,
-                info: ride_info,
-                userName: user_name,
-                userPhoneNumber: user_phone_number,
-                userPreferences: user_preferences
+                infoVisible: true,
             })
-
-            if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING || this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
-            {
-                this.setState({
-                    smokingVisible: true
-                })
-            }
-            if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING)
-            {
-                this.setState({
-                    noSmokeVisible: true,
-                    smokeOkVisible: false
-                })
-            }
-            if( this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
-            {
-                this.setState({
-                    smokeOkVisible: true,
-                    noSmokeVisible: false,
-                })
-            }
-
-
-            if(this.state.userPreferences.pets === config.PETS.NO_PETS || this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
-            {
-                this.setState({
-                    petsVisible: true
-                })
-            }
-            if(this.state.userPreferences.pets === config.PETS.NO_PETS )
-            {
-                this.setState({
-                    noPetsVisible: true,
-                    petsOkVisible: false,
-                })
-            }
-            if( this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
-            {
-                this.setState({
-                    petsOkVisible: true,
-                    noPetsVisible: false,
-                })
-            }
-            if(this.state.userPreferences.chattiness === config.CHATTINESS.QUIT_TYPE || this.state.userPreferences.chattiness === config.CHATTINESS.LOVE_TO_CHAT)
-            {
-                this.setState({
-                    chattinessVisible: true
-                })
-            }
-            if(this.state.userPreferences.music === config.MUSIC.SILENCE || this.state.userPreferences.music === config.MUSIC.ALL_ABOUT_PLAYLIST)
-            {
-                this.setState({
-                    musicVisible: true
-                })
-            }
         }
-            gettingUserRideDetails()
+        const booked_users = JSON.parse(await AsyncStorage.getItem('booked_user'))
+        if(booked_users.length > 0){
+            this.setState({
+                alreadyBooked: true,
+                bookedUsers: booked_users
+            })
+        }
+        const ride_date = JSON.parse(await AsyncStorage.getItem('date'))
+        const pickedDate = new Date(ride_date)
+        const user_name = JSON.parse(await AsyncStorage.getItem('user_name'))
+        const user_phone_number = JSON.parse(await AsyncStorage.getItem('phone_number'))
+        const user_preferences = JSON.parse(await AsyncStorage.getItem('preferences'))
+        const user_avatar = JSON.parse(await AsyncStorage.getItem('avatar'))
+        this.setState({
+            leaveLocation: leave_location,
+            goingLocation: going_location,
+            price: ride_price,
+            passengerNo: passenger_no,
+            date: pickedDate,
+            info: ride_info,
+            userName: user_name,
+            userPhoneNumber: user_phone_number,
+            userPreferences: user_preferences,
+            avatar: user_avatar
+        })
+
+        if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING || this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
+        {
+            this.setState({
+                smokingVisible: true
+            })
+        }
+        if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING)
+        {
+            this.setState({
+                noSmokeVisible: true,
+                smokeOkVisible: false
+            })
+        }
+        if( this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
+        {
+            this.setState({
+                smokeOkVisible: true,
+                noSmokeVisible: false,
+            })
         }
 
-       async bookedUserPreferences(bookedUser){
-            await AsyncStorage.setItem('booked_user', JSON.stringify(bookedUser))
-            this.props.navigation.navigate('bookedUserPreferences')
+        if(this.state.userPreferences.pets === config.PETS.NO_PETS || this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
+        {
+            this.setState({
+                petsVisible: true
+            })
         }
-  render() {
+        if(this.state.userPreferences.pets === config.PETS.NO_PETS )
+        {
+            this.setState({
+                noPetsVisible: true,
+                petsOkVisible: false,
+            })
+        }
+        if( this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
+        {
+            this.setState({
+                petsOkVisible: true,
+                noPetsVisible: false,
+            })
+        }
+        if(this.state.userPreferences.chattiness === config.CHATTINESS.QUIT_TYPE || this.state.userPreferences.chattiness === config.CHATTINESS.LOVE_TO_CHAT)
+        {
+            this.setState({
+                chattinessVisible: true
+            })
+        }
+        if(this.state.userPreferences.music === config.MUSIC.SILENCE || this.state.userPreferences.music === config.MUSIC.ALL_ABOUT_PLAYLIST)
+        {
+            this.setState({
+                musicVisible: true
+            })
+        }
+    }
+        gettingUserRideDetails()
+    }
 
-    const bookedUsers = this.state.bookedUsers.map(bookedUser => (
-        <View style = {{flexDirection: "row", marginTop: 10,justifyContent: 'space-between',}} key = {bookedUser._id}>
+    async bookedUserPreferences(bookedUser){
+        await AsyncStorage.setItem('booked_user', JSON.stringify(bookedUser))
+        this.props.navigation.navigate('bookedUserPreferences')
+    }
+
+renderBookedUsers =({item}) => {
+    return(
+        <View style = {{flexDirection: "row", marginTop: 15,justifyContent: 'space-between',}}>
             <Text style = {{
-            fontSize: 18,
-            marginTop: 20,
+            fontSize: 17,
+            marginTop: 13,
             fontWeight: 'bold',
             color: '#054752',
-            }}>{bookedUser.name}</Text>
-            <TouchableWithoutFeedback onPress = {() => this.bookedUserPreferences(bookedUser)} >
+            }}>{item.name}</Text>
+            <TouchableWithoutFeedback onPress = {() => this.bookedUserPreferences(item)} >
                 <View style = {{marginLeft: 120, flexDirection: 'row', justifyContent: 'flex-end'}}>
-                    <Image style={styles.avatar} source={{uri: 'https://bootdey.com/img/Content/avatar/avatar6.png'}}/>
+                    <Image style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 63,
+                        borderWidth: 4,
+                    }} source={{uri: config.API_HOST + '/' + item.avatar}}/>
                     <ArrowIcon2 name = 'ios-arrow-forward' 
                         size = {20}
                         color = '#527a7a'
@@ -181,8 +186,10 @@ export default class UserAndRideInfo extends Component {
                 </View>
             </TouchableWithoutFeedback>
         </View>
-        ))
-
+    )
+}
+    
+  render() {
     return (
         <View style = {styles.container}>
       <ScrollView contentContainerStyle = {{flexGrow: 1}}>
@@ -192,13 +199,35 @@ export default class UserAndRideInfo extends Component {
             </Text>
         </View>   
         
-        <View style = {styles.rideItemView}>
-            <Text style = {styles.location}>{this.state.leaveLocation}</Text>
-            <View style = {{alignItems: 'center'}}>
-                <ArrowIcon name = 'md-arrow-down' size = {20} color = '#054752' />
+         <View style = {styles.rideItemView}>
+        <View style = {{ flexDirection: 'column',}}>
+            <View style={{flexDirection: 'row', alignItems: 'center',}}>
+              <Ionicons.Button
+                name="md-pin"
+                backgroundColor='transparent'
+                underlayColor='transparent'
+                color={'#3d5c5c'}
+                size={16}
+              />
+              <View style={{flexWrap: 'wrap', flex: 1}}>
+                <Text style={{color: '#054752', fontSize: 16, marginLeft: -5, flexWrap: 'wrap'}}>{this.state.leaveLocation}</Text>
+              </View>
             </View>
-            <Text style = {styles.location}>{this.state.goingLocation}</Text>
-        </View> 
+
+            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10,}}>
+              <Ionicons.Button
+                name="md-pin"
+                backgroundColor='transparent'
+                underlayColor='transparent'
+                color={'#3d5c5c'}
+                size={16}
+              />
+              <View style={{flexWrap: 'wrap', flex: 1}}>
+                <Text style={{color: '#054752', fontSize: 16, marginLeft: -5,}}>{this.state.goingLocation}</Text>
+              </View>
+            </View>
+          </View>
+          </View> 
 
         <View style = {{flexDirection: 'row', marginTop: 30, justifyContent: 'space-between' }}>
             <View>
@@ -210,7 +239,7 @@ export default class UserAndRideInfo extends Component {
                     }}>{this.state.passengerNo} seats available</Text>
             </View>
 
-            <View style = {{flexDirection: "row" }}>
+            <View style = {{flexDirection: "row", marginRight: 10  }}>
                 <RupeeIcon name = 'rupee' size = {20} color = '#054752' style = {{marginTop: 7}} />
                 <Text style = {{
                     marginLeft: 2,
@@ -227,6 +256,7 @@ export default class UserAndRideInfo extends Component {
             color: '#527a7a',
             fontWeight: 'bold',
             fontSize: 16,
+            marginRight: 8 
             }}>per seat
         </Text>
 
@@ -239,13 +269,13 @@ export default class UserAndRideInfo extends Component {
         <View style = {{flexDirection: "row", marginTop: 20,justifyContent: 'space-between'}} >
             <Text style = {{
             fontSize: 18,
-            marginTop: 20,
+            marginTop: 15,
             fontWeight: 'bold',
             color: '#054752',
             }}>{this.state.userName}</Text>
             <TouchableWithoutFeedback onPress = {() => this.props.navigation.navigate('UserBio')} >
-                <View style = {{marginLeft: 120, flexDirection: 'row', justifyContent: 'flex-end'}}>
-                    <Image style={styles.avatar} source={{uri: 'https://bootdey.com/img/Content/avatar/avatar6.png'}}/>
+                <View style = {{marginLeft: 120, flexDirection: 'row', justifyContent: 'flex-end', }}>
+                    <Image style={styles.avatar} source={{uri: config.API_HOST + '/' + this.state.avatar}}/>
                     <ArrowIcon2 name = 'ios-arrow-forward' 
                         size = {20}
                         color = '#527a7a'
@@ -262,13 +292,22 @@ export default class UserAndRideInfo extends Component {
             color: '#527a7a',
             }}>{this.state.info}</Text>}
 
-        <Text style = {{
-            fontSize: 16,
-            marginTop: this.state.infoVisible? 25: 20,
-            //  fontFamily: 'sans-serif-medium',
-            fontWeight: 'bold',
-            color: '#7963b6',
-            }}>Contact {this.state.userName}</Text>
+        <View style = {{flexDirection: "row", marginTop: this.state.infoVisible? 25: 20, justifyContent: 'space-between'}}>
+            <Text style = {{
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: '#7963b6',
+                }}>Contact  {this.state.userName}</Text>
+
+            <Text style = {{
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: '#054752',
+                borderBottomWidth: 0.5,
+                borderBottomColor: '#737373',
+                }}
+                onPress = {() => Linking.openURL(`tel:${this.state.userPhoneNumber}`)}>{this.state.userPhoneNumber}</Text>
+        </View>
 
         <View style={{
             marginTop: 30,
@@ -324,7 +363,15 @@ export default class UserAndRideInfo extends Component {
 
         {this.state.alreadyBooked && 
         <Text style = {styles.booked}>Already booked this ride</Text>}
-        {this.state.alreadyBooked && bookedUsers}
+        {this.state.alreadyBooked && 
+         <FlatList
+            data={this.state.bookedUsers}
+            renderItem={this.renderBookedUsers}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle = {{marginVertical: 10, }}
+            keyExtractor={(item) => { return item._id; }}
+        />}
 
         {this.state.alreadyBooked && 
         <View style={{
@@ -378,8 +425,8 @@ const styles = StyleSheet.create({
       },
 
       avatar: {
-        width: 50,
-        height: 50,
+        width: 45,
+        height: 45,
         borderRadius: 63,
         borderWidth: 4,
       },

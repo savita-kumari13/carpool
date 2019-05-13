@@ -9,14 +9,13 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
-  AsyncStorage,
   TextInput,
 } from 'react-native'
 import {  Button,} from 'react-native-paper';
 
 import _ from 'lodash';
 import apiKey from '../../../apiKey'
-
+import AsyncStorage from '@react-native-community/async-storage'
 import IconLocation from 'react-native-vector-icons/MaterialIcons';
 import IconNext from 'react-native-vector-icons/Ionicons'
 
@@ -368,14 +367,14 @@ async savePickUpDropOffLocations() {
         <Text style = {styles.findRide}>Offer a ride</Text>
 
         <TextInput
-            placeholder='Pick-up'
-            value={this.state.pickUp}
-            style = {styles.textInput}
-            onChangeText={pickUp =>{
-              this.setState({ pickUp });
-              this.onChangePickUpDebounced(pickUp)}}
-              onFocus = {this.setPickUpLoading}  
-          />
+          placeholder='Pick-up'
+          value={this.state.pickUp}
+          style = {styles.textInput}
+          onChangeText={pickUp =>{
+            this.setState({ pickUp });
+            this.onChangePickUpDebounced(pickUp)}}
+            onFocus = {this.setPickUpLoading}  
+        />
           
           <TextInput
             placeholder='Drop-off'

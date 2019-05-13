@@ -56,13 +56,14 @@ export default class Loading extends Component {
   }
   checkUserToken = async() => {
 
-    await axios.post(`/users/auth`)
+    await axios.get(`/users/auth`)
       .then(res => {
         console.log('res in loading', res)
         if(res.status == 200)
         {
           console.log('loading to maincontainer')
           NavigationService.navigate('MainContainer', {})
+          // this.props.navigation.navigate('MainContainer')
         }
         else{
           console.log('status not 200')
@@ -71,7 +72,6 @@ export default class Loading extends Component {
       .catch(err => {
         console.log('Error sending authenticating request', err)
       })
-
   }
   requestLocationPermission();
   checkUserToken();

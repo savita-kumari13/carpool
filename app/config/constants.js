@@ -1,6 +1,7 @@
 export default {
     API_HOST: 'http://192.168.137.1:5570',
-    // API_HOST: 'http://192.168.43.100:5570'
+    // API_HOST: 'http://192.168.43.100:5570',
+    UPLOAD_FOLDER: '/upload/profile_photo/',  
     SMOKING: {
         DONT_KNOW: "Don't know",
         NO_SMOKING: "No smoking in the car please",
@@ -21,4 +22,10 @@ export default {
         SILENCE: "Silence is golden",
         ALL_ABOUT_PLAYLIST: "It's all about the playlist"
     },
+    STATUS: {
+        PENDING: 'Pending',
+        ON_GOING: 'On going',
+        COMPLETED: 'Completed',
+        CANCELLED: 'Cancelled'
+    }
 };

@@ -14,6 +14,21 @@ const pointSchema = new schema({
     }
   });
 
+const carSchema= new schema({
+  make: String,
+  model: String,
+  type: String,
+  color: String,
+  registered_year: Number
+})
+
+const preferencesSchema = new schema({
+  smoking: String,
+  pets: String,
+  chattiness: String,
+  music: String,
+})
+
 const userSchema = new schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId, 
@@ -21,7 +36,11 @@ const userSchema = new schema({
   },
   name: String,
   phone_number: Number,
-  preferences: Object
+  preferences: preferencesSchema,
+  status: String,
+  avatar: String,
+  bio: String,
+  car: carSchema,
 })
 
 const bookedUserSchema = new schema({
@@ -32,7 +51,10 @@ const bookedUserSchema = new schema({
   name: String,
   phone_number: Number,
   preferences: Object,
-  seats_booked: Number
+  seats_booked: Number,
+  status: String,
+  avatar: String,
+  bio: String
 });
 
 const RidesSchema = new schema({
