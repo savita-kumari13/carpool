@@ -6,106 +6,153 @@ import {
     Image,
     ScrollView,
     Linking,
+    ActivityIndicator,
+    NavigationActions ,
+    BackHandler,
+    StatusBar,
 } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import config from '../../../../config/constants'
 import call from 'react-native-phone-call'
 
 export default class bookedUserPreferences extends Component {
-    constructor(props){
-        super(props)
-        this.state = {
-            bookedUserBio: '',
-            avatar: '',
-            bookedUser: [],
+  constructor(props){
+    super(props)
+    this.state = {
+      bookedUserBio: '',
+      avatar: '',
+      bookedUser: [],
 
-            showUserBio: false,
-            chattinessVisible: false,
+      showUserBio: false,
+      chattinessVisible: false,
 
-            musicOkVisible: false,
-            noMusicVisible: false,
+      musicOkVisible: false,
+      noMusicVisible: false,
 
-            smokeOkVisible: false,
-            noSmokeVisible: false,
+      smokeOkVisible: false,
+      noSmokeVisible: false,
 
-            petsOkVisible: false,
-            noPetsVisible: false,
+      petsOkVisible: false,
+      noPetsVisible: false,
 
-        }
+      isloadingUser: false,
     }
-    componentDidMount(){
-        gettingUSerBio = async() =>{
-            const booked_user = JSON.parse(await AsyncStorage.getItem('booked_user'))
-            if(booked_user !== null){
-                this.setState({
-                    bookedUser: booked_user,
-                    avatar: booked_user.avatar
-                })
-                if(booked_user.bio !== undefined && booked_user.bio !== null && booked_user.bio != 'null' && booked_user.bio != ''){
-                    this.setState({
-                        bookedUserBio: booked_user.bio,
-                        showUserBio: true
-                    })
-                }
-                if(this.state.bookedUser.preferences.chattiness === config.CHATTINESS.DONT_KNOW ||
-                    this.state.bookedUser.preferences.chattiness === config.CHATTINESS.QUIT_TYPE ||
-                    this.state.bookedUser.preferences.chattiness === config.CHATTINESS.LOVE_TO_CHAT)
-                {
-                    this.setState({
-                        chattinessVisible: true,
-                    })
-                }
-                if(this.state.bookedUser.preferences.smoking === config.SMOKING.NO_SMOKING)
-                {
-                    this.setState({
-                        noSmokeVisible: true,
-                        smokeOkVisible: false
-                    })
-                }
-                if( this.state.bookedUser.preferences.smoking === config.SMOKING.YES_SMOKING)
-                {
-                    this.setState({
-                        smokeOkVisible: true,
-                        noSmokeVisible: false,
-                    })
-                }
-                if(this.state.bookedUser.preferences.pets === config.PETS.NO_PETS )
-                {
-                    this.setState({
-                        noPetsVisible: true,
-                        petsOkVisible: false,
-                    })
-                }
-                if( this.state.bookedUser.preferences.pets === config.PETS.PETS_WELCOME)
-                {
-                    this.setState({
-                        petsOkVisible: true,
-                        noPetsVisible: false,
-                    })
-                }
+  }
 
-                if(this.state.bookedUser.preferences.smoking === config.MUSIC.SILENCE)
-                {
-                    this.setState({
-                        noMusicVisible: true,
-                        musicOkVisible: false
-                    })
-                }
-                if( this.state.bookedUser.preferences.music === config.MUSIC.ALL_ABOUT_PLAYLIST)
-                {
-                    this.setState({
-                        musicOkVisible: true,
-                        noMusicVisible: false,
-                    })
-                }
-            }
+  gettingUSerBio = async() =>{
+    this.setState({
+        isloadingUser: true
+    })
+    try {
+      const booked_user = JSON.parse(await AsyncStorage.getItem('booked_user'))
+      if(booked_user !== null){
+        this.setState({
+            bookedUser: booked_user,
+            avatar: booked_user.avatar
+        })
+        if(booked_user.bio !== undefined && booked_user.bio !== null && booked_user.bio != 'null' && booked_user.bio != ''){
+            this.setState({
+                bookedUserBio: booked_user.bio,
+                showUserBio: true
+            })
         }
-        gettingUSerBio()
+        if(this.state.bookedUser.preferences.chattiness === config.CHATTINESS.DONT_KNOW ||
+            this.state.bookedUser.preferences.chattiness === config.CHATTINESS.QUIT_TYPE ||
+            this.state.bookedUser.preferences.chattiness === config.CHATTINESS.LOVE_TO_CHAT)
+        {
+            this.setState({
+                chattinessVisible: true,
+            })
+        }
+        if(this.state.bookedUser.preferences.smoking === config.SMOKING.NO_SMOKING)
+        {
+            this.setState({
+                noSmokeVisible: true,
+                smokeOkVisible: false
+            })
+        }
+        if( this.state.bookedUser.preferences.smoking === config.SMOKING.YES_SMOKING)
+        {
+            this.setState({
+                smokeOkVisible: true,
+                noSmokeVisible: false,
+            })
+        }
+        if(this.state.bookedUser.preferences.pets === config.PETS.NO_PETS )
+        {
+            this.setState({
+                noPetsVisible: true,
+                petsOkVisible: false,
+            })
+        }
+        if( this.state.bookedUser.preferences.pets === config.PETS.PETS_WELCOME)
+        {
+            this.setState({
+                petsOkVisible: true,
+                noPetsVisible: false,
+            })
+        }
+
+        if(this.state.bookedUser.preferences.smoking === config.MUSIC.SILENCE)
+        {
+            this.setState({
+                noMusicVisible: true,
+                musicOkVisible: false
+            })
+        }
+        if( this.state.bookedUser.preferences.music === config.MUSIC.ALL_ABOUT_PLAYLIST)
+        {
+            this.setState({
+                musicOkVisible: true,
+                noMusicVisible: false,
+            })
+        }
+        this.setState({
+            isloadingUser: false
+        })
+      }
+      else{
+          this.setState({
+              isloadingUser: false
+          })
+      }
+  } catch (error) {
+      this.setState({
+          isloadingUser: false
+      })
+      console.log('error in async storage ', error)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
+    
+  }
+
+  willFocus = this.props.navigation.addListener(
+      'willFocus', () => {
+        this.gettingUSerBio();
+      }
+    );
+    componentDidMount()
+    {
+      this._navListener = this.props.navigation.addListener('didFocus', () => {
+        StatusBar.setBarStyle('light-content');
+        StatusBar.setBackgroundColor(config.COLOR);
+      });
+      BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
+    }
+    componentWillUnmount()
+    {
+      this._navListener.remove();
+      BackHandler.removeEventListener('hardwareBackPress', this._handleBackHandler);
+    }
+    _handleBackHandler = () => {
+      this.props.navigation.goBack()
+       return true;
+     }
 
   render() {
     return (
         <ScrollView contentContainerStyle = {styles.container}>
+        {this.state.isloadingUser && <ActivityIndicator size="large" />}
         <View style={styles.header}>
             <View style={styles.headerContent}>
                 <Image style={styles.avatar}
@@ -241,7 +288,7 @@ const styles = StyleSheet.create({
 
     name:{
         fontSize:22,
-        color:"#054752",
+        color:config.TEXT_COLOR,
         fontWeight:'bold',
       },
 

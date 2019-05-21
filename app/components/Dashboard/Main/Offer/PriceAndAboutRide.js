@@ -6,13 +6,16 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
-    Alert
+    Alert,
+    ToastAndroid,
+    ActivityIndicator,
 } from 'react-native'
 
 import { Button,} from 'react-native-paper';
 import AsyncStorage from '@react-native-community/async-storage'
 import Icon from 'react-native-vector-icons/EvilIcons'
 import axios from '../../../axios'
+import config from '../../../../config/constants'
 
 export default class PriceAndAboutRide extends Component {
 
@@ -22,9 +25,9 @@ export default class PriceAndAboutRide extends Component {
         this.state = {
             price : 50,
             isDisabledMinusIcon: false,
-            isLessThanZero: '#7963b6',
-
+            isLessThanZero: config.COLOR,
             aboutText: '',
+            isLoading: false,
         }       
     }
 
@@ -51,12 +54,16 @@ export default class PriceAndAboutRide extends Component {
         if(this.state.price > -10){
             this.setState({
                 isDisabledMinusIcon: false,
-                isLessThanZero: '#7963b6',
+                isLessThanZero: config.COLOR,
             })
         }
     }
 
 async savePriceAndRideInfo() {
+
+    this.setState({
+        isLoading: true
+    })
     try {
         await AsyncStorage.setItem('offered_price', JSON.stringify(this.state.price))
 
@@ -77,7 +84,7 @@ async savePriceAndRideInfo() {
         let offeredPrice = JSON.parse(await AsyncStorage.getItem('offered_price'))
         let offeredRideInfo = (await AsyncStorage.getItem('offered_ride_info'))
         let offeredRideCar = JSON.parse(await AsyncStorage.getItem('car'))
- 
+    
         const offeredRide = {
             pick_up_name: pickUpLocationName,
             pick_up_coordinates: [pickUpLocationLongitude, pickUpLocationLatitude],
@@ -92,37 +99,56 @@ async savePriceAndRideInfo() {
 
         await axios.post(`/rides/offer_ride`,offeredRide)
         .then(res => {
-            this.props.navigation.navigate('Current')
+            if(res.data.status){
+                this.setState({
+                    isLoading: false
+                })
+                this.props.navigation.navigate('Current')
+                ToastAndroid.show('Ride posted successfully',ToastAndroid.TOP, ToastAndroid.SHORT);
+            }
+            else{
+                this.setState({
+                    isLoading: false
+                })
+                ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
+            }
         })
         .catch(error => {
+            this.setState({
+                isLoading: false
+            })
             console.log('error sending offered ride request ', error)
+            ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT);
         })
-        
+    
     } catch (error) {
+        this.setState({
+            isLoading: false
+        })
         console.log('Error in AsyncStorage ', error)
+        ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     }
 }
 
   render() {
 
     const minusIcon = <Icon name = "minus" size = {60} color = {this.state.isLessThanZero}
-                    onPress = {() =>
-                    {console.log('Price decresed')
-                    }}
-                    />
+        onPress = {() =>
+        {console.log('Price decresed')
+        }}
+        />
 
     const plusIcon = <Icon name = "plus" size = {60}
-                    color = "#7963b6"
-                    onPress = {() =>
-                            {console.log('Price increased')
-                            this.increasePrice()}}
-                    />
+        color = {config.COLOR}
+        onPress = {() =>
+                {console.log('Price increased')
+                this.increasePrice()}}
+        />
 
 
     return (
         <ScrollView contentContainerStyle = {styles.container}>
             <Text style = {styles.priceText}>Edit price per seat</Text>
-
             <View style = {styles.displayPrice}>
                 <Button  
                     mode="text"
@@ -131,7 +157,7 @@ async savePriceAndRideInfo() {
                 </Button>
 
                 <Text style = {{
-                            color: '#054752',
+                            color: config.TEXT_COLOR,
                             fontWeight: 'bold',
                             fontSize: 70,     
                             fontFamily: "sans-serif-condensed",}}>{this.state.price}</Text>
@@ -142,12 +168,10 @@ async savePriceAndRideInfo() {
                 </Button>
             </View>
 
-            <View style = {{marginTop: 50, flex: 1}}>
-
+            <View style = {{marginTop: 60, justifyContent: 'flex-start'}}>
                 <Text style = {styles.aboutRideText}>Anything to add about your ride?</Text>
-
                 <TouchableOpacity style = {styles.aboutTextInput}>
-                <ScrollView>
+                <ScrollView contentContainerStyle = {{justifyContent: 'flex-start', flex: 1}}>
                     <TextInput
                         multiline = {true}
                         numberOfLines = {6}                       
@@ -157,12 +181,16 @@ async savePriceAndRideInfo() {
                     ></TextInput>
                 </ScrollView>
                 </TouchableOpacity>
+            </View>
 
-                <Button mode = "contained" style = {styles.postRide}
-                            onPress = {() => {this.savePriceAndRideInfo()}}>
-                            <Text style = {{color: '#fff', fontWeight: 'bold' }}>Post ride</Text>
-
-                </Button>
+            <View style = {{alignItems: 'center',position: 'relative', justifyContent: 'center', marginTop: 70 ,}}>
+                <Button
+                    style={styles.postRide}
+                    onPress={() => {this.savePriceAndRideInfo()}}
+                    loading = {this.state.isLoading}
+                    mode = "contained">
+                    <Text style = {{color: '#fff', fontWeight: 'bold' }}>Post ride</Text>
+                </Button> 
             </View>
         </ScrollView>        
     )
@@ -175,12 +203,17 @@ const styles = StyleSheet.create({
         paddingTop: 30,
       },
 
+      loader: {
+          flex: 1,
+          backgroundColor: 'grey'
+      },
+
       priceText: {
         fontWeight: 'bold',
         fontFamily: "sans-serif-medium",
         fontSize: 30,
         fontWeight: 'bold',
-        color: '#054752',
+        color: config.TEXT_COLOR,
         marginLeft: 30,
       },
 
@@ -197,28 +230,26 @@ const styles = StyleSheet.create({
         fontFamily: "sans-serif-medium",
         fontSize: 30,
         fontWeight: 'bold',
-        color: '#054752',
+        color: config.TEXT_COLOR,
         marginLeft:30,
       },
 
       aboutTextInput: {
           backgroundColor: '#e6e6e6',
           width: '80%',
+          height: 150,
           marginLeft: '10%',
           borderRadius: 20,
-          marginTop: 30,
+          marginTop: 40,
           padding: 10,
       },
 
       postRide: {
         borderRadius: 30,
-        width: 100,
-        height: 40,
-        backgroundColor: "#7963b6",
+        width: 280,
+        height: 45,
+        backgroundColor: config.COLOR,
         justifyContent: 'center',
-        position: 'absolute',
-        bottom: 20,
-        left: '35%',
       }
     })
     

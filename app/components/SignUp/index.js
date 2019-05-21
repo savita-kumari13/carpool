@@ -7,6 +7,7 @@ import axios from '../axios'
 import { SocialIcon } from 'react-native-elements'
 import NavigationService from '../../../NavigationService'
 import CountryPicker from 'react-native-country-picker-modal';
+import config from '../../config/constants'
 
 import {
     View,
@@ -15,11 +16,11 @@ import {
     StyleSheet,
     ToastAndroid,
     Alert,
-    //Button,
     Image,
     TouchableHighlight,
     BackHandler,
     ScrollView,
+    ActivityIndicator,
 } from 'react-native'
 
 export default class SignUp extends Component {
@@ -66,133 +67,148 @@ export default class SignUp extends Component {
       isConfirmPasswordFocused: false,
       isNameFocused: false,
       isPhoneFocused: false,
-      isSigningUp: false
+      isSigningUp: false,
+      isFbLoging: false,
     };
   }
 
 
-  static navigationOptions = {
+  componentDidMount()
+  {
 
-    title: 'Sign up',
-    headerTitleStyle: {
-      fontWeight: 'bold',
-      color: '#fff',
-    },
-    headerStyle: {
-      backgroundColor: '#7963b6'
-    },
-    headerLeft: null,
-  }
-
-    componentDidMount()
-    {
-
-      BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
-    }
-  
-    componentWillUnmount()
-    {
-      BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress);
-    }
-  
-    handleBackPress = () =>
-    {
-      NavigationService.navigate('Login', {})
-      return true;
-      // BackHandler.exitApp();
-    }
-
-    handleSignUp = async() =>
-    { 
-      const user = {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
+    this.onTokenRefreshListener = firebase.messaging().onTokenRefresh(fcmToken => {
+      // Process your token as required
+      console.log('new device token ', fcmToken)
+      const data = {
         name: this.state.name,
-        email: this.state.email,
-        password: this.state.password,
-        confirm_password: this.state.confirmPassword,
-        phone_number: this.state.phoneNumber
+        device_token: fcmToken
+      }
+      axios.post('/users/save_device_token', data)
+      .then(res => {
 
-      }
-      this.setState({
-        isSigningUp: true
       })
-    await axios.post(`/users/register`, user)
-    .then(res => {
-      let resData=res.data;
-        if(!resData.status)
-        {
-          if(resData.response.hasOwnProperty('errors'))
-          {
-            if(resData.response.errors.hasOwnProperty('name')){
-              this.setState({
-                errorNameShow: true,
-                errorNameBorderFocused: true,
-              })
-            }
-            if(resData.response.errors.hasOwnProperty('email')){
-              this.setState({
-                errorEmailShow: true,
-                isEmailFocused: false,
-                errorEmailBorderFocused: true,
-              })
-            }
-            if(resData.response.errors.hasOwnProperty('password')){
-              this.setState({
-                errorPasswordShow: true,
-                errorPasswordBorderFocused: true,
-              })
-            }
-            if(resData.response.errors.hasOwnProperty('confirm_password')){
-              this.setState({
-                errorConfirmPasswordShow: true,
-                errorConfirmPasswordBorderFocused: true,
-              })
-            }
-  
-            if(resData.response.errors.hasOwnProperty('phone_number')){
-              this.setState({
-                errorPhoneNumberShow: true,
-                errorPhoneNumberBorderFocused: true,
-              })
-            }
-  
-  
-          this.setState({
-            errors: {
-              name: resData.response.errors.name,
-              email: resData.response.errors.email,
-              password: resData.response.errors.password,
-              confirmPassword: resData.response.errors.confirm_password,
-              phone_number: resData.response.errors.phone_number
-            }
-          })
-          throw new Error(Object.values(resData.response.errors).join(', '));
-          }
-          else{
-            ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
-          }       
-      }
-      else
-      {
-        this.setState({
-          name: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-          phoneNumber: '',
-        });
-        NavigationService.navigate('MainContainer', {})
-      }
-      this.setState({
-        isSigningUp: false
+      .catch(err => {
+
       })
-    })
-    .catch(err => {
-      console.log('error sending post request',err.message)
-      this.setState({
-        isSigningUp: false
-      })
-    })
+  });
   }
+
+  componentWillUnmount()
+  {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress);
+    this.onTokenRefreshListener();
+  }
+
+  handleBackPress = () =>
+  {
+    NavigationService.navigate('Login', {})
+    return true;
+  }
+
+  handleSignUp = async() =>
+  {
+    let device_token
+    await firebase.messaging().getToken()
+    .then(fcmToken => {
+      if (fcmToken) {
+        device_token = fcmToken
+        console.log('fcm token ', fcmToken)
+      } else {
+        // user doesn't have a device token yet
+        console.log("no token")
+      } 
+    });
+    console.log('device token ', device_token)
+    const user = {
+      name: this.state.name,
+      email: this.state.email,
+      password: this.state.password,
+      confirm_password: this.state.confirmPassword,
+      phone_number: this.state.phoneNumber,
+      device_token: device_token
+    }
+    this.setState({
+      isSigningUp: true
+    })
+  await axios.post(`/users/register`, user)
+  .then(res => {
+    let resData=res.data;
+      if(!resData.status)
+      {
+        if(resData.response.hasOwnProperty('errors'))
+        {
+          if(resData.response.errors.hasOwnProperty('name')){
+            this.setState({
+              errorNameShow: true,
+              errorNameBorderFocused: true,
+            })
+          }
+          if(resData.response.errors.hasOwnProperty('email')){
+            this.setState({
+              errorEmailShow: true,
+              isEmailFocused: false,
+              errorEmailBorderFocused: true,
+            })
+          }
+          if(resData.response.errors.hasOwnProperty('password')){
+            this.setState({
+              errorPasswordShow: true,
+              errorPasswordBorderFocused: true,
+            })
+          }
+          if(resData.response.errors.hasOwnProperty('confirm_password')){
+            this.setState({
+              errorConfirmPasswordShow: true,
+              errorConfirmPasswordBorderFocused: true,
+            })
+          }
+
+          if(resData.response.errors.hasOwnProperty('phone_number')){
+            this.setState({
+              errorPhoneNumberShow: true,
+              errorPhoneNumberBorderFocused: true,
+            })
+          }
+
+        this.setState({
+          errors: {
+            name: resData.response.errors.name,
+            email: resData.response.errors.email,
+            password: resData.response.errors.password,
+            confirmPassword: resData.response.errors.confirm_password,
+            phone_number: resData.response.errors.phone_number
+          }
+        })
+        throw new Error(Object.values(resData.response.errors).join(', '));
+        }
+      else{
+        ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
+      }       
+    }
+    else
+    {
+      this.setState({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        phoneNumber: '',
+      });
+      NavigationService.navigate('MainContainer', {})
+    }
+    this.setState({
+      isSigningUp: false
+    })
+  })
+  .catch(err => {
+    console.log('error sending post request',err.message)
+    this.setState({
+      isSigningUp: false
+    })
+    ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
+  })
+}
 
   handleFacebookLogin = async () => {
     AccessToken.getCurrentAccessToken().then(() =>
@@ -219,61 +235,85 @@ export default class SignUp extends Component {
               this.loginFacebookUser(user)
             }
           })                                                                       
-        }).catch((error) => 
-        {
+        }).catch((error) => {
           console.log('error.', error)
+          ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
         })
-    }).catch((error) => {
-          console.log('error ....', error)
-        });
+    })
+    .catch((error) => {
+      console.log('error ....', error)
+      ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
+    });
   }
 
 
   async registerFacebookUser(user) {
-    console.log("new facebook user : ", user)
-    const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
-    await axios.post(`/users/facebook/register`, {
-      name: fbName,
-      email: user.additionalUserInfo.profile.email,
-      phone_number: '',
-      // profile_picture: user._user.photoURL
-    }).then(res => {
-      console.log('res : ', res)
-      this.setState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phoneNumber: ''
-      });
-      console.log('navigating to main container....')
-      NavigationService.navigate('MainContainer', {})
-    }).catch(err => {
-      console.log('error sending post request',err.message)
+    this.setState({
+      isFbLoging: true
     })
+    try {
+      const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
+      await AsyncStorage.setItem('fbName', JSON.stringify(fbName))
+      await AsyncStorage.setItem('fbEmail', JSON.stringify(user.additionalUserInfo.profile.email))
+      await AsyncStorage.setItem('fbAvatar', JSON.stringify(user.user._user.photoURL))
+      NavigationService.navigate('PhoneAuth', {})
+      this.setState({
+        isFbLoging: false
+      })
+    } catch (error) {
+      this.setState({
+        isFbLoging: false
+      })
+      console.log(error)
+      ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
+    }
   }
 
   async loginFacebookUser(user) {
-    console.log('logging in facebook user')
+    this.setState({
+      isFbLoging: true
+    })
     const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
+    let device_token
+    await firebase.messaging().getToken()
+    .then(fcmToken => {
+      if (fcmToken) {
+        device_token = fcmToken
+        console.log('fcm token ', fcmToken)
+      } else {
+        // user doesn't have a device token yet
+        console.log("no token")
+      } 
+    });
     await axios.post(`/users/facebook/login`, {
       name: fbName,
       email: user.additionalUserInfo.profile.email,
-      phone_number: '',
-      // profile_picture: user._user.photoURL
-    }).then(res => {
-      console.log('res : ', res)
+      phone_number: user.user._user.phoneNumber,
+      avatar: user.additionalUserInfo.profile.picture.data.url,
+      device_token: device_token
+    })
+    .then(res => {
+      if(res.data.status){
+        this.setState({
+          email: '',
+          password: '',
+          isFbLoging: false
+        });
+        NavigationService.navigate('MainContainer', {})
+      }
+      else{
+        this.setState({
+          isFbLoging: false
+        })
+        ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
+      }
+    })
+    .catch(err => {
       this.setState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phoneNumber: ''
-      });
-      console.log('navigating to main container....')
-      NavigationService.navigate('MainContainer', {})
-    }).catch(err => {
+        isFbLoging: false
+      })
       console.log('error sending post request',err.message)
+      ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     })
   }
 
@@ -322,8 +362,8 @@ export default class SignUp extends Component {
     handleConfirmPasswordFocus = () => this.setState({isConfirmPasswordFocused: true, errorConfirmPasswordBorderFocused: false})
     handleConfirmPasswordBlur = () => this.setState({isConfirmPasswordFocused: false, errorConfirmPasswordBorderFocused: false})
 
-    handlePhoneFocus = () => this.setState({isPhoneFocused: true})
-    handlePhoneBlur = () => this.setState({isPhoneFocused: false})
+    handlePhoneFocus = () => this.setState({isPhoneFocused: true, errorPhoneNumberBorderFocused: false})
+    handlePhoneBlur = () => this.setState({isPhoneFocused: false,errorPhoneNumberBorderFocused: false})
 
   render() {
     return (
@@ -333,15 +373,16 @@ export default class SignUp extends Component {
             onFocus={this.handleNameFocus}
             onBlur={this.handleNameBlur}
             style={[styles.inputs, 
-              {borderBottomColor: (this.state.isNameFocused? '#7963b6': this.state.errorNameBorderFocused? 'red': '#000'),
+              {borderBottomColor: (this.state.isNameFocused? config.COLOR: this.state.errorNameBorderFocused? 'red': '#000'),
               borderBottomWidth: this.state.isNameFocused? 2: 1,}]}
             placeholder="Name"
+            selectionColor={config.COLOR}
             onChangeText={name => this.setState({name: name, errorNameShow: false, errorNameBorderFocused: false})}
             value={this.state.name}/>
         </View>  
               
         {this.state.errorNameShow && 
-        <Text style={{ color: 'red', marginHorizontal: 20  }}>
+        <Text style={{ color: 'red', marginHorizontal: 25  }}>
           {this.state.errors.name}
         </Text>}
 
@@ -350,16 +391,17 @@ export default class SignUp extends Component {
             onFocus={this.handleEmailFocus}
             onBlur={this.handleEmailBlur}
             style={[styles.inputs, 
-              {borderBottomColor: (this.state.isEmailFocused? '#7963b6': this.state.errorEmailBorderFocused? 'red': '#000'),
+              {borderBottomColor: (this.state.isEmailFocused? config.COLOR: this.state.errorEmailBorderFocused? 'red': '#000'),
               borderBottomWidth: this.state.isEmailFocused? 2: 1,}]}
             placeholder="Email"
+            selectionColor={config.COLOR}
             keyboardType="email-address"
             onChangeText={email => this.setState({email: email, errorEmailShow: false, errorEmailBorderFocused: false})}
             value={this.state.email}/>
       </View>       
 
       {this.state.errorEmailShow && 
-      <Text style={{ color: 'red', marginHorizontal: 20  }}>
+      <Text style={{ color: 'red', marginHorizontal: 25  }}>
         {this.state.errors.email}
       </Text>} 
 
@@ -368,16 +410,17 @@ export default class SignUp extends Component {
             onFocus={this.handlePasswordFocus}
             onBlur={this.handlePasswordBlur}
             style={[styles.inputs, 
-              {borderBottomColor: (this.state.isPasswordFocused? '#7963b6': this.state.errorPasswordBorderFocused? 'red': '#000'),
+              {borderBottomColor: (this.state.isPasswordFocused? config.COLOR: this.state.errorPasswordBorderFocused? 'red': '#000'),
               borderBottomWidth: this.state.isPasswordFocused? 2: 1,}]}
             placeholder="Password"
+            selectionColor={config.COLOR}
             secureTextEntry={true}
             onChangeText={password => this.setState({password: password, errorPasswordShow: false, errorPasswordBorderFocused: false})}
             value={this.state.password}/>
       </View>
 
       {this.state.errorPasswordShow &&
-      <Text style={{ color: 'red', marginHorizontal: 20  }}>
+      <Text style={{ color: 'red', marginHorizontal: 25  }}>
         {this.state.errors.password}
       </Text>}
 
@@ -386,16 +429,17 @@ export default class SignUp extends Component {
           onFocus={this.handleConfirmPasswordFocus}
           onBlur={this.handleConfirmPasswordBlur}
           style={[styles.inputs, 
-            {borderBottomColor: (this.state.isConfirmPasswordFocused? '#7963b6': this.state.errorConfirmPasswordBorderFocused? 'red': '#000'),
+            {borderBottomColor: (this.state.isConfirmPasswordFocused? config.COLOR: this.state.errorConfirmPasswordBorderFocused? 'red': '#000'),
             borderBottomWidth: this.state.isConfirmPasswordFocused? 2: 1,}]}
           onChangeText={confirmPassword => this.setState({ confirmPassword: confirmPassword, errorConfirmPasswordShow: false, errorConfirmPasswordBorderFocused: false })}
           placeholder={'Confirm password '}
           secureTextEntry={true}
+          selectionColor={config.COLOR}
           value={this.state.confirmPassword}/>
       </View>
 
       {this.state.errorConfirmPasswordShow &&
-      <Text style={{ color: 'red', marginHorizontal: 20  }}>
+      <Text style={{ color: 'red', marginHorizontal: 25  }}>
         {this.state.errors.confirmPassword}
       </Text>}
 
@@ -409,26 +453,27 @@ export default class SignUp extends Component {
             value={this.state.phoneNumber}
             keyboardType = "phone-pad"
             style={[styles.textInput, 
-              {borderBottomColor: (this.state.isPhoneFocused? '#7963b6': this.state.errorPhoneNumberBorderFocused? 'red': '#000'),
+              {borderBottomColor: (this.state.isPhoneFocused? config.COLOR: this.state.errorPhoneNumberBorderFocused? 'red': '#000'),
               borderBottomWidth: this.state.isPhoneFocused? 2: 1,}]}
             onChangeText={phoneNumber => this.setState({ phoneNumber: phoneNumber, errorPhoneNumberShow: false, errorPhoneNumberBorderFocused: false })}
             placeholder={'Phone number '}
-            selectionColor={'#7963b6'}
+            selectionColor={config.COLOR}
             maxLength={this.state.enterCode ? 6 : 20} />
         </View>
       </View>
 
       {this.state.errorPhoneNumberShow &&
-      <Text style={{ color: 'red', marginHorizontal: 20  }}>
+      <Text style={{ color: 'red', marginHorizontal: 25  }}>
         {this.state.errors.phone_number}
       </Text>}
 
       <View style = {{alignItems: 'center',justifyContent: 'center', marginTop: 30 }}>
         <Button 
-          style={[styles.registerButton]}
+          style={styles.registerButton}
           onPress={this.handleSignUp}
-          disabled = {this.state.isSigningUp}>
-          { this.state.isSigningUp ? <Text style = {{color: '#fff', fontWeight: 'bold' }}>SIGNING UP...</Text> : <Text style = {{color: '#fff', fontWeight: 'bold' }}>SIGN UP</Text>}
+          mode = "contained"
+          loading = {this.state.isSigningUp}>
+          <Text style = {{color: '#fff', fontWeight: 'bold' }}>SIGN UP</Text>
         </Button>
       </View>    
 
@@ -437,11 +482,10 @@ export default class SignUp extends Component {
           style={[styles.loginButton]}
           mode = 'text'
           onPress = {() => this.props.navigation.navigate('Login') }>
-            <Text style = {{color: '#7963b6', fontWeight: 'bold' }}> ALREADY A MEMBER? LOG IN</Text>
+            <Text style = {{color: config.COLOR, fontWeight: 'bold' }}> ALREADY A MEMBER? LOG IN</Text>
         </Button>
       </View>
 
-      {/* <Text style = {{fontWeight : 'bold' ,color: '#000', marginHorizontal: 170}}>OR</Text> */}
       <View style = {{flexDirection: "row", justifyContent: 'center',}}>
         <View style={{
               marginTop: 7,
@@ -472,6 +516,7 @@ export default class SignUp extends Component {
           onPress = {this.handleFacebookLogin}
           style = {styles.fbButton}
           /> 
+        {this.state.isFbLoging && <ActivityIndicator size="large" />}
       </View>
     </ScrollView>
     )
@@ -483,7 +528,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     // justifyContent: 'center',
     // alignItems: 'center',
-    paddingTop: 90,
+    paddingTop: 70,
 
   },
 
@@ -494,7 +539,7 @@ const styles = StyleSheet.create({
 
   callingCodeText: {
     fontSize: 16,
-    color: '#054752',
+    color: config.TEXT_COLOR,
     fontWeight: 'bold',
     paddingRight: 10
   },
@@ -504,7 +549,7 @@ const styles = StyleSheet.create({
     padding: 0,
     flex: 1,
     fontSize: 16,
-    color: '#054752',
+    color: config.TEXT_COLOR,
     fontWeight: 'bold'
   },
 
@@ -529,7 +574,7 @@ inputs:{
     padding: 0,
     flex: 1,
     fontSize: 16,
-    color: '#054752',
+    color: config.TEXT_COLOR,
     fontWeight: 'bold'
 },
 inputIcon:{
@@ -543,10 +588,8 @@ registerButton:{
   borderRadius: 30,
   width: 280,
   height: 40,
-  backgroundColor: "#7963b6",
+  backgroundColor: config.COLOR,
   justifyContent: 'center',
-  // alignItems: 'center'
-
 },
 
 registerText:{

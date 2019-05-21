@@ -46,7 +46,10 @@ const UserSchema = new schema({
     preferences: preferencesSchema,
 
     cars: [carSchema],
+    
     token: String,
+
+    device_token: String,
 
     date: {
         type: Date,

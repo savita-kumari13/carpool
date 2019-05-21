@@ -1,4 +1,6 @@
 export default {
+    COLOR: '#4370A3',
+    TEXT_COLOR: '#054752',
     API_HOST: 'http://192.168.137.1:5570',
     // API_HOST: 'http://192.168.43.100:5570',
     UPLOAD_FOLDER: '/upload/profile_photo/',  

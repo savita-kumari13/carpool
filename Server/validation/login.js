@@ -22,8 +22,6 @@ module.exports = function validateLoginInput(data) {
         errors.password = 'Password is required';
     }
 
-    console.log('errors in signing up user : ', errors)
-
     return {
         errors,
         status: isEmpty(errors)

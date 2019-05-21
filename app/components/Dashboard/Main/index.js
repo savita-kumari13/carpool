@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import IconOffer from 'react-native-vector-icons/EvilIcons';
 import IconInbox from 'react-native-vector-icons/AntDesign';
 import IconProfile from 'react-native-vector-icons/MaterialIcons';
+import config from '../../../config/constants'
 
 import
   { 
@@ -33,6 +34,9 @@ import Bio from './Profile/Bio';
 import Preferences from './Profile/Preferences';
 import DrivingCar from './Offer/DrivingCar';
 import ChangePassword from './Profile/ChangePassword';
+import OfferedRide from './Rides/OfferedRide';
+import BookedRide from './Rides/BookedRide';
+import OfferedRideUserBio from './Rides/OfferedRideUserBio';
 
 const backArrow = <Icon name = "ios-arrow-round-back" 
               size = {25} color = "#000000" 
@@ -55,14 +59,14 @@ const RidesTabNavigator = createMaterialTopTabNavigator(
   },
   {
     tabBarOptions: {
-      activeTintColor: '#7963b6',
+      activeTintColor: config.COLOR,
       inactiveTintColor: 'grey',
       style: {
         backgroundColor: '#fff'
       },
 
       indicatorStyle: {
-        backgroundColor: '#7963b6'
+        backgroundColor: config.COLOR
 
       },
 
@@ -135,7 +139,7 @@ const MainTabNavigator = createBottomTabNavigator(
             color: '#fff'
           },
           headerStyle: {
-            backgroundColor: '#7963b6',
+            backgroundColor: config.COLOR,
             elevation: 0,
           },
         }
@@ -144,7 +148,7 @@ const MainTabNavigator = createBottomTabNavigator(
       initialRouteName: 'Rides',
 
       tabBarOptions: {
-        activeTintColor: '#7963b6',
+        activeTintColor: config.COLOR,
         inactiveTintColor: 'grey',
         labelStyle: {
           fontWeight: 'bold'
@@ -162,6 +166,56 @@ const MainTabNavigator = createBottomTabNavigator(
       screen: MainTabNavigator
     },
 
+    OfferedRide:{
+      screen: OfferedRide,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',
+          elevation: 0,         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = {config.COLOR} 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          />
+        
+        
+      })
+    },
+
+    BookedRide:{
+      screen: BookedRide,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',
+          elevation: 0,         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = {config.COLOR} 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          /> 
+      })
+    },
+
+    OfferedRideUserBio:{
+      screen: OfferedRideUserBio,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: 'transparent',
+          elevation: 0,         
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = {config.COLOR} 
+              style = {{marginLeft: 20, marginTop: 20,}}
+              onPress = {() => navigation.goBack()}
+          /> 
+      })
+    },
+
     Calendarr:{
       screen: Calendarr,
       navigationOptions: ({navigation}) => ({
@@ -171,7 +225,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR} 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />
@@ -189,7 +243,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR} 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />
@@ -207,7 +261,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR} 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />
@@ -225,7 +279,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR} 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />
@@ -243,7 +297,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR }
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />     
@@ -259,7 +313,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR} 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />     
@@ -275,7 +329,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR} 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />     
@@ -291,7 +345,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR} 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />     
@@ -307,7 +361,7 @@ const MainTabNavigator = createBottomTabNavigator(
         },
         headerLeft: 
           <Icon name = "ios-arrow-round-back" 
-              size = {40} color = "#7963b6" 
+              size = {40} color = {config.COLOR} 
               style = {{marginLeft: 20, marginTop: 20,}}
               onPress = {() => navigation.goBack()}
           />     
@@ -318,7 +372,7 @@ const MainTabNavigator = createBottomTabNavigator(
       screen: CarMake,
       navigationOptions: ({navigation}) => ({
         headerStyle:{
-          backgroundColor: '#7963b6',
+          backgroundColor: config.COLOR,
           elevation: 0,
         },
         title: 'Your car details',
@@ -341,7 +395,7 @@ const MainTabNavigator = createBottomTabNavigator(
       screen: Bio,
       navigationOptions: ({navigation}) => ({
         headerStyle:{
-          backgroundColor: '#7963b6',
+          backgroundColor: config.COLOR,
           elevation: 0,
         },
         title: 'Edit profile',
@@ -364,7 +418,7 @@ const MainTabNavigator = createBottomTabNavigator(
       screen: Preferences,
       navigationOptions: ({navigation}) => ({
         headerStyle:{
-          backgroundColor: '#7963b6',
+          backgroundColor: config.COLOR,
           elevation: 0,
         },
         title: 'Edit preferences',
@@ -387,7 +441,7 @@ const MainTabNavigator = createBottomTabNavigator(
       screen: ChangePassword,
       navigationOptions: ({navigation}) => ({
         headerStyle:{
-          backgroundColor: '#7963b6',
+          backgroundColor: config.COLOR,
           elevation: 0,
         },
         title: 'Change password',

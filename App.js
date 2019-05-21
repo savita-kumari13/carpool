@@ -18,6 +18,7 @@ import PhoneAuth from './app/components/PhoneAuth';
 
 import axios from './app/components/axios';
 import ForgotPassword from './app/components/ForgotPassword';
+import config from './app/config/constants'
 
 
 export default class App extends Component {   
@@ -41,11 +42,32 @@ const AppStackContainer = createStackNavigator(
         header: null
       })
     },
+    PhoneAuth: {
+      screen : PhoneAuth,
+      navigationOptions: ({navigation}) => ({
+        headerStyle:{
+          backgroundColor: config.COLOR,
+          elevation: 0,
+        },
+        title: 'Save number',
+        headerTitleStyle: {
+          fontSize: 18,
+          color: '#fff',
+          marginTop: 5,
+        },
+        headerLeft: 
+          <Icon name = "ios-arrow-round-back" 
+              size = {40} color = "#fff" 
+              style = {{marginLeft: 20, marginTop: 5,}}
+              onPress = {() => navigation.goBack()}
+          />     
+      })
+    },
     SignUp: {
       screen : SignUp,
       navigationOptions: ({navigation}) => ({
         headerStyle:{
-          backgroundColor: '#7963b6',
+          backgroundColor: config.COLOR,
           elevation: 0,
         },
         title: 'Sign up',
@@ -81,12 +103,12 @@ const AppStackContainer = createStackNavigator(
         header: null
       })
     },
-    PhoneAuth: PhoneAuth,
+
     ForgotPassword: {
       screen : ForgotPassword,
       navigationOptions: ({navigation}) => ({
         headerStyle:{
-          backgroundColor: '#7963b6',
+          backgroundColor: config.COLOR,
           elevation: 0,
         },
         title: 'Forgot password',

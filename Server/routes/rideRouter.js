@@ -8,14 +8,16 @@ const config = require('../config')
 const Ride = require('../models/Ride');
 const User = require('../models/User');
 
+var fcm = require('fcm-notification');
+var FCM = new fcm('../Server/private_key.json');
+
+
 rideRouter.post('/offer_ride', passport.authenticate('jwt', { session: false }),(req, res) => {
     console.log("Success! You can not see this without a token (offer ride)")
     User.findById(mongoose.Types.ObjectId(req.user._id))
     .then(user => {
-        let avatar = user.avatar
-        let bio = user.bio
-        return avatar, bio
-    }).then((avatar, bio) => {
+        console.log('avatar',user.avatar)
+        console.log('bio', user.bio)
         const newRide = new Ride({
             pick_up_name: req.body.pick_up_name,
             pick_up_coordinates:{
@@ -37,9 +39,9 @@ rideRouter.post('/offer_ride', passport.authenticate('jwt', { session: false }),
                 phone_number: req.user.phone_number,
                 preferences: req.user.preferences,
                 status: config.status.PENDING,
-                avatar: avatar,
+                avatar: user.avatar,
                 car: req.body.offered_ride_car,
-                bio: bio
+                bio: user.bio
             },
         })       
         return newRide.save()
@@ -78,7 +80,7 @@ rideRouter.post('/search_ride', passport.authenticate('jwt', { session: false}),
             $gte: new Date(Date.parse(req.body.searched_ride_date_time) - 1 * 60 * 60 * 1000),
             $lte: new Date(Date.parse(req.body.searched_ride_date_time) + 1 * 60 * 60 * 1000)
         }
-
+        ,offered_ride_passengers_no: { $gt : 0}
     },
     {
         pick_up_coordinates: 0, drop_off_coordinates: 0, "offered_user._id": 0
@@ -89,17 +91,26 @@ rideRouter.post('/search_ride', passport.authenticate('jwt', { session: false}),
             response:{
                 rides: rides
             },
-            messages: ["Matched rides"]
-            
+            messages: ["Matched rides"]     
         })     
     })
-    .catch(err => console.log('error in geoWithin, centerSphere : ', err))
+    .catch(err => {
+        console.log('error in searching rides ', err)
+        return res.json({
+            status: false,
+            response:{},
+            messages: [err.message]  
+        }) 
+    })
 })
 
 
 rideRouter.post('/book', passport.authenticate('jwt', { session : false }), (req, res) => {
     console.log('Success! You can not see this without a token (book ride)')
     let id = mongoose.Types.ObjectId(req.body.ride_id)
+    let deviceToken
+    let currentUser
+    let currentRide
     if(!mongoose.Types.ObjectId.isValid(id)) {
         console.log('Not valid');
         return res.json({
@@ -108,65 +119,97 @@ rideRouter.post('/book', passport.authenticate('jwt', { session : false }), (req
             messages: ['Provide correct key']
         });
     }
-    User.findById(mongoose.Types.ObjectId(req.user._id))
+  User.findById(mongoose.Types.ObjectId(req.user._id))
     .then(user => {
-        let avatar = user.avatar
-        let bio = user.bio
-        return avatar, bio
-    })
-    .then((avatar, bio) => {
-        Ride.findById(id).then(ride=>{
-            ride.offered_ride_passengers_no= ride.offered_ride_passengers_no - req.body.seats_booked;
-            let existUser=false;
-            ride.booked_user.forEach((user,index)=>{
-                if(user._id.toString() == req.user._id){
-                    existUser=true;
-                    ride.booked_user[index].seats_booked= user.seats_booked + req.body.seats_booked
-                    ride.markModified('booked_user')
-                    return ;
-                }
-            });
-            if(!existUser){
-                ride.booked_user.push(
-                    {
-                        _id: mongoose.Types.ObjectId(req.user._id),
-                        name: req.user.name,
-                        phone_number: req.user.phone_number,
-                        preferences: req.user.preferences,
-                        seats_booked: req.body.seats_booked,
-                        status: config.status.PENDING,
-                        avatar: avatar,
-                        bio: bio
-                    }
-                )
+      currentUser = user
+      Ride.findById(id)
+      .then(ride=>{
+        ride.offered_ride_passengers_no= ride.offered_ride_passengers_no - req.body.seats_booked;
+        let existUser=false;
+        ride.booked_user.forEach((user,index)=>{
+          if(user._id.toString() == req.user._id){
+            existUser=true;
+            ride.booked_user[index].seats_booked= user.seats_booked + req.body.seats_booked
+            ride.markModified('booked_user')
+            return ;
+          }
+        })
+        if(!existUser){
+          ride.booked_user.push(
+            {
+              _id: mongoose.Types.ObjectId(req.user._id),
+              name: req.user.name,
+              phone_number: req.user.phone_number,
+              preferences: req.user.preferences,
+              seats_booked: req.body.seats_booked,
+              status: config.status.PENDING,
+              avatar: user.avatar,
+              bio: user.bio
             }
-            return ride.save(); 
-        })
-        .then((ride)=>{
-            return res.json({
-                status: true,
-                response:{
-                    ride: ride
+          )
+        }
+        return ride.save(); 
+      })
+      .then((ride)=>{
+        currentRide = ride
+        let userId = ride.offered_user._id
+        return userId
+      })
+      .then(userId => {
+          User.findById(mongoose.Types.ObjectId(userId))
+          .then(user => {
+            deviceToken = user.device_token
+            return deviceToken
+          })
+          .then(deviceToken => {
+            let seats = ' seats'
+            if(req.body.seats_booked == 1){
+                seats = ' seat'
+            }
+            var message = {
+                // data: {    //This is only optional, you can send any data
+                //     score: '850',
+                //     time: '2:45'
+                // },
+                notification:{
+                    title : 'CarPool',
+                    body : user.name + ' has booked ' + req.body.seats_booked + seats + ' for your ride ' + currentRide.pick_up_name + ' - ' + currentRide.drop_off_name
                 },
-                messages: ["Booked ride"]
+                token : deviceToken
+            };
+            console.log(message);
+            FCM.send(message, (err, response) => {
+                if(err) {
+                    console.log('error in sending notification ', err)
+                    throw err
+                }
+                console.log('notification ', response)
+                console.log('sjafiiw')
             })
-        })
-        .catch((err)=>{
-            return res.json({
-                status: false,
-                response:{},
-                messages: [err.message]
-            })
-        })
-    })
-    .catch(err => {
+            return
+          })
+          return
+      })
+      .then(() => {
         return res.json({
+          status: true,
+          response:{
+            ride: currentRide
+          },
+          messages: ["Booked ride"]
+        })
+      })
+      return
+    })
+    .catch((err)=>{
+      console.log('errrrrr', err)
+      return res.json({
           status: false,
           response:{},
           messages: [err.message]
-        })
-      }) 
-})
+      })
+    })
+  })
 
 
 rideRouter.get('/current_offered_ride', passport.authenticate('jwt', { session : false }), (req,res) =>{

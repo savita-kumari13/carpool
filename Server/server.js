@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express();
+const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser');
@@ -7,7 +8,6 @@ const cors = require('cors');
 const passport = require('passport')
 const crypto = require('crypto');
 const User = require('./models/User');
-const port = 5570;
 const config = require('./config');
 const UserRouter = require('./routes/userRouter')
 const RideRouter = require('./routes/rideRouter')
@@ -15,7 +15,8 @@ const RideRouter = require('./routes/rideRouter')
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 
-app.use(express.static('upload/profile_photo'));
+app.use(express.static(__dirname + '/upload/profile_photo'));
+// app.use('/static', express.static(path.join(__dirname, 'upload/profile_photo')))
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false  }));
@@ -54,13 +55,13 @@ app.post('/forgot_password', (req, res) => {
     .then(user => {
       if(!user)
         throw new Error("User doesn't exists");
-      return new Promise(function(resolve,reject){
+        return new Promise(function(resolve,reject){
         crypto.randomBytes(24, (err, buffer) => {
           if (err){
             reject(err);
             return;
           }
-          let token = buffer.toString('base64');
+          let token = buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/\=/g, '');
           resolve(token);
         });
       })
@@ -77,14 +78,13 @@ app.post('/forgot_password', (req, res) => {
           pass: config.gmail.password
         }
       });
-      var htmlBody=fs.readFileSync('./emailBody.html',{encoding: 'utf8'});
-      htmlBody = htmlBody.replace('{{app_host}}', config.app_host);
-      console.log(htmlBody);
+      var htmlBody=fs.readFileSync('./templates/email/reset_password.html',{encoding: 'utf8'});
+      htmlBody = htmlBody.replace(/{{app_host}}/g, config.app_host);
+      htmlBody = htmlBody.replace(/{{user_token}}/g, user.token);
       var mailOptions = {
         from: config.gmail.email,
         to: req.body.email,
         subject: 'Reset password instructions',
-        text: 'That was easy!',
         html: htmlBody
       }; 
 
@@ -107,7 +107,6 @@ app.post('/forgot_password', (req, res) => {
       });
     })
     .catch(err=>{
-      console.log(err)
       return res.json({
         status: false,
         response: {},
@@ -122,35 +121,49 @@ app.get('/reset_password', (req, res) => {
     token: req.query.token
   })
   .then(user => {
-    res.send(
-      '<html>' +
-    '<head>'+
-    '</head>'+
-    '<body>'+
-      '<div>'+
-        '<form class="wrapper small-only:heightMax" method="post">'+
-          '<h1 class="kirk-title theVoice">Choose a new password.</h1>'+
-          '<div class="jsx-2044813569 kirk-textField">'+
-            '<div class="jsx-2044813569 kirk-textField-wrapper">'+
-              '<input type="password" placeholder="Password (min. 8 characters)" name="password" autocomplete="new-password" title="Enter new password" class="jsx-2044813569 " value="t" aria-autocomplete="list">'+
-              '<button class="kirk-button kirk-button-unstyled kirk-button-bubble kirk-textField-button" type="button" tabindex="-1" aria-hidden="true">'+
-                
-              '</button>'+
-            '</div>'+
-          '</div>'+
-          '<div class="button-wrapper m-xl justify-center">'+
-            '<button class="kirk-button kirk-button-primary" type="submit" title="">Submit your new password</button>'+
-          '</div>'+
-        '</form>'+
-      '</div>'+
-    '</body>'+
-  '</html>')
+    if(!user) {
+      throw new Error("User doesn't exists");
+    }
+    var htmlBody=fs.readFileSync('./templates/confirm_password.html',{encoding: 'utf8'});
+    htmlBody = htmlBody.replace(/{{app_host}}/g, config.app_host);
+    htmlBody = htmlBody.replace(/{{user_token}}/g, user.token);
+    console.log(htmlBody)
+    res.send(htmlBody)
   })
   .catch(err =>{
+    res.sendFile('./templates/reset_password_error.html', {root: __dirname })
+  })
+})
 
+app.post('/reset_password_success', (req, res) => {
+  let currentUser
+  console.log('req body ', req.body.password)
+  User.findOne({
+    token: req.body.token
+  })
+  .then(user => {
+    if(!user) {
+      throw new Error("User doesn't exists");
+    }
+    currentUser = user
+    return bcrypt.genSalt(10);
+  })
+  .then(salt=>{
+    return bcrypt.hash(req.body.password, salt);
+  }).then(hash=>{
+    currentUser.password = hash;
+    return currentUser.save();
+  })
+  .then(user => {
+    console.log('user ', user)
+    res.sendFile('./templates/reset_password_success.html', {root: __dirname })
+  })
+  .catch(err => {
+    console.log('err ', err)
+    res.sendFile('./templates/reset_password_error.html', {root: __dirname })
   })
 })
   
-app.listen(port, () => {
-    console.log(`Listening at ${port}`);
+app.listen(config.port, () => {
+    console.log(`Listening at ${config.port}`);
  })

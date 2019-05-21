@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
+  ToastAndroid
 } from 'react-native'
 import Icon from 'react-native-vector-icons/EvilIcons';
 import { Button } from 'react-native-paper'
@@ -28,22 +29,31 @@ export default class CarMake extends Component {
       carTypeName: '',
       carColor: '',
       registeredYear: null,
+
       yearError: '',
       yearErrorShow: false,
+
       showMakeText: true,
       showModelText: false,
+
       showPopularMakes: true,
       showPopularModels: false,
+
       showModelMaruti: false,
       showModelHonda: false,
       showModelHyundai: false,
       showModelFord: false,
       showModelTata: false,
+
       showContinueButton: false,
+      showSubmitButton: false,
+      
       showCarType: false,
       showColors: false,
       showRegistration: false,
-      showSubmitButton: false,
+
+      isLoading: false,
+
       popularMake: ['HONDA', 'HYUNDAI', 'TATA', 'FORD', 'MARUTI',],
       popularModelMaruti: ['Wagon R', 'Swift', 'SWIFT DZIRE', 'ALTO 800', '1000',],
       popularModelHyundai: [ 'ACCENT', 'i30', 'i20', 'SOLARIS', 'GETZ'],
@@ -209,20 +219,20 @@ export default class CarMake extends Component {
         source={require('../../../../../icons/convertible.png')}/>
     }
     return(
-      <TouchableOpacity style = {{flexDirection: 'row', marginTop: 20, justifyContent: 'space-between', alignItems: 'center',}} 
-      onPress = {() => {
-        this.setState({
-          carTypeName: item,
-          showColors: true,
-          showCarType: false
-        })
+      <TouchableOpacity style = {{flexDirection: 'row', marginTop: 20, justifyContent: 'space-between', alignItems: 'center', }} 
+        onPress = {() => {
+          this.setState({
+            carTypeName: item,
+            showColors: true,
+            showCarType: false,
+          })
       }}>
         <TouchableOpacity style = {{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',}}>
           {carIcon}
           <Text style = {{fontWeight: 'bold',
             fontFamily: 'sans-serif-medium',
             fontSize: 16,
-            color: '#054752',
+            color: config.TEXT_COLOR,
             marginLeft: 20,
             marginTop: 10,
             }}
@@ -230,7 +240,7 @@ export default class CarMake extends Component {
               this.setState({
                 carTypeName: item,
                 showColors: true,
-                showCarType: false
+                showCarType: false,
               })
             }}>{item}</Text>
         </TouchableOpacity>
@@ -360,7 +370,7 @@ export default class CarMake extends Component {
           <Text style = {{fontWeight: 'bold',
             fontFamily: 'sans-serif-medium',
             fontSize: 16,
-            color: '#054752',
+            color: config.TEXT_COLOR,
             marginLeft: 20,
             }}
             onPress = {() => {
@@ -376,11 +386,15 @@ export default class CarMake extends Component {
   }
 
 async checkRegisteredYear(){
+  this.setState({
+    isLoading: true
+  })
   const currentYear = new Date().getFullYear()
   const lastFiftyYears = currentYear - 50
   if(this.state.registeredYear >= lastFiftyYears && this.state.registeredYear <= currentYear){
     this.setState({
-      yearErrorShow: false
+      yearErrorShow: false,
+      isLoading: false
     })
     const car = {
       make: this.state.carMakeText,
@@ -391,6 +405,9 @@ async checkRegisteredYear(){
     }
 
     try {
+      this.setState({
+        isLoading: true
+      })
       const directedFromOfferRide = JSON.parse(await AsyncStorage.getItem('carMakeOfferRide'))
       const directedFromProfile = JSON.parse(await AsyncStorage.getItem('carMakeProfile'))
 
@@ -401,23 +418,47 @@ async checkRegisteredYear(){
         const resData = res.data
         if(resData.status){
           if(directedFromOfferRide && !directedFromProfile){
-            this.props.navigation.navigate('PriceAndAboutRide')
+            this.setState({
+              isLoading: false
+            })
+            this.props.navigation.navigate('TimeAndPassengersNumber')
+            return
           }
           if(directedFromProfile && !directedFromOfferRide){
+            this.setState({
+              isLoading: false
+            })
             this.props.navigation.navigate('Profile')
+            ToastAndroid.show('Car saved successfully', ToastAndroid.SHORT)
+            return
           }
         }
+        else{
+          this.setState({
+            isLoading: false
+          })
+          ToastAndroid.show('Error occurred while saving car details', ToastAndroid.SHORT)
+        }
       }).catch(err => {
-        console.log('Error sending add car request ', err) 
+        this.setState({
+          isLoading: false
+        })
+        console.log('Error sending add car request ', err)
+        ToastAndroid.show('Error occurred while updating profile photo', ToastAndroid.SHORT)
       })
     } catch (error) {
-      console.log('Error in AsyncStorage ', error)  
+      this.setState({
+        isLoading: false
+      })
+      console.log('Error in AsyncStorage ', error) 
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT) 
     }
   }
   else{
     this.setState({
       yearErrorShow: true,
-      yearError: 'Please enter a valid year'
+      yearError: 'Please enter a valid year',
+      isLoading: false
     })
   }
 }
@@ -431,7 +472,7 @@ async checkRegisteredYear(){
         {this.state.showMakeText &&
         <View style = {{ marginTop: 50, marginLeft: 20, flexDirection: 'row', justifyContent: 'space-between',}}>
           <Icon name = "search" 
-                size = {35} color= '#054752'
+                size = {35} color= {config.TEXT_COLOR}
                 style = {{marginTop:15, }}/>
           <TextInput
             placeholder='Car make'
@@ -457,14 +498,14 @@ async checkRegisteredYear(){
       <Text style = {{fontWeight: 'bold',
         fontFamily: 'sans-serif-medium',
         fontSize: 18,
-        color: '#054752',
+        color: config.TEXT_COLOR,
         marginTop: 70,
         }}> What model? </Text>}
         
         {this.state.showModelText &&  
         <View style = {{ marginTop: 50, marginLeft: 20, flexDirection: 'row', justifyContent: 'space-between'}}>
           <Icon name = "search" 
-                size = {35} color= '#054752'
+                size = {35} color= {config.TEXT_COLOR}
                 style = {{marginTop:15, }}/>
           <TextInput
             placeholder='Car model'
@@ -583,14 +624,21 @@ async checkRegisteredYear(){
         keyboardType = "phone-pad"
         style = {{justifyContent: 'center',
           borderBottomWidth: 2,
-          borderBottomColor: '#7963b6',
+          borderBottomColor: config.COLOR,
           height: 50,
           width: 300,
           marginTop: 90,
-          marginLeft: 10,//marginTop: 90,
-          paddingTop: 20,}}
+          marginLeft: 10,
+          padding: 0,
+          fontSize: 16,
+          color: config.TEXT_COLOR,
+          fontWeight: 'bold'}}
           onChangeText={registeredYear =>{
-            this.setState({ registeredYear, showSubmitButton: true, yearErrorShow: false })
+            this.setState({ 
+              registeredYear, 
+              showSubmitButton: true, 
+              yearErrorShow: false 
+            })
             if(registeredYear == ''){
               this.setState({
                 showSubmitButton: false
@@ -610,7 +658,8 @@ async checkRegisteredYear(){
               onPress={() => {
                 this.checkRegisteredYear()
               }}
-              mode = "contained">
+              mode = "contained"
+              loading = {this.state.isLoading}>
             <Text style = {{color: '#fff', fontWeight: 'bold' }}>Submit</Text>
           </Button> 
         </View>}
@@ -622,14 +671,15 @@ async checkRegisteredYear(){
 const styles = StyleSheet.create({
   container: {
      flexGrow: 1,
-     padding: 20
+     padding: 20,
+     marginTop: 10
   },
 
   makeCar: {
     fontWeight: 'bold',
     fontFamily: 'sans-serif-medium',
     fontSize: 18,
-    color: '#054752',
+    color: config.TEXT_COLOR,
   },
 
   registrationText: {
@@ -644,33 +694,37 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'sans-serif-medium',
     fontSize: 18,
-    color: '#054752',
+    color: config.TEXT_COLOR,
   },
 
   popularMakeName: {
     fontWeight: 'bold',
     fontFamily: 'sans-serif-medium',
     fontSize: 16,
-    color: '#7963b6',
+    color: config.COLOR,
     marginTop: 20,
     marginHorizontal: 40,
   },
 
   textInput: {
     justifyContent: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#054752',
+    borderBottomColor: config.TEXT_COLOR,
     height: 50,
     width: 240,
     marginRight: 10,
     paddingTop: 20,
+    borderBottomWidth: 2,
+    padding: 0,
+    fontSize: 16,
+    color: config.TEXT_COLOR,
+    fontWeight: 'bold'
   },
 
   continueBtn:{
     borderRadius: 30,
-    width: 300,
+    width: 250,
     height: 45,
-    backgroundColor: "#7963b6",
+    backgroundColor: config.COLOR,
     justifyContent: 'center',
   },
 

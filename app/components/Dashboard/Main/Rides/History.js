@@ -11,6 +11,7 @@ import {
   RefreshControl ,
   ToastAndroid,
   FlatList,
+  TouchableOpacity
 } from 'react-native'
 import axios from '../../../axios'
 import config from '../../../../config/constants'
@@ -23,6 +24,8 @@ export default class History extends Component {
     super(props)
 
     this.state = {
+      noOfferedRides: false,
+      noBookedRides: false,
       currentUserId: null,
       offeredRides: [],
       bookedRides : [],
@@ -69,7 +72,8 @@ getHistoryRide(){
     else{
       this.setState({
         offeredRideVisible: false,
-        refreshing: false
+        refreshing: false,
+        noOfferedRides: true,
       })
       console.log('empty offered rides')
     }
@@ -91,7 +95,8 @@ getHistoryRide(){
     else{
       this.setState({
         bookedRideVisible: false,
-        refreshing: false
+        refreshing: false,
+        noBookedRides: true,
       })
       console.log('empty booked rides')
     }
@@ -109,7 +114,7 @@ getHistoryRide(){
   {
     this._navListener = this.props.navigation.addListener('didFocus', () => {
       StatusBar.setBarStyle('light-content');
-      StatusBar.setBackgroundColor('#7963b6');
+      StatusBar.setBackgroundColor(config.COLOR);
     });
     BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
   }
@@ -126,10 +131,31 @@ getHistoryRide(){
     this.getHistoryRide()
   }
 
+  async offeredRidePlan(item) {
+    try {
+      await AsyncStorage.setItem('offered_ride', JSON.stringify(item))
+      this.props.navigation.navigate('OfferedRide')
+    } catch (error) {
+      console.log("error in async storgae ", error)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    }
+  }
+
+  async bookedRidePlan(item){
+    try {
+      await AsyncStorage.setItem('booked_ride', JSON.stringify(item))
+      this.props.navigation.navigate('BookedRide')
+    } catch (error) {
+      console.log("error in async storgae ", error)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    }
+  }
+
 renderOfferedRide = ({item}) => {
   if(item){
     return(
-      <View style = {styles.currentRideView} >
+      <TouchableOpacity style = {styles.currentRideView}
+      onPress = {() => this.offeredRidePlan(item)}>
         <Text 
           style = {styles.date}>
           {this.state.daysNames[new Date(item.offered_ride_date_time).getDay()]}, {new Date(item.offered_ride_date_time).getDate()} {this.state.monthNames[new Date(item.offered_ride_date_time).getMonth()]} - {((new Date(item.offered_ride_date_time).getHours()) < 10? '0': '') + new Date(item.offered_ride_date_time).getHours()}:{((new Date(item.offered_ride_date_time).getMinutes()) < 10? '0': '') + new Date(item.offered_ride_date_time).getMinutes()}
@@ -170,9 +196,9 @@ renderOfferedRide = ({item}) => {
           borderBottomWidth: 1,
         }}/>
         <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: 'space-between'}}>
-          <Text style = {{ color: '#054752', fontWeight: 'bold' }}>Ride completed</Text>
+          <Text style = {{ color: config.TEXT_COLOR, fontWeight: 'bold' }}>Ride completed</Text>
         </View>
-      </View>
+      </TouchableOpacity>
   )
   }   
 }
@@ -180,7 +206,8 @@ renderOfferedRide = ({item}) => {
 renderBookedRide = ({item}) => {
   if(item) {
     return(
-      <View style = {styles.currentRideView} key = {item._id}>
+      <TouchableOpacity style = {styles.currentRideView} key = {item._id}
+      onPress = {() => this.bookedRidePlan(item)}>
         <Text 
           style = {styles.date}>
           {this.state.daysNames[new Date(item.offered_ride_date_time).getDay()]}, {new Date(item.offered_ride_date_time).getDate()} {this.state.monthNames[new Date(item.offered_ride_date_time).getMonth()]} - {((new Date(item.offered_ride_date_time).getHours()) < 10? '0': '') + new Date(item.offered_ride_date_time).getHours()}:{((new Date(item.offered_ride_date_time).getMinutes()) < 10? '0': '') + new Date(item.offered_ride_date_time).getMinutes()}
@@ -228,15 +255,13 @@ renderBookedRide = ({item}) => {
         {item.booked_user.map(user => {
           if(user._id.toString() == this.state.currentUserId && user.status == config.STATUS.COMPLETED)
           return(
-            <Text key = {user._id} style = {{ color: '#054752', fontWeight: 'bold',  marginTop: 10, }}>Ride completed</Text>
+            <Text key = {user._id} style = {{ color: config.TEXT_COLOR, fontWeight: 'bold',  marginTop: 10, }}>Ride completed</Text>
           )
         })}
-      </View>
+      </TouchableOpacity>
     )
   }
 }
-
-
 
   render() {
     return (
@@ -247,12 +272,24 @@ renderBookedRide = ({item}) => {
             onRefresh={this._onRefresh}
           />
         }>
-        <SafeAreaView style={[{ backgroundColor: '#7963b6' }]}>
+        <SafeAreaView style={[{ backgroundColor: config.COLOR }]}>
           <StatusBar
           barStyle="light-content"
-          backgroundColor="#7963b6"
+          backgroundColor={config.COLOR}
           />
         </SafeAreaView>
+
+        {this.state.noOfferedRides && this.state.noBookedRides &&
+        <Text style = {{
+          fontWeight: 'bold',
+          fontFamily: "sans-serif-medium",
+          fontSize: 20,
+          fontWeight: 'bold',
+          color: config.TEXT_COLOR,
+          marginTop: 20,
+          marginHorizontal: 70}}>
+          No rides completed yet!
+        </Text>}
 
         {this.state.offeredRideVisible &&
         <View style = {styles.yourBookingView}>
@@ -292,14 +329,14 @@ const styles = StyleSheet.create({
   },
 
   date: {
-    color: '#054752',
+    color: config.TEXT_COLOR,
     fontWeight: 'bold',
     fontSize: 20,
   },
 
   yourBookingView: {
-    backgroundColor: '#7963b6',
-    marginTop: 20,
+    backgroundColor: config.COLOR,
+    marginTop: 30,
     marginHorizontal: 20,
     padding: 10,
 
@@ -308,7 +345,7 @@ const styles = StyleSheet.create({
   location: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#054752',
+    color: config.TEXT_COLOR,
     flexWrap: 'wrap',
     marginTop: 10,
 },

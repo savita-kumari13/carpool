@@ -7,11 +7,14 @@ const userRouter = express.Router();
 const validateRegisterInput = require('../validation/register');
 const validateLoginInput = require('../validation/login');
 const validateChangePasswordInput = require('../validation/change_password')
+const validatePhoneNumberInput = require('../validation/phone_number')
 const config = require('../config')
 const User = require('../models/User');
+const Ride = require('../models/Ride')
 const multer = require('multer');
-var nodemailer = require('nodemailer');
-const crypto = require('crypto');
+const axios = require('axios')
+const fs = require('fs')
+const path = require('path')
 
 const date = Date.now()
 var storage = multer.diskStorage({
@@ -28,6 +31,30 @@ const preferences = {
   chattiness: config.chattiness.DONT_KNOW,
   music: config.music.DONT_KNOW
 }
+
+userRouter.route('/save_device_token').post((req, res) => {
+  User.findOne({
+    email: req.body.email
+  })
+  .then(user => {
+    user.device_token = req.body.device_token
+    return user.save()
+  })
+  .then(user => {
+    return res.json({
+      status: true,
+      response: {user: user},
+      messages: ["Device token changed successfully"]
+    });
+  })
+  .catch(err=>{
+      return res.json({
+        status: false,
+        response: {},
+        messages: [err.message]
+      });    
+  });
+})
 
 userRouter.route('/register').post((req, res) => {
   const validateRegister = validateRegisterInput(req.body);
@@ -49,6 +76,7 @@ userRouter.route('/register').post((req, res) => {
       avatar: config.profile,
       bio: '',
       preferences,
+      device_token: req.body.device_token
       // car: {}
   });
 
@@ -74,28 +102,26 @@ userRouter.route('/register').post((req, res) => {
     return jwt.sign(payload, config.secretKey, {
       expiresIn: '1 day'
       })
-  }).then(token => {
+  })
+  .then(token => {
     return res.json({
       status: true,
       response: {token: token},
       messages: ["You have been registered successfully"]
     });
-  }).catch(err=>{
-    setTimeout(function(){
+  })
+  .catch(err=>{
       return res.json({
         status: false,
         response: {},
         messages: [err.message]
-      });
-    }, 5000)    
+      });    
   });
 });
 
 
 userRouter.route('/login').post((req, res) => {
   const validateLogin = validateLoginInput(req.body);
-  console.log('validateLogin ? ', validateLogin)
-  console.log('isValid : ', validateLogin.status)
   if(!validateLogin.status) {
     return res.json({
       status: false,
@@ -107,10 +133,10 @@ userRouter.route('/login').post((req, res) => {
   const payload = {};
 
   User.findOne({
-    email : req.body.email
-  }).then(user => {
+    email : req.body.email.toLowerCase()
+  })
+  .then(user => {
     if(!user) {
-        errors.email = 'User not found'
         throw new Error("User doesn't exists");
     }
     payload.id = user.id;
@@ -118,49 +144,87 @@ userRouter.route('/login').post((req, res) => {
     payload.phone_number = user.phone_number
     payload.user_preferences = user.preferences
 
+    user.device_token = req.body.device_token
+    return user.save()
+  })
+  .then(user => {
     return bcrypt.compare(password, user.password)
-  }).then(isMatch => {
-      if(!isMatch) {
-        errors.password = 'Incorrect password';
-        throw new Error("Incorrect password");
-      }
-      return jwt.sign(payload, config.secretKey, {
-        expiresIn: '1 day'
+  })
+  .then(isMatch => {
+    if(!isMatch) {
+      errors.password = 'Incorrect password';
+      throw new Error("Incorrect password");
+    }
+    return jwt.sign(payload, config.secretKey, {
+      expiresIn: '1 day'
     })
-  }).then(token => {
+  })
+  .then(token => {
     return res.json({
       status: true,
       response: {token: token},
-      messages: ["You have been registered successfully"]
+      messages: ["You have been logged in successfully"]
     });
-  }).catch(err => {
+  })
+  .catch(err=>{
     return res.json({
       status: false,
       response: {},
       messages: [err.message]
-    });
-  })
-});
+    });    
+  });
+})
 
 
 userRouter.route('/facebook/register').post((req, res) => {
-  const newUser = new User({ 
-    name: req.body.name,
-    email: req.body.email,
-    phone_number: req.body.phone_number,
-    avatar: config.profile,
-    preferences,
-    bio: '',
-    car: {}
-});
-
+  console.log('body ', req.body)
+  const validatePhoneNumber = validatePhoneNumberInput(req.body);
+  console.log('validatePhoneNumber ? ', validatePhoneNumber)
+  if(!validatePhoneNumber.status) {
+    return res.json({
+      status: false,
+      response: {errors: validatePhoneNumber.errors},
+      messages: []
+    });
+  }
+  const email = req.body.email.replace(/^"(.*)"$/, '$1')
+  const fb_profile_name = date + '-' + email + '.jpg'
   User.findOne({
     email : req.body.email
   })
-  .then(user => {
+  .then(async (user) => {
     if(user) {
       throw new Error('Email already exists');
     }
+    const url = req.body.avatar
+    const image_path = path.resolve(__dirname, '../upload/profile_photo', fb_profile_name)
+    const axios_response = await axios({
+      method: 'GET',
+      url: url,
+      responseType: 'stream'
+    })
+    axios_response.data.pipe(fs.createWriteStream(image_path))
+
+    return new Promise((resolve, reject) => {
+      axios_response.data.on('end', () => {
+        resolve()
+      })
+      axios_response.data.on('error', () => {
+        reject(err)
+      })
+    })
+  }).then(() => {
+    console.log('download finished')
+    const newUser = new User({ 
+      name: req.body.name,
+      email: req.body.email,
+      phone_number: req.body.phone_number,
+      avatar: fb_profile_name,
+      preferences,
+      device_token: req.body.device_token,
+      bio: '',
+      car: {}
+  });
     return newUser.save()
   })
   .then(user => {
@@ -182,8 +246,9 @@ userRouter.route('/facebook/register').post((req, res) => {
     });
   })
   .catch(err=>{
+    console.log('errrrr', err)
     return res.json({
-      status: true,
+      status: false,
       response: {},
       messages: [err.message]
     });
@@ -191,20 +256,24 @@ userRouter.route('/facebook/register').post((req, res) => {
 })
 
 userRouter.route('/facebook/login').post((req, res) => {
+  console.log('body ', req.body)
   const payload = {}
   User.findOne({
     email : req.body.email
   })
   .then(user => {
     if(!user) {
-        errors.email = 'User not found'
-        throw new Error("User doesn't exists");
+      throw new Error("User doesn't exists");
     }
     payload.id = user.id;
     payload.name = user.name;
     payload.phone_number = user.phone_number
     payload.user_preferences = user.preferences
 
+    user.device_token = req.body.device_token
+    return user.save()
+  })
+  .then(user => {
     return jwt.sign(payload, config.secretKey, {
       expiresIn: '1 day'
     })
@@ -217,13 +286,14 @@ userRouter.route('/facebook/login').post((req, res) => {
     });
   })
   .catch(err => {
+    console.log('errrr ', err)
     return res.json({
-      status: true,
+      status: false,
       response: {},
-      messages: [err.message]});
-    }) 
+      messages: [err.message]
+    });
+  }) 
 })
-
 
 userRouter.get('/auth', passport.authenticate('jwt', { session: false }), (req, res) => {
   console.log("Success! You can not see this without a token auth")
@@ -248,7 +318,7 @@ userRouter.get('/', passport.authenticate('jwt', { session: false }), (req, res)
     })
     .catch(err => {
       return res.json({
-        status: true,
+        status: false,
         response: {},
         messages: [err.message]});
       }) 
@@ -268,7 +338,7 @@ userRouter.get('/get_profile', passport.authenticate('jwt', { session: false }),
     })
     .catch(err => {
       return res.json({
-        status: true,
+        status: false,
         response: {},
         messages: [err.message]});
       }) 
@@ -300,7 +370,7 @@ userRouter.post('/add_car', passport.authenticate('jwt', { session: false }), (r
   })
   .catch(err => {
     return res.json({
-      status: true,
+      status: false,
       response: {},
       messages: [err.message]
     });
@@ -377,27 +447,71 @@ userRouter.post('/delete_car', passport.authenticate('jwt', { session: false }),
 })
 
 var profileImgUpload=upload.single('image');
+
 userRouter.post('/add_profile_photo', passport.authenticate('jwt', { session: false }),profileImgUpload, (req, res) => {
   console.log('Success! You can not see this without a token (add profile photo)')
   // console.log('req image name ', req.body.data._parts[1][1].name )
-
+  const image_name = date +'-'+ req.file.originalname
+  let currentUser
+  let previous_photo
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
-    user.avatar = date +'-'+ req.file.originalname
+    previous_photo = user.avatar
+    const image_path = path.resolve(__dirname, '../upload/profile_photo', previous_photo)
+    fs.unlink(image_path, (err) => {
+      if(err) throw err;
+    })
+    user.avatar = image_name
     return user.save()
   })
   .then(user => {
+    currentUser = user
+    Ride.find({
+      "offered_user._id": mongoose.Types.ObjectId(req.user._id),
+      "offered_user.status": {$ne: config.status.COMPLETED}
+    })
+    .then(rides => {
+      rides.forEach((ride, index) => {
+        ride.offered_user.avatar = image_name
+        return ride.save()
+      })
+      return rides
+    })
+    .then(rides => {
+      Ride.find({
+       "booked_user._id": mongoose.Types.ObjectId(req.user._id),
+       "booked_user.status": {$ne: config.status.COMPLETED}
+      })
+      .then(rides => {
+        rides.forEach((ride, index) => {
+          ride.booked_user.forEach((user,index)=>{
+            if(user._id.toString() == req.user._id){
+              user.avatar= image_name
+              ride.markModified('booked_user')
+              return ride.save();
+            }
+          })
+          return rides
+        })
+        return rides
+      })
+      .then(rides => {
+        console.log('updated')
+        return
+      })
+      return
+    })
     return res.json({
       status: true,
       response: {
-        user: user
+        user: currentUser
       },
       messages: ["Profile photo changed"]
-    });
+    })
   })
   .catch(err => {
     return res.json({
-      status: true,
+      status: false,
       response: {},
       messages: [err.message]
     });
@@ -406,6 +520,7 @@ userRouter.post('/add_profile_photo', passport.authenticate('jwt', { session: fa
 
 userRouter.post('/update_profile', passport.authenticate('jwt', { session: false }), (req, res) => {
   console.log('Success! You can not see this without a token (update profile)')
+  let currentUser
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
     user.name = req.body.name,
@@ -414,17 +529,55 @@ userRouter.post('/update_profile', passport.authenticate('jwt', { session: false
     return user.save()
   })
   .then(user => {
+    currentUser = user
+    Ride.find({
+      "offered_user._id": mongoose.Types.ObjectId(req.user._id),
+      "offered_user.status": {$ne: config.status.COMPLETED}
+    })
+    .then(rides => {
+      rides.forEach((ride, index) => {
+        ride.offered_user.name = req.body.name,
+        ride.offered_user.phone_number = req.body.phone_number,
+        ride.offered_user.bio = req.body.bio
+        return ride.save()
+      })
+      return rides
+    })
+    .then(rides => {
+      Ride.find({
+       "booked_user._id": mongoose.Types.ObjectId(req.user._id),
+       "booked_user.status": {$ne: config.status.COMPLETED}
+      })
+      .then(rides => {
+        rides.forEach((ride, index) => {
+          ride.booked_user.forEach((user,index)=>{
+            if(user._id.toString() == req.user._id){
+              user.name= req.body.name,
+              user.phone_number = req.body.phone_number,
+              user.bio = req.body.bio
+              ride.markModified('booked_user')
+              return ride.save();
+            }
+          })
+          return rides
+        })
+        return rides
+      })
+      .then(rides => {
+        console.log('updated profile')
+        return
+      })
+      return
+    })
     return res.json({
       status: true,
-      response: {
-        user: user
-      },
+      response: {},
       messages: ["Profile updated"]
     });
   })
   .catch(err => {
     return res.json({
-      status: true,
+      status: false,
       response: {},
       messages: [err.message]
     });
@@ -442,6 +595,48 @@ userRouter.post('/save_preferences', passport.authenticate('jwt', { session: fal
     return user.save()
   })
   .then(user => {
+    currentUser = user
+    Ride.find({
+      "offered_user._id": mongoose.Types.ObjectId(req.user._id),
+      "offered_user.status": {$ne: config.status.COMPLETED}
+    })
+    .then(rides => {
+      rides.forEach((ride, index) => {
+        ride.offered_user.preferences.chattiness = req.body.chattiness,
+        ride.offered_user.preferences.smoking = req.body.smoking,
+        ride.offered_user.preferences.music = req.body.music
+        ride.offered_user.preferences.pets= req.body.pets
+        return ride.save()
+      })
+      return rides
+    })
+    .then(rides => {
+      Ride.find({
+       "booked_user._id": mongoose.Types.ObjectId(req.user._id),
+       "booked_user.status": {$ne: config.status.COMPLETED}
+      })
+      .then(rides => {
+        rides.forEach((ride, index) => {
+          ride.booked_user.forEach((user,index)=>{
+            if(user._id.toString() == req.user._id){
+              user.preferences.chattiness = req.body.chattiness,
+              user.preferences.smoking = req.body.smoking,
+              user.preferences.music = req.body.music
+              user.preferences.pets= req.body.pets
+              ride.markModified('booked_user')
+              return ride.save();
+            }
+          })
+          return rides
+        })
+        return rides
+      })
+      .then(rides => {
+        console.log('updated preferences')
+        return
+      })
+      return
+    })
     return res.json({
       status: true,
       response: {},
@@ -450,7 +645,7 @@ userRouter.post('/save_preferences', passport.authenticate('jwt', { session: fal
   })
   .catch(err => {
     return res.json({
-      status: true,
+      status: false,
       response: {},
       messages: [err.message]
     });
@@ -460,6 +655,13 @@ userRouter.post('/save_preferences', passport.authenticate('jwt', { session: fal
 userRouter.post('/change_password', passport.authenticate('jwt', { session: false }), (req, res) => {
   console.log('Success! You can not see this without a token (change password)')
   const validateChangePassword = validateChangePasswordInput(req.body);
+  if(!validateChangePassword.status) {
+    return res.json({
+      status: false,
+      response: {errors: validateChangePassword.errors},
+      messages: []
+    });
+  }
   let currentUser
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
@@ -504,7 +706,7 @@ userRouter.post('/change_password', passport.authenticate('jwt', { session: fals
     .catch(err => {
       console.log('user not found', err)
       return res.json({
-        status: true,
+        status: false,
         response: {},
         messages: [err.message]
       });

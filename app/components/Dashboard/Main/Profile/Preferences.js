@@ -13,6 +13,8 @@ import {
   FlatList,
   TextInput,
   Alert,
+  ActivityIndicator,
+  ToastAndroid
 } from 'react-native'
 
 import { Button} from 'react-native-paper';
@@ -40,30 +42,48 @@ export default class Preferences extends Component {
 
         petsOkVisible: true,
         noPetsVisible: false,
+
+        isGetBio: false,
+        isLoading: false
       }
       this._handleBackHandler = this._handleBackHandler.bind(this);
     }
 
     getBio(){
+        this.setState({
+            isGetBio: true
+          })
         axios.get('/users/get_profile')
         .then(res => {
-          const resData = res.data      
-          console.log(res);
-          this.setState({
-            chattiness: resData.response.user.preferences.chattiness,
-            smoking: resData.response.user.preferences.smoking,
-            music: resData.response.user.preferences.music,
-            pets: resData.response.user.preferences.pets,
-          })
+          const resData = res.data
+          if(resData.status){
+            this.setState({
+                chattiness: resData.response.user.preferences.chattiness,
+                smoking: resData.response.user.preferences.smoking,
+                music: resData.response.user.preferences.music,
+                pets: resData.response.user.preferences.pets,
+                isGetBio: false
+              })
+          }
+          else{
+            this.setState({
+              isGetBio: false
+            })
+            ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+          }
         }).catch(err => {
-          console.log('error sending get bio request ', err)
-        })
+            this.setState({
+              isGetBio: false
+            })
+            console.log('error sending get bio request ', err)
+            ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+          })
       }
     componentDidMount()
     {
       this._navListener = this.props.navigation.addListener('didFocus', () => {
         StatusBar.setBarStyle('light-content');
-        StatusBar.setBackgroundColor('#7963b6');
+        StatusBar.setBackgroundColor(config.COLOR);
       });
       BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
     }
@@ -165,6 +185,9 @@ export default class Preferences extends Component {
     }
 
     savePreference(){
+        this.setState({
+            isLoading: true
+        })
         const data = {
             chattiness: this.state.chattiness,
             smoking: this.state.smoking,
@@ -173,16 +196,33 @@ export default class Preferences extends Component {
         }
         axios.post('/users/save_preferences', data)
         .then(res => {
+            if(res.data.status){
+                this.setState({
+                  isLoading: false
+                })
+            ToastAndroid.show('Preferences saved successfully', ToastAndroid.SHORT)
             this.props.navigation.navigate('Profile')
+            }
+            else{
+                this.setState({
+                  isLoading: false
+                })
+                ToastAndroid.show('Error occurred while saving preferences', ToastAndroid.SHORT)
+              }
         })
         .catch(err => {
+            this.setState({
+                isLoading: false
+              })
             console.log('error sending save preferences request ', err)
+            ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
         })
     }
     
   render() {
     return (
       <ScrollView contentContainerStyle = {styles.container}>
+        {this.state.isGetBio && <ActivityIndicator size="large" />}
         <Text style = {styles.label}>Chattiness</Text>
         <View style = {{ flexDirection: 'row',justifyContent: 'space-between',}}>
             <Image
@@ -203,7 +243,7 @@ export default class Preferences extends Component {
                 justifyContent: 'center',
                 flexDirection: 'row',
                }}>
-                <Icon name={'md-arrow-dropdown'} size = {25} color = {'#7963b6'}
+                <Icon name={'md-arrow-dropdown'} size = {25} color = {config.COLOR}
                     style = {{ marginTop: 10,}}/>
             </View>
         </View>
@@ -232,7 +272,7 @@ export default class Preferences extends Component {
                     justifyContent: 'center',
                     flexDirection: 'row',
                 }}>
-                    <Icon name={'md-arrow-dropdown'} size = {25} color = {'#7963b6'}
+                    <Icon name={'md-arrow-dropdown'} size = {25} color = {config.COLOR}
                         style = {{ marginTop: 10,}}/>
             </View>
         </View>
@@ -261,7 +301,7 @@ export default class Preferences extends Component {
                 justifyContent: 'center',
                 flexDirection: 'row',
                }}>
-                <Icon name={'md-arrow-dropdown'} size = {25} color = {'#7963b6'}
+                <Icon name={'md-arrow-dropdown'} size = {25} color = {config.COLOR}
                     style = {{ marginTop: 10,}}/>
             </View>
         </View>
@@ -290,14 +330,16 @@ export default class Preferences extends Component {
                 justifyContent: 'center',
                 flexDirection: 'row',
                }}>
-                <Icon name={'md-arrow-dropdown'} size = {25} color = {'#7963b6'}
+                <Icon name={'md-arrow-dropdown'} size = {25} color = {config.COLOR}
                     style = {{ marginTop: 10,}}/>
             </View>
         </View>
         <View style={{alignItems: 'center',}}>
         <Button 
           style={[styles.savePreferenceBtn]}
-          onPress={() => this.savePreference()}>
+          onPress={() => this.savePreference()}
+          mode = 'contained'
+          loading = {this.state.isLoading}>
             <Text style = {{color: '#fff', fontWeight: 'bold' }} >Save preferences</Text>
         </Button> 
         </View>
@@ -322,21 +364,21 @@ const styles = StyleSheet.create({
      modelDropDown: {
         width: 260,
         borderBottomWidth: 1,
-        borderBottomColor: '#054752',
+        borderBottomColor: config.TEXT_COLOR,
         padding: 0,
         marginTop: 10,
         marginLeft: 10,
      },
 
      textStyle: {
-        color: '#054752',
+        color: config.TEXT_COLOR,
         fontWeight: 'bold',
         fontSize: 18,
      },
 
      dropDownStyle: {
         width: 260,
-        borderColor: '#7963b6',
+        borderColor: config.COLOR,
      },
 
      dropdownTextStyle: {
@@ -348,9 +390,9 @@ const styles = StyleSheet.create({
     savePreferenceBtn: {
         marginTop: 60,
         borderRadius: 30,
-        width: 300,
+        width: 280,
         height: 45,
-        backgroundColor: "#7963b6",
+        backgroundColor: config.COLOR,
         justifyContent: 'center',
       },
 })

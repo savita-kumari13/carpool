@@ -15,6 +15,7 @@
     "ejs": "^2.6.1",
     "email-templates": "^5.0.5",
     "express": "^4.16.4",
+    "fcm-notification": "^2.0.0",
     "gravatar": "^1.8.0",
     "jsonwebtoken": "^8.5.1",
     "mongojs": "^2.6.0",

@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-community/async-storage'
 import { SocialIcon } from 'react-native-elements'
 import axios from '../axios'
 import NavigationService from '../../../NavigationService';
+import config from '../../config/constants'
 
 import {
     View,
@@ -15,7 +16,9 @@ import {
     BackHandler,
     Alert,
     ScrollView,
-    Linking
+    ToastAndroid,
+    ActivityIndicator,
+    Image,
 } from 'react-native'
 
 
@@ -32,7 +35,6 @@ export default class Login extends Component {
       email: '',
       password: '',
       passwordResetCode: '',
-      errorMessage: null,
 
       errors: {
         name: null,
@@ -40,7 +42,7 @@ export default class Login extends Component {
         password: null,
         confirmPassword: null,
       },
-
+      
       errorEmailShow: false,
       errorPasswordShow: false,
 
@@ -49,7 +51,8 @@ export default class Login extends Component {
 
       isEmailFocused: false,
       isPasswordFocused: false,
-      isLoging: false
+      isLoging: false,
+      isFbLoging: false,
     };
 
     this.handleBackPress = this.handleBackPress.bind(this);
@@ -72,18 +75,31 @@ export default class Login extends Component {
 
 
   handleLogin = async() =>  {
+    let device_token
+    await firebase.messaging().getToken()
+    .then(fcmToken => {
+      if (fcmToken) {
+        device_token = fcmToken
+        console.log('fcm token ', fcmToken)
+      } else {
+        // user doesn't have a device token yet
+        console.log("no token")
+      } 
+    })
     const user = {
       email: this.state.email,
       password: this.state.password,
+      device_token: device_token
   }
+  this.setState({
+    isLoging: true
+  })
   await axios.post(`/users/login`, user)
   .then(res => {
-    console.log('res : ', res)
     let resData=res.data;
-
-    if(resData.response.hasOwnProperty('errors'))
+    if(!resData.status)
     {
-      if(!resData.status)
+      if(resData.response.hasOwnProperty('errors'))
       {
         if(resData.response.errors.hasOwnProperty('email')){
           this.setState({
@@ -101,88 +117,36 @@ export default class Login extends Component {
   
         this.setState({
           errors: {
-            email: response.errors.email,
-            password: response.errors.password,
+            email: resData.response.errors.email,
+            password: resData.response.errors.password,
           }
         })
-        throw new Error(Object.values(response.errors).join(', '));
+        throw new Error(Object.values(resData.response.errors).join(', '));
       }
-      else{
-        ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
-      } 
+    else{
+      ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
     }
+  }
     else
     {
       this.setState({
         email: '',
         password: ''
       });
-      console.log('navigating to main container....')
       NavigationService.navigate('MainContainer', {})
     }
+    this.setState({
+      isLoging: false
+    })
   })
   .catch(err => {
     console.log('error sending post request',err.message)
+    this.setState({
+      isLoging: false
+    })
+    ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
   })
 }
-
-
-  forgotPassword = () => {
-
-    console.log('enterd in forgotPassword method')
-
-    return (
-      <View style = {{padding: 30}}>
-        <Text>Enter your email</Text>
-        <TextInput
-          autoFocus
-          style={{ height: 40, marginTop: 15, marginBottom: 15 }}
-          placeholder={'Email'}
-          keyboardType="email-address"
-          onChangeText={email => this.setState({email})}
-          >
-        </TextInput>
-        <Button title="SEND PASSWORD RESET EMAIL " color="#7963b6" onPress={this.resetPasswordEmail} />
-      </View>
-    );
-  }
-
-  resetPasswordEmail = () => {
-
-    const { email } = this.state
-    sendPasswordResetEmail(email).then( () => {this.confirmPasswordDialog
-      console.log('password reset email sent')
-    }).catch(error => console.log(`password reset email error ${error}`))
-
-  }
-
-
-  confirmPasswordDialog = () => {
-    return(
-      <View style = {{padding: 30}}>
-        <Text>Enter code </Text>
-        <TextInput
-          autoFocus
-          style={{ height: 40, marginTop: 15, marginBottom: 15 }}
-          placeholder={'Code'}
-          onChangeText={passwordResetCode => this.setState({passwordResetCode})}
-          >
-        </TextInput>
-        <Button title="CONFIRM CODE " color="#7963b6" onPress={this.confirmResetCode} />
-
-      </View>
-    )
-  }
-
-  confirmResetCode = () => {
-    confirmPasswordReset(code, newPassword)
-    .then(() =>{
-      this.setState({password: newPassword})
-      console.log('password reset successfully')
-    }).catch(error => {
-      console.log('error in confirmResetCode', error)
-    })
-  }
 
   handleFacebookLogin = async () => {
     AccessToken.getCurrentAccessToken().then(() =>
@@ -210,145 +174,200 @@ export default class Login extends Component {
               this.loginFacebookUser(user)
             }
           })                                                                       
-        }).catch((error) => 
-        {
+        }).catch((error) => {
           console.log('error.', error)
+          ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
         })
-    }).catch((error) => {
-          console.log('error ....', error)
-        });
+    })
+    .catch((error) => {
+      console.log('error ....', error)
+      ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
+    });
   }
 
 
   async registerFacebookUser(user) {
-    console.log("new facebook user : ", user)
-    const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
-    await axios.post(`/users/facebook/register`, {
-      name: fbName,
-      email: user.additionalUserInfo.profile.email,
-      phone_number: '',
-      // profile_picture: user._user.photoURL
-    }).then(res => {
-      console.log('res : ', res)
-      this.setState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phoneNumber: ''
-      });
-      console.log('navigating to main container....')
-      NavigationService.navigate('MainContainer', {})
-    }).catch(err => {
-      console.log('error sending post request',err.message)
+    this.setState({
+      isFbLoging: true
     })
+    try {
+      const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
+      await AsyncStorage.setItem('fbName', JSON.stringify(fbName))
+      await AsyncStorage.setItem('fbEmail', JSON.stringify(user.additionalUserInfo.profile.email))
+      await AsyncStorage.setItem('fbAvatar', JSON.stringify(user.user._user.photoURL))
+      NavigationService.navigate('PhoneAuth', {})
+      this.setState({
+        isFbLoging: false
+      })
+    } catch (error) {
+      this.setState({
+        isFbLoging: false
+      })
+      console.log(error)
+      ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
+    }
   }
 
   async loginFacebookUser(user) {
-    console.log('logging in facebook user')
+    this.setState({
+      isFbLoging: true
+    })
     const fbName = user.additionalUserInfo.profile.first_name + ' '+ user.additionalUserInfo.profile.last_name
+    let device_token
+    await firebase.messaging().getToken()
+    .then(fcmToken => {
+      if (fcmToken) {
+        device_token = fcmToken
+        console.log('fcm token ', fcmToken)
+      } else {
+        // user doesn't have a device token yet
+        console.log("no token")
+      } 
+    });
     await axios.post(`/users/facebook/login`, {
       name: fbName,
       email: user.additionalUserInfo.profile.email,
-      phone_number: '',
-      // profile_picture: user._user.photoURL
-    }).then(res => {
-      console.log('res : ', res)
+      phone_number: user.user._user.phoneNumber,
+      avatar: user.user._user.photoURL,
+      device_token: device_token
+    })
+    .then(res => {
+      if(res.data.status){
+        this.setState({
+          email: '',
+          password: '',
+          isFbLoging: false
+        });
+        NavigationService.navigate('MainContainer', {})
+      }
+      else{
+        this.setState({
+          isFbLoging: false
+        })
+        ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
+      }
+    })
+    .catch(err => {
       this.setState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phoneNumber: ''
-      });
-      console.log('navigating to main container....')
-      NavigationService.navigate('MainContainer', {})
-    }).catch(err => {
+        isFbLoging: false
+      })
       console.log('error sending post request',err.message)
+      ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     })
   }
 
  
 handleEmailFocus = () => this.setState({isEmailFocused: true})
 
- handleEmailBlur = () => this.setState({isEmailFocused: false})
+handleEmailBlur = () => this.setState({isEmailFocused: false})
 
- handlePasswordFocus = () => this.setState({isPasswordFocused: true})
+handlePasswordFocus = () => this.setState({isPasswordFocused: true})
 
- handlePasswordBlur = () => this.setState({isPasswordFocused: false})
+handlePasswordBlur = () => this.setState({isPasswordFocused: false})
   
 
   render() {
     return (
       <ScrollView contentContainerStyle={styles.container}>
-        {this.state.errorMessage &&
-          <Text style={{ color: 'red' }}>
-            {this.state.errorMessage}
-          </Text>}
-
+        <View style = {{alignItems: 'center', marginBottom:50,}}>
+          <Image style={styles.logo} source={{uri: config.API_HOST + '/carpool_logo.png' }}/>
+        </View>
         <View style={styles.inputContainer}>
           <TextInput 
             onFocus={this.handleEmailFocus}
             onBlur={this.handleEmailBlur}
             style={[styles.inputs, 
-              {borderBottomColor: this.state.isEmailFocused? '#7963b6': '#000',
+              {borderBottomColor: (this.state.isEmailFocused? config.COLOR: this.state.errorEmailBorderFocused? 'red': '#000'),
               borderBottomWidth: this.state.isEmailFocused? 2: 1,}]}
             placeholder="E-mail"
             keyboardType="email-address"
-            underlineColorAndroid='transparent'
-            onChangeText={email => this.setState({email})}
+            onChangeText={email => this.setState({email: email, errorEmailShow: false, errorEmailBorderFocused: false})}
             value={this.state.email}/>
         </View>
+        {this.state.errorEmailShow && 
+        <Text style={{ color: 'red', marginHorizontal: 25  }}>
+          {this.state.errors.email}
+        </Text>}
 
         <View style={styles.inputContainer}>
-          <TextInput 
+          <TextInput
             onFocus={this.handlePasswordFocus}
             onBlur={this.handlePasswordBlur}
             style={[styles.inputs, 
-              {borderBottomColor: this.state.isPasswordFocused? '#7963b6': '#000',
+              {borderBottomColor: (this.state.isPasswordFocused? config.COLOR: this.state.errorPasswordBorderFocused? 'red': '#000'),
               borderBottomWidth: this.state.isPasswordFocused? 2: 1,}]}
-              placeholder="Password"
-              secureTextEntry={true}
-              underlineColorAndroid='transparent'
-              onChangeText={password => this.setState({password})}
-              value={this.state.password}/>
+            placeholder="Password"
+            secureTextEntry={true}
+            onChangeText={password => this.setState({password: password, errorPasswordShow: false, errorPasswordBorderFocused: false})}
+            value={this.state.password}/>
         </View>
 
-        <View style = {styles.buttonContainer}>
+        {this.state.errorPasswordShow && 
+        <Text style={{ color: 'red', marginHorizontal: 25  }}>
+          {this.state.errors.password}
+        </Text>}
+
+        <View style = {{alignItems: 'center',justifyContent: 'center', marginTop: 30 }}>
           <Button
-            style={styles.loginBtn}
-            onPress={this.handleLogin}
-            mode = "contained">
-              <Text style = {{color: '#fff', fontWeight: 'bold' }}>LOG IN</Text>
-          </Button>   
-  
+              style={styles.loginBtn}
+              onPress={this.handleLogin}
+              mode = "contained"
+              loading = {this.state.isLoging}>
+                <Text style = {{color: '#fff', fontWeight: 'bold' }}>LOG IN</Text>
+            </Button>
+        </View> 
+
+        <View style = {{alignItems: 'center',justifyContent: 'center', }}>
           <Button 
             style={[ styles.registerButton]}
             mode = 'text'
             onPress ={() => this.props.navigation.navigate('ForgotPassword')}>
-              <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>FORGOT YOUR PASSWORD?</Text>
+              <Text style = {{color: config.COLOR, fontWeight: 'bold' }}>FORGOT YOUR PASSWORD?</Text>
           </Button>
+        </View>         
 
+        <View style = {{alignItems: 'center',justifyContent: 'center', }}>
           <Button 
             style={[ styles.registerButton]}
             mode = 'text'
             onPress ={() => NavigationService.navigate('SignUp', {})}>
-              <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>NOT A MEMEBER YET? JOIN FOR FREE </Text>
+              <Text style = {{color: config.COLOR, fontWeight: 'bold' }}>NOT A MEMEBER YET? JOIN FOR FREE</Text>
           </Button>
+        </View> 
 
-        <Text style = {{fontWeight : 'bold' ,color: '#000'}}>OR</Text>
-
-        <SocialIcon
-          title='Sign In With Facebook'
-          button
-          type='facebook'
-          fontWeight = 'bold'
-          onPress = {this.handleFacebookLogin}
-          style = {styles.fbButton}
-        />  
+        <View style = {{flexDirection: "row", justifyContent: 'center',}}>
+        <View style={{
+              marginTop: 7,
+              borderBottomColor: '#cccccc',
+              height: 1,
+              width: 120,
+              marginLeft: 10,
+              borderBottomWidth: 1,
+              backgroundColor: '#cccccc'
+          }}/>
+        <Text style = {{fontWeight : 'bold' ,color: '#000', marginLeft: 10,}}>OR</Text>
+        <View style={{
+            marginTop: 7,
+            borderBottomColor: '#cccccc',
+            height: 1,
+            width: 120,
+            marginLeft: 10,
+            borderBottomWidth: 1,
+            backgroundColor: '#cccccc'
+        }}/>
       </View>
-
-        </ScrollView>
+      <View style = {{alignItems: 'center',justifyContent: 'center', marginTop: 10 }}>
+        <SocialIcon
+            title='Sign In With Facebook'
+            button
+            type='facebook'
+            fontWeight = 'bold'
+            onPress = {this.handleFacebookLogin}
+            style = {styles.fbButton}
+          />
+        {this.state.isFbLoging && <ActivityIndicator size="large" />}
+      </View>
+    </ScrollView>
     )
   }
 }
@@ -357,9 +376,12 @@ handleEmailFocus = () => this.setState({isEmailFocused: true})
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    // justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: '50%',
+    paddingTop: 70,
+  },
+
+  logo: {
+    width: 120,
+    height: 100,
   },
 
   iconStyles : {
@@ -373,26 +395,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0)',
     height:45,
     marginBottom:10,
-    marginLeft: 10,
+    marginHorizontal: 10,
     marginRight: 20,
     flexDirection: 'row',
-    alignItems:'center',
-    // justifyContent: 'center'
+    alignItems:'center'
 },
 
 loginBtn:{
-
   borderRadius: 30,
-  width: 300,
+  width: 280,
   height: 40,
-  backgroundColor: "#7963b6",
+  backgroundColor: config.COLOR,
   justifyContent: 'center',
-
 },
 
 registerButton: {
   borderRadius: 30,
-  width: 300,
+  width: 355,
   height: 40,
   backgroundColor: "#fff",
   marginTop: 10,
@@ -408,7 +427,7 @@ inputs:{
     padding: 0,
     flex: 1,
     fontSize: 16,
-    color: '#054752',
+    color: config.TEXT_COLOR,
     fontWeight: 'bold'
 },
 buttonContainer:{
@@ -421,7 +440,7 @@ buttonContainer:{
 
 fbButton:{
   height: 40,
-  width: 270,
+  width: 280,
   marginTop: 10,
   borderRadius: 30,
   justifyContent: 'center',

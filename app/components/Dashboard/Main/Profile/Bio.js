@@ -13,6 +13,8 @@ import {
   FlatList,
   TextInput,
   Alert,
+  ActivityIndicator,
+  ToastAndroid
 } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import { Button} from 'react-native-paper';
@@ -38,32 +40,49 @@ export default class Bio extends Component {
       country: {
         cca2: 'IN',
         callingCode: '91'
-      }
+      },
+      isGetBio: false,
+      isLoading: false
     }
     this._handleBackHandler = this._handleBackHandler.bind(this);
 
   }
 
   getBio(){
+    this.setState({
+      isGetBio: true
+    })
     axios.get('/users/get_profile')
     .then(res => {
-      const resData = res.data      
-      console.log(res);
-      this.setState({
-        uri: config.API_HOST + '/' + resData.response.user.avatar,
-        name: resData.response.user.name,
-        bio: resData.response.user.bio,
-        phoneNumber: (resData.response.user.phone_number).toString()
-      })
+      const resData = res.data
+      if(resData.status){
+        this.setState({
+          uri: config.API_HOST + '/' + resData.response.user.avatar,
+          name: resData.response.user.name,
+          bio: resData.response.user.bio,
+          phoneNumber: (resData.response.user.phone_number).toString(),
+          isGetBio: false
+        })
+      }
+      else{
+        this.setState({
+          isGetBio: false
+        })
+        ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+      }
     }).catch(err => {
+      this.setState({
+        isGetBio: false
+      })
       console.log('error sending get bio request ', err)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
   componentDidMount()
   {
     this._navListener = this.props.navigation.addListener('didFocus', () => {
       StatusBar.setBarStyle('light-content');
-      StatusBar.setBackgroundColor('#7963b6');
+      StatusBar.setBackgroundColor(config.COLOR);
     });
     BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
   }
@@ -114,15 +133,21 @@ export default class Bio extends Component {
         });
         axios.post('/users/add_profile_photo', data)
         .then((res)=>{
-          const resData = res.data      
-          console.log(res);
-          this.setState({
-            uri: config.API_HOST + '/' + resData.response.user.avatar
-          })
+          const resData = res.data
+          if(resData.status){
+            this.setState({
+              // uri: config.API_HOST + '/' + resData.response.user.avatar
+            })
+            ToastAndroid.show('profile photo updated', ToastAndroid.SHORT)
+          }
+          else{
+            ToastAndroid.show('Error occurred while updating profile photo', ToastAndroid.SHORT)
+          }
         })
         .catch((err)=>{
           console.log(err)
-        });
+          ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+        })
       }
     })
   }
@@ -164,10 +189,12 @@ export default class Bio extends Component {
         <Text style={styles.callingCodeText}>+{this.state.country.callingCode}</Text>
       </View>
     );
-
   }
 
   updateProfile(){
+    this.setState({
+      isLoading: true
+    })
     const data = {
       name: this.state.name,
       phone_number: this.state.phoneNumber,
@@ -175,16 +202,33 @@ export default class Bio extends Component {
     }
     axios.post('/users/update_profile', data)
     .then(res => {
-      this.props.navigation.navigate('Profile')
+      if(res.data.status){
+        this.setState({
+          isLoading: false
+        })
+        ToastAndroid.show('Profile updated successfully', ToastAndroid.SHORT)
+        this.props.navigation.navigate('Profile')
+      }
+      else{
+        this.setState({
+          isLoading: false
+        })
+        ToastAndroid.show('Error occurred while updating profile', ToastAndroid.SHORT)
+      }
     })
     .catch(err => {
+      this.setState({
+        isLoading: false
+      })
       console.log('error sending update profile request')
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
   
   render() {
     return (
-      <ScrollView contentContainerStyle = {styles.container}>          
+      <ScrollView contentContainerStyle = {styles.container}>
+        {this.state.isGetBio && <ActivityIndicator size="large" />}
         <TouchableOpacity style={styles.photo} 
             onPress={()=>{ this.setProfilePhoto()}}>
             <Image
@@ -199,7 +243,7 @@ export default class Bio extends Component {
                 uri: this.state.uri 
               }}
             />
-          <Text style={{color: '#7963b6',
+          <Text style={{color: config.COLOR,
             fontWeight: 'bold',
             marginRight:70,
             alignSelf:'center',
@@ -220,7 +264,7 @@ export default class Bio extends Component {
             onFocus={this.handleNameFocus}
             onBlur={this.handleNameBlur}
             style={[styles.inputs, 
-              {borderBottomColor: (this.state.isNameFocused? '#7963b6': '#000'),
+              {borderBottomColor: (this.state.isNameFocused? config.COLOR: '#000'),
               borderBottomWidth: this.state.isNameFocused? 2: 1,}]}
             onChangeText={name => this.setState({name: name,})}
             value={this.state.name}/>
@@ -230,9 +274,9 @@ export default class Bio extends Component {
             onFocus={this.handleBioFocus}
             onBlur={this.handleBioBlur}
             style={[styles.inputs, 
-              {borderBottomColor: (this.state.isBioFocused? '#7963b6': '#000'),
+              {borderBottomColor: (this.state.isBioFocused? config.COLOR: '#000'),
               borderBottomWidth: this.state.isBioFocused? 2: 1,}]}
-              selectionColor={'#7963b6'}
+              selectionColor={config.COLOR}
             onChangeText={bio => this.setState({bio: bio,})}
             value={this.state.bio}/>
 
@@ -247,17 +291,21 @@ export default class Bio extends Component {
               value={this.state.phoneNumber}
               keyboardType = "phone-pad"
               style={[ styles.textInput,
-                {borderBottomColor: (this.state.isPhoneFocused? '#7963b6': '#000'),
+                {borderBottomColor: (this.state.isPhoneFocused? config.COLOR: '#000'),
                 borderBottomWidth: this.state.isPhoneFocused? 2: 1,} ]}
               placeholderTextColor={'#737373'}
-              selectionColor={'#7963b6'}
+              selectionColor={config.COLOR}
               maxLength={this.state.enterCode ? 6 : 20} />
         </View>
+        <View style={{alignItems: 'center',}}>
           <Button 
-          style={[styles.saveProfileBtn]}
-          onPress={() => this.updateProfile()}>
-            <Text style = {{color: '#fff', fontWeight: 'bold' }} >Save profile info</Text>
-        </Button> 
+            style={[styles.saveProfileBtn]}
+            onPress={() => this.updateProfile()}
+            mode = 'contained'
+            loading = {this.state.isLoading}>
+              <Text style = {{color: '#fff', fontWeight: 'bold' }} >Save profile info</Text>
+          </Button> 
+        </View>
         </View>
       </ScrollView>
     )
@@ -291,7 +339,7 @@ const styles = StyleSheet.create({
       padding: 0,
       flex: 1,
       fontSize: 16,
-      color: '#054752',
+      color: config.TEXT_COLOR,
       fontWeight: 'bold'
   },
 
@@ -300,7 +348,7 @@ const styles = StyleSheet.create({
     padding: 0,
     flex: 1,
     fontSize: 16,
-    color: '#054752',
+    color: config.TEXT_COLOR,
     fontWeight: 'bold'
   },
 
@@ -311,7 +359,7 @@ const styles = StyleSheet.create({
 
   callingCodeText: {
     fontSize: 16,
-    color: '#054752',
+    color: config.TEXT_COLOR,
     fontWeight: 'bold',
     paddingRight: 10
   },
@@ -319,9 +367,9 @@ const styles = StyleSheet.create({
   saveProfileBtn: {
     marginTop: 60,
     borderRadius: 30,
-    width: 300,
+    width: 280,
     height: 45,
-    backgroundColor: "#7963b6",
+    backgroundColor: config.COLOR,
     justifyContent: 'center',
   },
   })

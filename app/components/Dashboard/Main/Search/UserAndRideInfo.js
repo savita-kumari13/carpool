@@ -8,6 +8,8 @@ import {
     FlatList,
     TouchableWithoutFeedback,
     Linking,
+    ToastAndroid,
+    ActivityIndicator,
     } from 'react-native'
 import { Button } from 'react-native-paper'
 import AsyncStorage from '@react-native-community/async-storage'
@@ -33,6 +35,7 @@ export default class UserAndRideInfo extends Component {
             userName: '',
             userPhoneNumber: '',
             userPreferences:'',
+            car: {},
 
             monthNames : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -57,135 +60,157 @@ export default class UserAndRideInfo extends Component {
             musicVisible: false,
 
             alreadyBooked: false,
+            isloadingUser: false,
           }
         }
 
 componentDidMount(){
-    gettingUserRideDetails = async() =>{       
-        const leave_location = (await AsyncStorage.getItem('leave'))
-        const going_location = (await AsyncStorage.getItem('going'))
-        const ride_price = JSON.parse(await AsyncStorage.getItem('price'))
-        const passenger_no = JSON.parse(await AsyncStorage.getItem('passenger'))
-        const ride_info = JSON.parse(await AsyncStorage.getItem('info'))
-        if(ride_info != 'null' && ride_info !== null && ride_info !== undefined )
-        {
-            this.setState({
-                infoVisible: true,
-            })
-        }
-        const booked_users = JSON.parse(await AsyncStorage.getItem('booked_user'))
-        if(booked_users.length > 0){
-            this.setState({
-                alreadyBooked: true,
-                bookedUsers: booked_users
-            })
-        }
-        const ride_date = JSON.parse(await AsyncStorage.getItem('date'))
-        const pickedDate = new Date(ride_date)
-        const user_name = JSON.parse(await AsyncStorage.getItem('user_name'))
-        const user_phone_number = JSON.parse(await AsyncStorage.getItem('phone_number'))
-        const user_preferences = JSON.parse(await AsyncStorage.getItem('preferences'))
-        const user_avatar = JSON.parse(await AsyncStorage.getItem('avatar'))
+    gettingUserRideDetails = async() =>{
         this.setState({
-            leaveLocation: leave_location,
-            goingLocation: going_location,
-            price: ride_price,
-            passengerNo: passenger_no,
-            date: pickedDate,
-            info: ride_info,
-            userName: user_name,
-            userPhoneNumber: user_phone_number,
-            userPreferences: user_preferences,
-            avatar: user_avatar
+            isloadingUser: true
         })
+        try {
+            const leave_location = (await AsyncStorage.getItem('leave'))
+            const going_location = (await AsyncStorage.getItem('going'))
+            const ride_price = JSON.parse(await AsyncStorage.getItem('price'))
+            const passenger_no = JSON.parse(await AsyncStorage.getItem('passenger'))
+            const car = JSON.parse(await AsyncStorage.getItem('car'))
+            const ride_info = JSON.parse(await AsyncStorage.getItem('info'))
+            if(ride_info != 'null' && ride_info !== null && ride_info !== undefined )
+            {
+                this.setState({
+                    infoVisible: true,
+                })
+            }
+            const booked_users = JSON.parse(await AsyncStorage.getItem('booked_user'))
+            if(booked_users.length > 0){
+                this.setState({
+                    alreadyBooked: true,
+                    bookedUsers: booked_users
+                })
+            }
+            const ride_date = JSON.parse(await AsyncStorage.getItem('date'))
+            const pickedDate = new Date(ride_date)
+            const user_name = JSON.parse(await AsyncStorage.getItem('user_name'))
+            const user_phone_number = JSON.parse(await AsyncStorage.getItem('phone_number'))
+            const user_preferences = JSON.parse(await AsyncStorage.getItem('preferences'))
+            const user_avatar = JSON.parse(await AsyncStorage.getItem('avatar'))
+            this.setState({
+                leaveLocation: leave_location,
+                goingLocation: going_location,
+                price: ride_price,
+                passengerNo: passenger_no,
+                date: pickedDate,
+                info: ride_info,
+                userName: user_name,
+                userPhoneNumber: user_phone_number,
+                userPreferences: user_preferences,
+                avatar: user_avatar,
+                car: car
+            })
 
-        if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING || this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
-        {
-            this.setState({
-                smokingVisible: true
-            })
-        }
-        if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING)
-        {
-            this.setState({
-                noSmokeVisible: true,
-                smokeOkVisible: false
-            })
-        }
-        if( this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
-        {
-            this.setState({
-                smokeOkVisible: true,
-                noSmokeVisible: false,
-            })
-        }
+            if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING || this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
+            {
+                this.setState({
+                    smokingVisible: true
+                })
+            }
+            if(this.state.userPreferences.smoking === config.SMOKING.NO_SMOKING)
+            {
+                this.setState({
+                    noSmokeVisible: true,
+                    smokeOkVisible: false
+                })
+            }
+            if( this.state.userPreferences.smoking === config.SMOKING.YES_SMOKING)
+            {
+                this.setState({
+                    smokeOkVisible: true,
+                    noSmokeVisible: false,
+                })
+            }
 
-        if(this.state.userPreferences.pets === config.PETS.NO_PETS || this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
-        {
+            if(this.state.userPreferences.pets === config.PETS.NO_PETS || this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
+            {
+                this.setState({
+                    petsVisible: true
+                })
+            }
+            if(this.state.userPreferences.pets === config.PETS.NO_PETS )
+            {
+                this.setState({
+                    noPetsVisible: true,
+                    petsOkVisible: false,
+                })
+            }
+            if( this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
+            {
+                this.setState({
+                    petsOkVisible: true,
+                    noPetsVisible: false,
+                })
+            }
+            if(this.state.userPreferences.chattiness === config.CHATTINESS.QUIT_TYPE || this.state.userPreferences.chattiness === config.CHATTINESS.LOVE_TO_CHAT)
+            {
+                this.setState({
+                    chattinessVisible: true
+                })
+            }
+            if(this.state.userPreferences.music === config.MUSIC.SILENCE || this.state.userPreferences.music === config.MUSIC.ALL_ABOUT_PLAYLIST)
+            {
+                this.setState({
+                    musicVisible: true
+                })
+            }
             this.setState({
-                petsVisible: true
+                isloadingUser: false
             })
-        }
-        if(this.state.userPreferences.pets === config.PETS.NO_PETS )
-        {
+        } catch (error) {
             this.setState({
-                noPetsVisible: true,
-                petsOkVisible: false,
+                isloadingUser: false
             })
-        }
-        if( this.state.userPreferences.pets === config.PETS.PETS_WELCOME)
-        {
-            this.setState({
-                petsOkVisible: true,
-                noPetsVisible: false,
-            })
-        }
-        if(this.state.userPreferences.chattiness === config.CHATTINESS.QUIT_TYPE || this.state.userPreferences.chattiness === config.CHATTINESS.LOVE_TO_CHAT)
-        {
-            this.setState({
-                chattinessVisible: true
-            })
-        }
-        if(this.state.userPreferences.music === config.MUSIC.SILENCE || this.state.userPreferences.music === config.MUSIC.ALL_ABOUT_PLAYLIST)
-        {
-            this.setState({
-                musicVisible: true
-            })
+            console.log('error in async storage ', error)
+            ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
         }
     }
         gettingUserRideDetails()
     }
 
-    async bookedUserPreferences(bookedUser){
-        await AsyncStorage.setItem('booked_user', JSON.stringify(bookedUser))
-        this.props.navigation.navigate('bookedUserPreferences')
+  async bookedUserPreferences(bookedUser){
+    try {
+      await AsyncStorage.setItem('booked_user', JSON.stringify(bookedUser))
+      this.props.navigation.navigate('bookedUserPreferences')
+    } catch (error) {
+      console.log('error in async storage ', error)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
+  }
 
-renderBookedUsers =({item}) => {
+  renderBookedUsers =({item}) => {
     return(
+      <TouchableWithoutFeedback onPress = {() => this.bookedUserPreferences(item)}>
         <View style = {{flexDirection: "row", marginTop: 15,justifyContent: 'space-between',}}>
-            <Text style = {{
-            fontSize: 17,
-            marginTop: 13,
-            fontWeight: 'bold',
-            color: '#054752',
-            }}>{item.name}</Text>
-            <TouchableWithoutFeedback onPress = {() => this.bookedUserPreferences(item)} >
-                <View style = {{marginLeft: 120, flexDirection: 'row', justifyContent: 'flex-end'}}>
-                    <Image style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 63,
-                        borderWidth: 4,
-                    }} source={{uri: config.API_HOST + '/' + item.avatar}}/>
-                    <ArrowIcon2 name = 'ios-arrow-forward' 
-                        size = {20}
-                        color = '#527a7a'
-                        style = {{marginLeft: 15, marginTop: 15, }}
-                    />
-                </View>
-            </TouchableWithoutFeedback>
+          <Text style = {{
+          fontSize: 17,
+          marginTop: 13,
+          fontWeight: 'bold',
+          color: config.TEXT_COLOR,
+          }}>{item.name}</Text>
+          <View style = {{marginLeft: 120, flexDirection: 'row', justifyContent: 'flex-end'}}>
+            <Image style={{
+              width: 40,
+              height: 40,
+              borderRadius: 63,
+              borderWidth: 4,
+            }} source={{uri: config.API_HOST + '/' + item.avatar}}/>
+            <ArrowIcon2 name = 'ios-arrow-forward' 
+              size = {20}
+              color = '#527a7a'
+              style = {{marginLeft: 15, marginTop: 15, }}
+            />
+          </View>
         </View>
+      </TouchableWithoutFeedback>
     )
 }
     
@@ -193,6 +218,7 @@ renderBookedUsers =({item}) => {
     return (
         <View style = {styles.container}>
       <ScrollView contentContainerStyle = {{flexGrow: 1}}>
+      {this.state.isloadingUser && <ActivityIndicator size="large" />}
         <View >
             <Text style = {styles.date}>
                 {this.state.daysNames[this.state.date.getDay()]} {this.state.date.getDate()} {this.state.monthNames[this.state.date.getMonth()]}
@@ -210,7 +236,7 @@ renderBookedUsers =({item}) => {
                 size={16}
               />
               <View style={{flexWrap: 'wrap', flex: 1}}>
-                <Text style={{color: '#054752', fontSize: 16, marginLeft: -5, flexWrap: 'wrap'}}>{this.state.leaveLocation}</Text>
+                <Text style={{color: config.TEXT_COLOR, fontSize: 16, marginLeft: -5, flexWrap: 'wrap'}}>{this.state.leaveLocation}</Text>
               </View>
             </View>
 
@@ -223,7 +249,7 @@ renderBookedUsers =({item}) => {
                 size={16}
               />
               <View style={{flexWrap: 'wrap', flex: 1}}>
-                <Text style={{color: '#054752', fontSize: 16, marginLeft: -5,}}>{this.state.goingLocation}</Text>
+                <Text style={{color: config.TEXT_COLOR, fontSize: 16, marginLeft: -5,}}>{this.state.goingLocation}</Text>
               </View>
             </View>
           </View>
@@ -240,12 +266,12 @@ renderBookedUsers =({item}) => {
             </View>
 
             <View style = {{flexDirection: "row", marginRight: 10  }}>
-                <RupeeIcon name = 'rupee' size = {20} color = '#054752' style = {{marginTop: 7}} />
+                <RupeeIcon name = 'rupee' size = {20} color = {config.TEXT_COLOR} style = {{marginTop: 7}} />
                 <Text style = {{
                     marginLeft: 2,
                     fontSize: 25,
                     fontWeight: 'bold',
-                    color: '#054752',
+                    color: config.TEXT_COLOR,
                     fontFamily: "sans-serif-condensed",
                     }}>{this.state.price}</Text>
             </View>
@@ -266,24 +292,24 @@ renderBookedUsers =({item}) => {
             borderBottomWidth: 1,
         }}/>
 
-        <View style = {{flexDirection: "row", marginTop: 20,justifyContent: 'space-between'}} >
+        <TouchableWithoutFeedback onPress = {() => this.props.navigation.navigate('UserBio')}>
+          <View style = {{flexDirection: "row", marginTop: 20,justifyContent: 'space-between',}}>
             <Text style = {{
             fontSize: 18,
             marginTop: 15,
             fontWeight: 'bold',
-            color: '#054752',
+            color: config.TEXT_COLOR,
             }}>{this.state.userName}</Text>
-            <TouchableWithoutFeedback onPress = {() => this.props.navigation.navigate('UserBio')} >
-                <View style = {{marginLeft: 120, flexDirection: 'row', justifyContent: 'flex-end', }}>
-                    <Image style={styles.avatar} source={{uri: config.API_HOST + '/' + this.state.avatar}}/>
-                    <ArrowIcon2 name = 'ios-arrow-forward' 
-                        size = {20}
-                        color = '#527a7a'
-                        style = {{marginLeft: 15, marginTop: 15, }}
-                    />
-                </View>
-            </TouchableWithoutFeedback>
-        </View>
+            <View style = {{marginLeft: 120, flexDirection: 'row', justifyContent: 'flex-end'}} >
+              <Image style={styles.avatar} source={{uri: config.API_HOST + '/' + this.state.avatar}}/>
+              <ArrowIcon2 name = 'ios-arrow-forward' 
+                  size = {20}
+                  color = '#527a7a'
+                  style = {{marginLeft: 15, marginTop: 15, }}
+              />
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
 
         {this.state.infoVisible && <Text style = {{
             fontSize: 16,
@@ -296,24 +322,24 @@ renderBookedUsers =({item}) => {
             <Text style = {{
                 fontSize: 16,
                 fontWeight: 'bold',
-                color: '#7963b6',
+                color: config.COLOR,
                 }}>Contact  {this.state.userName}</Text>
 
-            <Text style = {{
-                fontSize: 16,
-                fontWeight: 'bold',
-                color: '#054752',
-                borderBottomWidth: 0.5,
-                borderBottomColor: '#737373',
-                }}
-                onPress = {() => Linking.openURL(`tel:${this.state.userPhoneNumber}`)}>{this.state.userPhoneNumber}</Text>
+          <Text style = {{
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: config.TEXT_COLOR,
+            borderBottomWidth: 0.5,
+            borderBottomColor: '#737373',
+            }}
+            onPress = {() => Linking.openURL(`tel:${this.state.userPhoneNumber}`)}>{this.state.userPhoneNumber}</Text>
         </View>
 
-        <View style={{
+        {(this.state.smokingVisible || this.state.petsVisible )&& <View style={{
             marginTop: 30,
             borderBottomColor: '#cccccc',
             borderBottomWidth: 1,
-        }}/>
+        }}/>}
 
         {this.state.smokingVisible && this.state.noSmokeVisible &&
         <View style = {{marginTop: 20, flexDirection: 'row'}}>
@@ -355,11 +381,38 @@ renderBookedUsers =({item}) => {
             </Text>
         </View>}
 
-        {(this.state.smokingVisible || this.state.petsVisible )&& <View style={{
+        <View>
+          <View style={{
             marginTop: 30,
+            flexDirection: 'row',
+          }}>
+            <Text style={{color: config.TEXT_COLOR,
+              fontWeight: 'bold',
+              fontSize: 16}}
+              >{this.state.car.make}</Text>
+
+              <Text style={{color: config.TEXT_COLOR,
+              fontWeight: 'bold',
+              marginLeft: 8,
+              fontSize: 16}}
+              >{this.state.car.model}</Text>
+          </View>
+
+          <View style={{
+            marginTop: 10,
+          }}>
+            <Text style={{color: '#527a7a',
+              fontWeight: 'bold',
+              fontSize: 16}}
+            >{this.state.car.color}</Text>
+          </View>
+        </View>
+
+         <View style={{
+            marginTop: 20,
             borderBottomColor: '#cccccc',
             borderBottomWidth: 1,
-        }}/>}
+        }}/>
 
         {this.state.alreadyBooked && 
         <Text style = {styles.booked}>Already booked this ride</Text>}
@@ -375,17 +428,17 @@ renderBookedUsers =({item}) => {
 
         {this.state.alreadyBooked && 
         <View style={{
-                    marginTop: 30,
-                    borderBottomColor: '#cccccc',
-                    borderBottomWidth: 1,
-                }}/>}
+            marginTop: 10,
+            borderBottomColor: '#cccccc',
+            borderBottomWidth: 1,
+        }}/>}
     
       </ScrollView>
       <View style = {{alignItems: 'center',position: 'relative', justifyContent: 'center',
          bottom: 0, marginTop: 20 }}>
         <Button
             style={styles.continueBtn}
-            onPress={() => this.props.navigation.navigate('BookRide')}
+            onPress={() => {this.props.navigation.navigate('BookRide')}}
             mode = "contained">
             <Text style = {{color: '#fff', fontWeight: 'bold' }}>Continue</Text>
         </Button> 
@@ -403,7 +456,7 @@ const styles = StyleSheet.create({
       },
   
     date: {
-      color: '#054752',
+      color: config.TEXT_COLOR,
       fontWeight: 'bold',
       fontSize: 33,
       fontFamily: "sans-serif-condensed",
@@ -412,7 +465,7 @@ const styles = StyleSheet.create({
     location: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#054752',
+        color: config.TEXT_COLOR,
         flexWrap: 'wrap',
     },
 
@@ -441,9 +494,9 @@ const styles = StyleSheet.create({
 
       continueBtn:{
         borderRadius: 30,
-        width: 300,
+        width: 280,
         height: 45,
-        backgroundColor: "#7963b6",
+        backgroundColor: config.COLOR,
         justifyContent: 'center',
       },
 
@@ -452,7 +505,7 @@ const styles = StyleSheet.create({
         fontFamily: "sans-serif-medium",
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#054752',
-        marginTop: 30,
+        color: config.TEXT_COLOR,
+        marginTop: 20,
       }
 })

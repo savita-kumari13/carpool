@@ -11,12 +11,17 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
+  Modal,
+  Alert,
+  ActivityIndicator,
+  ToastAndroid
 } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import { Button} from 'react-native-paper';
 import axios from '../../../axios'
 import config from '../../../../config/constants'
 import ImagePicker from 'react-native-image-picker'
+import AwesomeAlert from 'react-native-awesome-alerts';
 
 export default class Profile extends Component {
 
@@ -31,7 +36,10 @@ export default class Profile extends Component {
       preferences: [],
       cars: [],
       addCarShow: true,
-      carList: false
+      carList: false,
+      Alert_Visibility: false,
+      isProfileLoading: false,
+      isDeleteLoading: false,
 
     }
     this._handleBackHandler = this._handleBackHandler.bind(this);
@@ -47,35 +55,52 @@ signOut = async () => {
 }
 
 getProfile(){
+  this.setState({
+    isProfileLoading: true
+  })
   axios.get('/users/get_profile')
   .then(res =>{
     const resData = res.data
-    if(resData && resData.response && resData.response.user)
-    {
+    if(resData.status){
+      if(resData && resData.response && resData.response.user)
+      {
+        this.setState({
+          userName: resData.response.user.name,
+          userEmail: resData.response.user.email,
+          phoneNumber: resData.response.user.phone_number,
+          preferences: resData.response.user.preferences,
+          cars: resData.response.user.cars,
+          uri: config.API_HOST + '/' + resData.response.user.avatar
+        })
+        if((resData.response.user.cars).length > 0){
+          this.setState({
+            addCarShow: false,
+            carList: true
+          })
+        }
+        if((resData.response.user.cars).length == 0){
+          this.setState({
+            addCarShow: true,
+            carList: false
+          })
+        }
+      }
       this.setState({
-        userName: resData.response.user.name,
-        userEmail: resData.response.user.email,
-        phoneNumber: resData.response.user.phone_number,
-        preferences: resData.response.user.preferences,
-        cars: resData.response.user.cars,
-        uri: config.API_HOST + '/' + resData.response.user.avatar
+        isProfileLoading: false
       })
-      if((resData.response.user.cars).length > 0){
-        this.setState({
-          addCarShow: false,
-          carList: true
-        })
-      }
-      if((resData.response.user.cars).length == 0){
-        this.setState({
-          addCarShow: true,
-          carList: false
-        })
-      }
     }
-
+    else{
+      this.setState({
+        isProfileLoading: false
+      })
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    }
   }).catch(err => {
+    this.setState({
+      isProfileLoading: false
+    })
     console.log('error sending get profile request ', err)
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   })
 
 }
@@ -84,7 +109,7 @@ componentDidMount()
 {
   this._navListener = this.props.navigation.addListener('didFocus', () => {
     StatusBar.setBarStyle('light-content');
-    StatusBar.setBackgroundColor('#7963b6');
+    StatusBar.setBackgroundColor(config.COLOR);
   });
   BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
 }
@@ -105,7 +130,33 @@ _handleBackHandler = () => {
    return true;
  }
 
+Show_Custom_Alert(item) {
+  this.setState({
+    Alert_Visibility: true
+  });
+
+  Alert.alert(
+    '','Confirm delete ?',
+    [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {text: 'OK', onPress: () => this.deleteCar(item)},
+    ],
+    {cancelable: false},
+  );
+}
+
+ok_Button=()=>{
+  Alert.alert("OK Button Clicked.");
+}
+
  deleteCar(item){
+   this.setState({
+     isDeleteLoading: true
+   })
   const car = {
     make: item.make,
     model: item.model,
@@ -120,18 +171,28 @@ _handleBackHandler = () => {
       let cars = this.state.cars
       cars = cars.filter(car => { return car._id.toString() != item._id.toString() })
       this.setState({
-        cars: cars
+        cars: cars,
+        isDeleteLoading: false
       })
       if(car.length == 0){
         this.setState({
           addCarShow: true,
-          carList: false
+          carList: false,
+          isDeleteLoading: false
         })
       }
+      ToastAndroid.show('Car deleted successfully', ToastAndroid.SHORT)
     }
+    this.setState({
+      isDeleteLoading: false
+    })
    })
    .catch(err => {
-     console.log('error sending delete car request ', err)
+      this.setState({
+        isDeleteLoading: false
+      })
+      console.log('error sending delete car request ', err)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
    })
  }
 
@@ -165,15 +226,21 @@ _handleBackHandler = () => {
       });
       axios.post('/users/add_profile_photo', data)
       .then((res)=>{
-        const resData = res.data      
-        console.log(res);
-        this.setState({
-          uri: config.API_HOST + '/' + resData.response.user.avatar
-        })
+        const resData = res.data
+        if(resData.status){
+          this.setState({
+            // uri: config.API_HOST + '/' + resData.response.user.avatar
+          })
+          ToastAndroid.show('profile photo updated', ToastAndroid.SHORT)
+        }
+        else{
+          ToastAndroid.show('Error occurred while updating profile photo', ToastAndroid.SHORT)
+        }
       })
       .catch((err)=>{
         console.log(err)
-      });
+        ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+      })
     }
   })
 }
@@ -189,12 +256,12 @@ _handleBackHandler = () => {
           marginTop: 10,
           flexDirection: 'row',
         }}>
-          <Text style={{color: '#054752',
+          <Text style={{color: config.TEXT_COLOR,
             fontWeight: 'bold',
             fontSize: 16}}
             >{item.make}</Text>
 
-            <Text style={{color: '#054752',
+            <Text style={{color: config.TEXT_COLOR,
             fontWeight: 'bold',
             marginLeft: 8,
             fontSize: 16}}
@@ -210,7 +277,7 @@ _handleBackHandler = () => {
           >{item.color}</Text>
         </View>
       </View>
-        <TouchableOpacity style={{justifyContent: 'flex-end'}} onPress = {() => this.deleteCar(item)}>
+        <TouchableOpacity style={{justifyContent: 'flex-end'}} onPress = {() => {this.Show_Custom_Alert(item)}}>
           <Text style = {{ color: '#e60000', fontWeight: 'bold', fontSize: 13, }}>DELETE</Text>
         </TouchableOpacity>
      </View>
@@ -226,7 +293,7 @@ _handleBackHandler = () => {
   render() {
     return (
       <ScrollView contentContainerStyle = {styles.container}>
-        <SafeAreaView style= { backgroundColor = '#7963b6' }/>
+        <SafeAreaView style= { backgroundColor = config.COLOR }/>
           <View style={styles.header}>
             <TouchableOpacity style = {{
               alignSelf:'center',
@@ -239,15 +306,15 @@ _handleBackHandler = () => {
               <Text style={styles.userName}>{this.state.userName}</Text>
             </View>
           </View>
-          
+          {this.state.isProfileLoading && <ActivityIndicator size="large" />}
           <View style={styles.body}>
-              <Text style = {{color: '#054752', fontWeight: 'bold',fontSize: 18}}>About you</Text>
+              <Text style = {{color: config.TEXT_COLOR, fontWeight: 'bold',fontSize: 18}}>About you</Text>
               <View style = {{paddingLeft: 45, paddingTop: 30}}>
-                <Text style={{color: '#7963b6',
+                <Text style={{color: config.COLOR,
                   fontWeight: 'bold',
                   fontSize: 16}}
                   onPress = {() => this.props.navigation.navigate('Bio')}>Write my mini bio</Text>
-                <Text style={{color: '#7963b6',
+                <Text style={{color: config.COLOR,
                   fontWeight: 'bold',
                   fontSize: 16,
                   marginTop: 20,}}
@@ -261,12 +328,12 @@ _handleBackHandler = () => {
                 borderBottomWidth: 1,
               }}/>
 
-            <Text style = {{color: '#054752', fontWeight: 'bold',fontSize: 18, marginTop: 20,}}>Account</Text>
+            <Text style = {{color: config.TEXT_COLOR, fontWeight: 'bold',fontSize: 18, marginTop: 20,}}>Account</Text>
               <View style = {{paddingLeft: 45, paddingTop: 30}}>
-                <Text style={{color: '#7963b6',
+                <Text style={{color: config.COLOR,
                   fontWeight: 'bold',
                   fontSize: 16}}>{this.state.phoneNumber}</Text>
-                <Text style={{color: '#7963b6',
+                <Text style={{color: config.COLOR,
                   fontWeight: 'bold',
                   fontSize: 16,
                   marginTop: 20,}}
@@ -281,16 +348,17 @@ _handleBackHandler = () => {
               }}/>
 
             <View style = {{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20,}}>
-              <Text style = {{color: '#054752', fontWeight: 'bold',fontSize: 18,}}>Car</Text> 
+              <Text style = {{color: config.TEXT_COLOR, fontWeight: 'bold',fontSize: 18,}}>Car</Text> 
+              {this.state.isDeleteLoading && <ActivityIndicator size="large" />}
               {this.state.carList &&
-                  <Text style={{color: '#7963b6',
+                  <Text style={{color: config.COLOR,
                     fontWeight: 'bold',
                     fontSize: 16}}
-                    onPress = {() => this.props.navigation.navigate('CarMake')}>Add a car</Text>}
+                    onPress = {() => this.addCar()}>Add a car</Text>}
             </View>
             {this.state.addCarShow &&
               <View style = {{paddingLeft: 45, paddingTop: 30, flexDirection: 'row', justifyContent: 'space-between'}}>
-                <Text style={{color: '#7963b6',
+                <Text style={{color: config.COLOR,
                   fontWeight: 'bold',
                   fontSize: 16}}
                   onPress = {() => this.addCar()}>Add a car</Text>
@@ -314,13 +382,14 @@ _handleBackHandler = () => {
                 borderBottomWidth: 1,
               }}/>
 
-        <Button 
-          style={[styles.logoutButton]}
-          mode = 'text'
-          onPress = {() => this.signOut() }>
-            <Text style = {{color: '#7963b6', fontWeight: 'bold' }}>LOG OUT</Text>
-        </Button>
-            
+          <View style = {{alignItems: 'center'}}>
+            <Button 
+              style={[styles.logoutButton]}
+              mode = 'text'
+              onPress = {() => this.signOut() }>
+                <Text style = {{color: config.COLOR, fontWeight: 'bold' }}>LOG OUT</Text>
+            </Button>
+          </View>    
         </View>
 
       </ScrollView>
@@ -334,7 +403,7 @@ const styles = StyleSheet.create({
      flexGrow: 1,
   },
   header:{
-    backgroundColor: "#7963b6",
+    backgroundColor: config.COLOR,
     height:200,
     alignItems: 'center'
   },
@@ -361,7 +430,7 @@ const styles = StyleSheet.create({
   },
 
   aboutYouText: {
-    color: '#7963b6',
+    color: config.COLOR,
     fontWeight: 'bold',
     fontSize: 14
   },
@@ -381,4 +450,52 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
     },
 
+      
+  Alert_Main_View:{
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor : "#e1dcef", 
+  height: 100 ,
+  width: 220,
+  borderWidth: 1,
+  borderColor: '#fff',
+  borderRadius:7,
+  },
+
+  Alert_Message:{
+    fontSize: 20, 
+    color: config.TEXT_COLOR,
+    textAlign: 'center',
+    padding: 10,
+  },
+  
+  buttonStyle: {
+    width: '50%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  okButtonStyle: {
+    width: '50%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
+    backgroundColor : "#ffb3b3",
+    marginTop: 5,
+  },
+  cancelButtonStyle: {
+    width: '50%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor : "#fff", 
+  },
+    
+  TextStyle:{
+    color:config.TEXT_COLOR,
+    textAlign:'center',
+    fontSize: 18,
+    marginTop: 5
+  }
 })

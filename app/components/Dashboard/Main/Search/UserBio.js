@@ -5,6 +5,7 @@ import {
     StyleSheet,
     Image,
     ScrollView,
+    ActivityIndicator
 } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import config from '../../../../config/constants'
@@ -25,12 +26,16 @@ export default class UserBio extends Component {
 
             petsOkVisible: false,
             noPetsVisible: false,
+            isLoadingUser: false,
 
         }
     }
 
     componentDidMount(){
         gettingUSerBio = async() =>{
+            this.setState({
+                isLoadingUser: true
+            })
             try {
                 const user_name = JSON.parse(await AsyncStorage.getItem('user_name'))
                 const user_preferences = JSON.parse(await AsyncStorage.getItem('preferences'))
@@ -75,10 +80,16 @@ export default class UserBio extends Component {
                         noPetsVisible: false,
                     })
                 }
+                this.setState({
+                    isLoadingUser: false
+                })
             } catch (error) {
+                this.setState({
+                    isLoadingUser: false
+                })
                 console.log('error in async storage ', error)
-            }
-            
+                ToastAndroid.show('Please fill different places', ToastAndroid.SHORT)
+            }     
         }
         gettingUSerBio()
     }
@@ -86,6 +97,7 @@ export default class UserBio extends Component {
   render() {
     return (
       <ScrollView contentContainerStyle = {styles.container}>
+      {this.state.isloadingUser && <ActivityIndicator size="large" />}
         <View style={styles.header}>
             <View style={styles.headerContent}>
                 <Image style={styles.avatar}
@@ -202,7 +214,7 @@ const styles = StyleSheet.create({
 
     name:{
         fontSize:22,
-        color:"#054752",
+        color:config.TEXT_COLOR,
         fontWeight:'bold',
       },
 

@@ -1,0 +1,43 @@
+.container{
+	background: ;
+}
+.logo{
+	width: 62%;
+	padding: 20px 0px 0px 30px; 
+}
+.new-password h1{
+	text-align: center;
+	color: #054752;
+	font-size: 28px;
+	font-weight: 500;
+	line-height: 1.06;
+	font-weight: bold;
+	margin-top: 48px;
+}
+.email-input{
+	border: 0;
+	border-radius: 16px;
+	background-color: #EDEDED;
+	color: #054752;
+	flex: 1;
+	font-size: 16px;
+	line-height: 20px;
+	width: 100%;
+	caret-color: #4370A3;
+	padding: 16px;
+	/*margin-top: 20px;*/
+}
+.send-button{
+	background-color: #4370A3;
+	color: #FFF;
+	font-weight: bold;
+	font-size: 16px;
+	margin-left:20%;
+	padding: 14px 35px;
+	border-radius: 45px;
+	border: none;
+	margin-top: 20px;
+}
+.email-input:focus{
+	border: solid 3px #4370A3;
+}

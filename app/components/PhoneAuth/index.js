@@ -1,195 +1,228 @@
-import React, { Component } from 'react';
-import { View, Button, Text, TextInput, Image, DeviceEventEmitter, } from 'react-native';
-
-// import firebase from 'react-native-firebase';
-
-// import RNFirebasePhoneAuth from 'react-native-firebase-phone-auth';
+import React, { Component } from 'react'
+import firebase from 'react-native-firebase';
+import { NavigationActions ,} from 'react-navigation'
+import { 
+  Text,
+  View ,
+  BackHandler,
+  SafeAreaView,
+  StyleSheet,
+  StatusBar,
+  ScrollView,
+  TextInput,
+} from 'react-native'
+import AsyncStorage from '@react-native-community/async-storage'
+import { Button} from 'react-native-paper';
+import axios from '../axios'
+import CountryPicker from 'react-native-country-picker-modal'
+import NavigationService from '../../../NavigationService';
+import config from '../../config/constants'
 
 export default class PhoneAuth extends Component {
-
-//     constructor(props) 
-//     {
-//         super(props);
-//         this.unsubscribe = null;
-//         this.state = 
-//         {
-//           user: null,
-//           message: '',
-//           codeInput: '',
-//           phoneNumber: '+91',
-//           confirmResult: null,
-//         };
-//     }
-
-//     componentDidMount()
-//     {
-//         this.unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-//           if (user) {
-//             this.setState({ user: user.toJSON() });
-//           } else {
-//             // User has been signed out, reset the state
-//             this.setState({
-//               user: null,
-//               message: '',
-//               codeInput: '',
-//               phoneNumber: '+91',
-//               confirmResult: null,
-//             });
-//           }
-//         });
-//       }
-
-//       componentWillUnmount()
-//       {
-//         if (this.unsubscribe) this.unsubscribe();
-//      }
-
-//       renderPhoneNumberInput()
-//       {
-//         const { phoneNumber } = this.state;
-           
-//          return (
-//            <View style={{ padding: 25 }}>
-//              <Text>Enter phone number:</Text>
-//              <TextInput
-//                autoFocus
-//                style={{ height: 40, marginTop: 15, marginBottom: 15 }}
-//                onChangeText={value => this.setState({ phoneNumber: value })}
-//                placeholder={'Phone number ... '}
-//                value={phoneNumber}
-//                keyboardType = "phone-pad"
-//              />
-//              <Button title="Sign In" color="#33adff" onPress={this.signIn} />
-//            </View>
-//          );
-//        }
-
-//        signIn = () =>
-//        {
-//         const { phoneNumber } = this.state;
-//         this.setState({ message: 'Sending code ...' });
-    
-//         // firebase.auth().signInWithPhoneNumber(phoneNumber)
-//         //   .then(confirmResult => this.setState({ confirmResult, message: 'Code has been sent!' }))
-//         //   .catch(error => this.setState({ message: `Verification With Phone Number Error: ${error.message}` }));
-
-//         firebase.auth().verifyPhoneNumber(phoneNumber).on('state_changed', (phoneAuthSnapShot) =>
-//         {
-//           switch(phoneAuthSnapShot.state)
-//           {
-
-//             case firebase.auth.PhoneAuthState.CODE_SENT : 
-//               this.setState({confirmResult, message: 'Code has been sent'})
-//               this.renderVerificationCodeInput();
-//               break;
-
-//             case firebase.auth.PhoneAuthState.ERROR: // or 'error'
-//               console.log('verification error');
-//               console.log(phoneAuthSnapshot.error);
-//               this.setState({message: `${phoneAuthSnapShot.error}`});
-//               break;
-
-//             case firebase.auth.PhoneAuthState.AUTO_VERIFY_TIMEOUT :
-//               console.log('auto verify on android timed out');
-//               this.setState({confirmResult, message: 'Code has been sent'})
-//               break;
-
-//             case firebase.auth.PhoneAuthState.AUTO_VERIFIED :
-//               const { verificationId, code } = phoneAuthSnapshot;
-//               const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
-//               firebase.auth().currentUser.linkWithCredential(credential);
-//               break;
-//           }
-//         }, (error) => {
-//           console.log(error);
-//           console.log(error.verificationId);
-//         }, (phoneAuthSnapShot) => {
-//           if(phoneAuthSnapShot.code == null) {
-//             this.renderVerificationCodeInput();
-//           console.log(phoneAuthSnapShot);
-//           }
-//         });
-//       };
-
-//       renderMessage()
-//       {
-//         const { message } = this.state;
+  constructor(props) {
+    super(props)
+  
+    this.state = {
+      phoneNumber: '',
+      enterCode: false,
+      country: {
+        cca2: 'IN',
+        callingCode: '91'
+      },
       
-//         if (!message.length) return null;
-      
-//         return (
-//           <Text style={{ padding: 5, backgroundColor: '#000', color: '#fff' }}>{message}</Text>
-//         );
-//       }
+      errors: {
+          phoneNumber: ''
+      },
 
-//       renderVerificationCodeInput()
-//       {
-//         const { codeInput } = this.state;
-      
-//         return (
-//           <View style={{ marginTop: 25, padding: 25 }}>
-//             <Text>Enter verification code below:</Text>
-//             <TextInput
-//               autoFocus
-//               style={{ height: 40, marginTop: 15, marginBottom: 15 }}
-//               onChangeText={value => this.setState({ codeInput: value })}
-//               placeholder={'Code ... '}
-//               value={codeInput}
-//               keyboardType = "phone-pad"
-//             />
-//             <Button title="Confirm Code" color="#33adff" onPress={this.confirmCode} />
-//           </View>
-//         );
-//       }
-
-//       confirmCode = () =>
-//       {
-//         const { codeInput, confirmResult } = this.state;
-    
-//         if (confirmResult && codeInput.length)
-//         {
-//           confirmResult.confirm(codeInput)
-//             .then((user) => {
-//               this.setState({ message: 'Code Confirmed!' });
-//               this.props.navigation.navigate('dashboard')
-//             })
-//             .catch(error => this.setState({ message: `Code Confirm Error: ${error.message}` }));
-//         }
-//       };
-
-
-
-
-    render()
-    {
-//         const { user, confirmResult } = this.state;
-
-
-        return (
-        <View style={{ flex: 1 }}>
-{/* //         <Text>PhoneAuth</Text>
-//             { !user &&  !confirmResult && this.renderPhoneNumberInput()}
-
-//             {this.renderMessage()} */}
-
-//             {/* {!user && confirmResult && this.renderVerificationCodeInput()} */}
-
-//             {/* {user && (
-//                 <View
-//                     style={{
-//                     padding: 15,
-//                     justifyContent: 'center',
-//                     alignItems: 'center',
-//                     flex: 1,
-//                     }}
-//                 >
-//                     {this.props.navigation.navigate('dashboard')}
-                    
-//                 </View>
-//         )} */}
-
-
-//         </View>
-        );
+      isPhoneFocused: false,
+      errorPhoneNumberShow: false,
+      errorPhoneNumberBorderFocused: false,
+      isLoading: false
     }
+  }
+
+  handlePhoneFocus = () => this.setState({isPhoneFocused: true, errorPhoneNumberBorderFocused: false})
+  handlePhoneBlur = () => this.setState({isPhoneFocused: false,errorPhoneNumberBorderFocused: false})
+
+  _changeCountry = (country) => {
+      this.setState({ country });
+    }
+  
+  _renderCountryPicker = () => {
+    if (this.state.enterCode)
+      return (
+        <View/>
+      );
+    return (
+      <CountryPicker
+        ref={'countryPicker'}
+        closeable
+        onChange={this._changeCountry}
+        cca2={this.state.country.cca2}
+        translation='eng'/>
+    );
+  }
+    
+  _renderCallingCode = () => {
+    if (this.state.enterCode)
+      return (
+        <View />
+      );
+    return (
+      <View style={styles.callingCodeView}>
+        <Text style={styles.callingCodeText}>+{this.state.country.callingCode}</Text>
+      </View>
+    );
+  }
+
+  async savePhoneNumber(){
+    this.setState({
+      isLoading: true
+    })
+    try {
+      const fbName = JSON.parse(await AsyncStorage.getItem('fbName'))
+      const fbEmail = JSON.parse(await AsyncStorage.getItem('fbEmail'))
+      const fbAvatar = JSON.parse(await AsyncStorage.getItem('fbAvatar'))
+      let device_token
+      await firebase.messaging().getToken()
+      .then(fcmToken => {
+        if (fcmToken) {
+          device_token = fcmToken
+          console.log('fcm token ', fcmToken)
+        } else {
+          // user doesn't have a device token yet
+          console.log("no token")
+        } 
+      });
+      await axios.post(`/users/facebook/register`, {
+        name: fbName,
+        email: fbEmail,
+        avatar: fbAvatar,
+        phone_number: this.state.phoneNumber,
+        device_token: device_token
+      })
+      .then(res => {
+        let resData=res.data;
+        if(!resData.status)
+        {
+          if(resData.response.hasOwnProperty('errors'))
+          {
+            if(resData.response.errors.hasOwnProperty('phone_number'))
+            {
+              this.setState({
+              errorPhoneNumberShow: true,
+              errorPhoneNumberBorderFocused: true,
+              })
+            }
+            this.setState({
+              errors: {
+                  phone_number: resData.response.errors.phone_number
+              }
+            })
+            throw new Error(Object.values(resData.response.errors).join(', '));
+          }
+          else{
+            ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
+          }
+          this.setState({
+            isLoading: false
+          })
+        }
+        else{
+          this.setState({
+              phoneNumber: '',
+              isLoading: false
+          })
+          this.props.navigation.navigate('MainContainer')
+        }
+      })
+      .catch(err => {
+        console.log('error sending save phone number request ', err)
+        this.setState({
+          isLoading: false
+        })
+        ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+      })
+  }catch(error){
+    this.setState({
+      isLoading: false
+    })
+    console.log('error in async storage ', error)
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+  }
 }
+    
+  render() {
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={{ flexDirection: 'row', marginTop: 30 }}>
+            {this._renderCountryPicker()}
+            {this._renderCallingCode()}
+            <TextInput
+            onFocus={this.handlePhoneFocus}
+            onBlur={this.handlePhoneBlur}
+            value={this.state.phoneNumber}
+            keyboardType = "phone-pad"
+            style={[styles.textInput, 
+              {borderBottomColor: (this.state.isPhoneFocused? config.COLOR: this.state.errorPhoneNumberBorderFocused? 'red': '#000'),
+              borderBottomWidth: this.state.isPhoneFocused? 2: 1,}]}
+            onChangeText={phoneNumber => this.setState({ phoneNumber: phoneNumber, errorPhoneNumberShow: false, errorPhoneNumberBorderFocused: false })}
+            placeholder={'Phone number '}
+            selectionColor={config.COLOR}
+            maxLength={this.state.enterCode ? 6 : 20} />
+        </View>
+        {this.state.errorPhoneNumberShow &&
+        <Text style={{ color: 'red', marginHorizontal: 50 , marginTop: 10, }}>
+            {this.state.errors.phone_number}
+        </Text>}
+        <View style = {{alignItems: 'center'}}>
+            <Button 
+              style={[styles.savePhoneBtn]}
+              onPress={() => this.savePhoneNumber()}
+              loading = {this.state.isLoading}>
+              <Text style = {{color: '#fff', fontWeight: 'bold' }}>SAVE</Text>
+            </Button> 
+        </View>
+      </ScrollView>
+    )
+  }
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flexGrow: 1,
+        padding: 30,
+        marginTop: 40,
+    },
+
+    textInput: {
+        borderBottomWidth: 2,
+        padding: 0,
+        flex: 1,
+        fontSize: 16,
+        color: config.TEXT_COLOR,
+        fontWeight: 'bold'
+      },
+    
+      callingCodeView: {
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+    
+      callingCodeText: {
+        fontSize: 16,
+        color: config.TEXT_COLOR,
+        fontWeight: 'bold',
+        paddingRight: 10
+      },
+
+      savePhoneBtn: {
+        marginTop: 60,
+        borderRadius: 30,
+        width: 200,
+        height: 45,
+        backgroundColor: config.COLOR,
+        justifyContent: 'center',
+      },
+    
+})

@@ -10,23 +10,27 @@ import {
   StatusBar,
   ScrollView,
   TextInput,
+  ToastAndroid,
+  ActivityIndicator,
 } from 'react-native'
 import {  Button,} from 'react-native-paper';
-
+import config from '../../../../config/constants'
 import _ from 'lodash';
 import apiKey from '../../../apiKey'
 import AsyncStorage from '@react-native-community/async-storage'
 import IconLocation from 'react-native-vector-icons/MaterialIcons';
 import IconNext from 'react-native-vector-icons/Ionicons'
 
-const locationIcon = (<IconLocation name = "my-location" size = {20} color = "grey"
-                                    style = {{marginRight: 20}}/>)
+const locationIcon = (
+  <IconLocation name = "my-location" size = {20} color = "grey"
+    style = {{marginTop: 8,}}/>)
 
-const nextIcon = (<IconNext name = "ios-arrow-dropright-circle" size = {50} color = "#7963b6"
-                            style = {{position: 'absolute',
-                            bottom:20,
-                            right:20,}}
-                            />)
+const nextIcon = (
+  <IconNext name = "ios-arrow-dropright-circle" size = {50} color = {config.COLOR}
+      style = {{position: 'absolute',
+      bottom:20,
+      right:20,}}
+      />)
 
 export default class Offer extends Component {
 
@@ -35,6 +39,7 @@ export default class Offer extends Component {
 
     this.state = {
       error: '',
+      isLoading: false,
 
       pickUp: '',
       dropOff: '',
@@ -62,15 +67,15 @@ export default class Offer extends Component {
 
       showNextIconAfterPickUp: false,
       showNextIconAfterDropOff: false,
+
+      isPickUpFocused: false,
+      isDropOffFocused: false,
     }
 
-    this.offerRideRef = firebase.firestore().collection('offerRide');
+  this._handleBackHandler = this._handleBackHandler.bind(this);
 
-
-    this._handleBackHandler = this._handleBackHandler.bind(this);
-
-    this.onChangePickUpDebounced = _.debounce(this.onChangePickUp, 1000)
-    this.onChangeDropOffDebounced = _.debounce(this.onChangeDropOff, 1000)
+  this.onChangePickUpDebounced = _.debounce(this.onChangePickUp, 1000)
+  this.onChangeDropOffDebounced = _.debounce(this.onChangeDropOff, 1000)
 }
 
 
@@ -79,10 +84,9 @@ componentDidMount()
 
   this._navListener = this.props.navigation.addListener('didFocus', () => {
     StatusBar.setBarStyle('light-content');
-    StatusBar.setBackgroundColor('#7963b6');
+    StatusBar.setBackgroundColor(config.COLOR);
   });
   BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
-
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -90,11 +94,13 @@ componentDidMount()
         currentLocationLatitude: position.coords.latitude,
         currentLocationLongitude: position.coords.longitude
       })
-      console.log('position', position)
-      console.log('currentLocationLatitude', this.state.currentLocationLatitude)
-      console.log('currentLocationLongitude', this.state.currentLocationLongitude)
     },
-    error => this.setState({error: error.message}),
+    (error) => {
+      this.setState({
+      error: error.message
+      })
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    },
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
   );
 }
@@ -119,17 +125,25 @@ _handleBackHandler = () => {
    })
   const pickUpApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}&input=${pickUp}&radius=2000`;
   
-  
   try{
    const pickUpResult = await fetch(pickUpApiUrl);
    const pickUpJson = await pickUpResult.json();
 
    console.log('pickUpJson', pickUpJson)
-
+   if(pickUpJson.error_message){
+    ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT)
+    this.setState({
+      showNextIconAfterPickUp: false
+    })
+  }
    this.setState({
      pickUpPredictions: pickUpJson.predictions,
    });
   }catch(err) {
+    this.setState({
+      showNextIconAfterPickUp: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     console.log(err)
   }
 
@@ -146,11 +160,21 @@ async onChangeDropOff(dropOff) {
    const dropOffResult = await fetch(dropOffApiUrl);
    const dropOffJson = await dropOffResult.json();
    console.log('dropOffJson', dropOffJson)
+   if(dropOffJson.error_message){
+    ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT)
+    this.setState({
+      showNextIconAfterDropOff: false
+    })
+  }
    this.setState({
      dropOffPredictions: dropOffJson.predictions
    });
   }catch(err) {
-    console.log(err)
+    this.setState({
+      showNextIconAfterDropOff: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    console.log('errorr ',err)
   }
 
 }
@@ -162,6 +186,12 @@ async getCurrentLocationForPickUp() {
     const result = await fetch(apiUrl);
     const currentLocationJson = await result.json();
     console.log('currentLocationJson', currentLocationJson)
+    if(currentLocationJson.error_message){
+      ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT)
+      this.setState({
+        showNextIconAfterPickUp: false
+      })
+    }
     this.setState({
       currentLocationPredictions: currentLocationJson.results,
     });
@@ -171,13 +201,16 @@ async getCurrentLocationForPickUp() {
       this.setCurrentLocationToPickUp(currentLocationPrediction.formatted_address)
     ))
   }catch(err) {
-   console.log(err)
+    this.setState({
+      showNextIconAfterPickUp: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    console.log('errorr ',err)
  }
 
 }
 
 setCurrentLocationToPickUp =(currentPlace) => {
-  console.log('currentPlaceForPickUpPlace', currentPlace)
   this.setState({
     pickUp: currentPlace,
     pickUpLatitude: this.state.currentLocationLatitude,
@@ -198,6 +231,12 @@ async getCurrentLocationForDropOff() {
     const result = await fetch(apiUrl);
     const currentLocationJson = await result.json();
     console.log('currentLocationJson', currentLocationJson)
+    if(currentLocationJson.error_message){
+      ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT)
+      this.setState({
+        showNextIconAfterDropOff: false
+      })
+    }
     this.setState({
       currentLocationPredictions: currentLocationJson.results,
     });
@@ -207,13 +246,16 @@ async getCurrentLocationForDropOff() {
       this.setCurrentLocationToDropOff(currentLocationPrediction.formatted_address)
     ))
   }catch(err) {
-   console.log(err)
+    this.setState({
+      showNextIconAfterDropOff: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    console.log(err)
  }
 
 }
 
 setCurrentLocationToDropOff =(currentPlace) => {
-  console.log('currentPlaceForDropOff', currentPlace)
   this.setState({
     dropOff: currentPlace,
     dropOfflatitude: this.state.currentLocationLatitude,
@@ -227,10 +269,6 @@ setCurrentLocationToDropOff =(currentPlace) => {
 }
 
 async setPickUpLocation (pickUpPlace) {
-
-  console.log('selected pickUp place : ', pickUpPlace)
-  console.log('selected pickUp place_id : ', pickUpPlace.place_id)
-
   this.setState({
     pickUpPlaceId: pickUpPlace.place_id,
     pickUp: pickUpPlace.description,
@@ -239,33 +277,26 @@ async setPickUpLocation (pickUpPlace) {
     currentPlaceLoadingForPickUp: false,
     showNextIconAfterPickUp: true,
   })
-  console.log('pick Up place id : ', this.state.pickUpPlaceId)
-
   const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${pickUpPlace.place_id}&key=${apiKey}`
 
   try {
 
   const placeIdResult = await fetch(placeIdApiUrl);
   const placeIdJson = await placeIdResult.json();
-  console.log('place id json : ', placeIdJson)
-
   this.setState({
     pickUpLatitude: placeIdJson.result.geometry.location.lat,
     pickUpLongitude: placeIdJson.result.geometry.location.lng
-  })
-   
-    
+  }) 
   } catch (error) {
+    this.setState({
+      showNextIconAfterPickUp: false
+    })
     console.log(error)
-    
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   }
 }
 
 async setDropOffLocation (dropOffPlace) {
-
-  console.log('selected dropOff place : ', dropOffPlace)
-  console.log('selected dropOff place_id : ', dropOffPlace.place_id)
-
   this.setState({
     dropOffPlaceId: dropOffPlace.place_id,
     dropOff: dropOffPlace.description,
@@ -279,20 +310,18 @@ async setDropOffLocation (dropOffPlace) {
   const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${dropOffPlace.place_id}&key=${apiKey}`
 
   try {
-
-  const placeIdResult = await fetch(placeIdApiUrl);
-  const placeIdJson = await placeIdResult.json();
-  console.log('place id json : ', placeIdJson)
-
-  this.setState({
-    dropOfflatitude: placeIdJson.result.geometry.location.lat,
-    dropOfflongitude: placeIdJson.result.geometry.location.lng
-  })
-   
-    
-  } catch (error) {
-    console.log(error)
-    
+    const placeIdResult = await fetch(placeIdApiUrl);
+    const placeIdJson = await placeIdResult.json();
+    this.setState({
+      dropOfflatitude: placeIdJson.result.geometry.location.lat,
+      dropOfflongitude: placeIdJson.result.geometry.location.lng
+    })
+  }catch (error) {
+    this.setState({
+      showNextIconAfterDropOff: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    console.log(error) 
   }
 }
 
@@ -301,7 +330,10 @@ setPickUpLoading = () => {
     pickUploading: true,
     dropOffLoading: false,
     currentPlaceLoadingForPickUp: true,
-    currentPlaceLoadingForDropOff: false
+    currentPlaceLoadingForDropOff: false,
+
+    isPickUpFocused: true,
+    showNextIconAfterPickUp: false
   })
 }
 
@@ -310,44 +342,57 @@ setDropOffLoading = () => {
     dropOffLoading: true,
     pickUploading: false,
     currentPlaceLoadingForPickUp: false,
-    currentPlaceLoadingForDropOff: true
+    currentPlaceLoadingForDropOff: true,
+
+    isDropOffFocused: true,
+    showNextIconAfterDropOff: false
   })
 }
 
 async savePickUpDropOffLocations() {
+  this.setState({
+    isLoading: true
+  })
   try{
-      if(this.state.pickUp != this.state.dropOff)
-      {
-        console.log('pickUpLatitude : ', this.state.pickUpLatitude)
-        console.log('dropOffLongitude : ', this.state.dropOfflongitude)
+    if(this.state.pickUp != this.state.dropOff)
+    {
+      await AsyncStorage.setItem('pickup_location_latitude', JSON.stringify(this.state.pickUpLatitude))
+      await AsyncStorage.setItem('pickup_location_longitude', JSON.stringify(this.state.pickUpLongitude))
 
-        await AsyncStorage.setItem('pickup_location_latitude', JSON.stringify(this.state.pickUpLatitude))
-        await AsyncStorage.setItem('pickup_location_longitude', JSON.stringify(this.state.pickUpLongitude))
+      await AsyncStorage.setItem('dropoff_location_latitude', JSON.stringify(this.state.dropOfflatitude))
+      await AsyncStorage.setItem('dropoff_location_longitude', JSON.stringify(this.state.dropOfflongitude))
 
-        await AsyncStorage.setItem('dropoff_location_latitude', JSON.stringify(this.state.dropOfflatitude))
-        await AsyncStorage.setItem('dropoff_location_longitude', JSON.stringify(this.state.dropOfflongitude))
-
-        await AsyncStorage.setItem('pickup_location_name', this.state.pickUp)
-        await AsyncStorage.setItem('dropoff_location_name', this.state.dropOff)
-
-        console.log('TimeAndPassengersNumber screen')
-        this.props.navigation.navigate('TimeAndPassengersNumber')
-      }
-      else{
-        alert('Please fill different places')
-      }
+      await AsyncStorage.setItem('pickup_location_name', this.state.pickUp)
+      await AsyncStorage.setItem('dropoff_location_name', this.state.dropOff)
+      
+      this.props.navigation.navigate('DrivingCar')
+      this.setState({
+        isLoading: false
+      })
+    }
+    else{
+      this.setState({
+        isLoading: false
+      })
+      ToastAndroid.show('Please fill different places', ToastAndroid.SHORT)
+    }
 
   }catch(error){
+    this.setState({
+      isLoading: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     console.log('Error in AsyncStorage ', error)
   }
   
 }
 
+handlePickUpBlur = () => this.setState({isPickUpFocused: false, showNextIconAfterPickUp: true,})
+handleDropoffBlur = () => this.setState({isDropOffFocused: false, showNextIconAfterDropOff: true,})
+
 
   render() {
-
-    const  pickUpPredictions = this.state.pickUpPredictions.map(pickUpPrediction => (
-        
+    const  pickUpPredictions = this.state.pickUpPredictions.map(pickUpPrediction => (   
       <Text
         style = {styles.suggestions}
         key = {pickUpPrediction.id}
@@ -360,75 +405,104 @@ async savePickUpDropOffLocations() {
         onPress = {() => this.setDropOffLocation(dropOffPrediction)}>{dropOffPrediction.description}</Text>))
 
 
-    return (
-      <ScrollView contentContainerStyle = {styles.container}>
-        <SafeAreaView style={[{ backgroundColor: '#7963b6' }]}/>
+  return (
+    <ScrollView contentContainerStyle = {styles.container}>
+      <SafeAreaView style={[{ backgroundColor: config.COLOR }]}/>
 
-        <Text style = {styles.findRide}>Offer a ride</Text>
+      <Text style = {styles.findRide}>Offer a ride</Text>
 
-        <TextInput
-          placeholder='Pick-up'
-          value={this.state.pickUp}
-          style = {styles.textInput}
-          onChangeText={pickUp =>{
-            this.setState({ pickUp });
-            this.onChangePickUpDebounced(pickUp)}}
-            onFocus = {this.setPickUpLoading}  
-        />
-          
-          <TextInput
-            placeholder='Drop-off'
-            value={this.state.dropOff}
-            style = {styles.textInput}
-            onChangeText={dropOff =>{
-              this.setState({ dropOff });
-              this.onChangeDropOffDebounced(dropOff)}}
-              onFocus = {this.setDropOffLoading} 
-          />
+      <TextInput 
+        placeholder='Pick-up'
+        placeholderTextColor={'#737373'}
+        selectionColor={config.COLOR}
+        value={this.state.pickUp}
+        onFocus = {this.setPickUpLoading}
+        onBlur={this.handlePickUpBlur}
+        style={[styles.textInput, 
+          {borderBottomColor: (this.state.isPickUpFocused? config.COLOR: '#000'),
+          borderBottomWidth: this.state.isPickUpFocused? 2: 1,}]}
+        onChangeText={pickUp =>{
+          this.setState({ pickUp });
+          this.onChangePickUpDebounced(pickUp)}}/>
+            
+      <TextInput 
+        placeholder='Drop-off'
+        placeholderTextColor={'#737373'}
+        selectionColor={config.COLOR}
+        value={this.state.dropOff}
+        onFocus = {this.setDropOffLoading}
+        onBlur={this.handleDropoffBlur}
+        style={[styles.textInput, 
+          {borderBottomColor: (this.state.isDropOffFocused? config.COLOR: '#000'),
+          borderBottomWidth: this.state.isDropOffFocused? 2: 1,}]}
+        onChangeText={dropOff =>{
+          this.setState({ dropOff });
+          this.onChangeDropOffDebounced(dropOff)}}/>
 
-          <View
-          style = {{borderBottomColor:'#054752', borderBottomWidth: 1, margin: 10}}/>
+      {/* <View style = {{
+        borderBottomColor:config.TEXT_COLOR,
+        borderBottomWidth: 1,
+        marginHorizontal: 20}}/> */}
 
-          {this.state.currentPlaceLoadingForPickUp && <Text
-            style = {{backgroundColor: "#fff",
-                      padding: 10,
-                      fontSize: 16,
-                      borderBottomWidth: 0.5,
-                      marginLeft: 10,
-                      }}
-            onPress = {() => this.getCurrentLocationForPickUp()}
-          >{locationIcon}Use current location</Text>}
+    {this.state.currentPlaceLoadingForPickUp &&
+      <View style = {{
+        flexDirection: 'row',
+        borderBottomWidth: 1.5,
+        borderBottomColor: config.TEXT_COLOR,
+        marginHorizontal: 20,}}>
+          {locationIcon}<Text
+          style = {{
+          paddingVertical: 10,
+          fontSize: 16,
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontWeight: 'bold',
+          color: '#666666', 
+          }}
+          onPress = {() => this.getCurrentLocationForPickUp()}
+        >   Use current location</Text></View>}
 
-          {this.state.currentPlaceLoadingForDropOff && <View><Text
-            style = {{backgroundColor: "#fff",
-            padding: 10,
+      {this.state.currentPlaceLoadingForDropOff &&
+        <View style = {{
+          flexDirection: 'row',
+          borderBottomWidth: 1.5,
+          borderBottomColor: config.TEXT_COLOR,
+          marginHorizontal: 20,}}>
+            {locationIcon}<Text
+            style = {{
+            paddingVertical: 10,
             fontSize: 16,
-            borderBottomWidth: 0.5,
-            marginLeft: 10,}}
+            justifyContent: 'center',
+            alignItems: 'center',
+            fontWeight: 'bold',
+            color: '#666666', 
+            }}
             onPress = {() => this.getCurrentLocationForDropOff()}
-          >{locationIcon}Use current location</Text></View>}
+          >   Use current location</Text></View>}
 
-        {this.state.pickUploading && pickUpPredictions}
-        {this.state.dropOffLoading && dropOffPredictions}
+      {this.state.pickUploading && pickUpPredictions}
+      {this.state.dropOffLoading && dropOffPredictions}
 
-        {/* {this.state.showNextIconAfterPickUp && this.state.showNextIconAfterDropOff &&
-         <IconNext name = "ios-arrow-dropright-circle" size = {50} color = "#7963b6"
-                            style = {{position: 'absolute',
-                            bottom:20,
-                            right:20,}}
-                            onPress = {() =>
-                              this.savePickUpDropOffLocations()}
-                            />} */}
+      {/* {this.state.showNextIconAfterPickUp && this.state.showNextIconAfterDropOff &&
+        <IconNext name = "ios-arrow-dropright-circle" size = {50} color = config.COLOR
+          style = {{position: 'absolute',
+          bottom:20,
+          right:20,}}
+          onPress = {() =>
+            this.savePickUpDropOffLocations()}
+          />} */}
 
-        <IconNext name = "ios-arrow-dropright-circle" size = {50} color = "#7963b6"
-                            style = {{position: 'absolute',
-                            bottom:20,
-                            right:20,}}
-                            onPress = {() =>
-                              this.savePickUpDropOffLocations()}
-                            />                    
-      </ScrollView>
-    )
+      {this.state.isLoading && <ActivityIndicator size="large" />}
+
+      <IconNext name = "ios-arrow-dropright-circle" size = {50} color = {config.COLOR}
+        style = {{position: 'absolute',
+        bottom:20,
+        right:20,}}
+        onPress = {() =>
+          this.savePickUpDropOffLocations()}
+        />                    
+    </ScrollView>
+  )
   }
 }
 
@@ -443,18 +517,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'sans-serif-medium',
     fontSize: 30,
-    color: '#054752',
+    color: config.TEXT_COLOR,
     margin: 20,
   },
 
   textInput: {
-    justifyContent: 'center',
-    borderRadius: 30,
-    backgroundColor: '#f2f2f2',
-    height: 50,
+    paddingVertical: 0,
+    fontWeight: 'bold',
+    color: config.TEXT_COLOR,
+    height: 40,
     marginHorizontal: 20,
     marginVertical: 10,
-    paddingHorizontal: 20,
+    fontSize: 16,
   },
 
   suggestions: {
@@ -462,8 +536,9 @@ const styles = StyleSheet.create({
     padding: 5,
     fontSize: 16,
     borderBottomWidth: 0.5,
-    marginHorizontal: 10,
-    
-  }
+    marginHorizontal: 20,
+    fontWeight: 'bold',
+    color: config.TEXT_COLOR,
+  },
 
 })

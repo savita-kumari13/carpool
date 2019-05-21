@@ -12,9 +12,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-community/async-storage'
 import apiKey from '../../../apiKey'
+import config from '../../../../config/constants'
 
-
-const locationIcon = (<Icon name = "my-location" size = {20} color = "grey" style = {{marginRight: 20}}/>)
+const locationIcon = (<Icon name = "my-location" size = {20} color = "#666666" style = {{marginTop: 8,}}/>)
 
 import { 
   Text,
@@ -26,7 +26,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Clipboard,
+  ToastAndroid,
 } from 'react-native'
 
 import _ from 'lodash';
@@ -40,6 +40,8 @@ export default class Search extends Component {
     this._handleBackHandler = this._handleBackHandler.bind(this);
 
     this.state = {
+      isLoading: false,
+
       leavingFrom: '',
       goingTo: '',
 
@@ -61,11 +63,13 @@ export default class Search extends Component {
       goingToPredictions: [],
       currentLocationPredictions: [],
 
+      isleavingFromFocused: false,
+      isGoingToFocused: false,
+
       leavingFromloading: false,
       goingToLoading: false,
       currentPlaceLoadingForLeavingFrom: false,
       currentPlaceLoadingForGoingTo: false,
-
 
       showDateTimePickerAfterLeavingFrom: false,
       showDateTimePickerAfterGoingTo: false,
@@ -103,7 +107,7 @@ componentDidMount()
 
   this._navListener = this.props.navigation.addListener('didFocus', () => {
     StatusBar.setBarStyle('light-content');
-    StatusBar.setBackgroundColor('#7963b6');
+    StatusBar.setBackgroundColor(config.COLOR);
   });
 
   BackHandler.addEventListener('hardwareBackPress', this._handleBackHandler);
@@ -115,11 +119,11 @@ componentDidMount()
         currentLocationLatitude: position.coords.latitude,
         currentLocationLongitude: position.coords.longitude
       })
-      console.log('position', position)
-      console.log('currentLocationLatitude', this.state.currentLocationLatitude)
-      console.log('currentLocationLongitude', this.state.currentLocationLongitude)
     },
-    error => console.log('error getting current location', error),
+    (error) => {
+      console.log('error getting current location', error)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    },
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
   );
 
@@ -148,11 +152,22 @@ async onChangeLeavingFrom(leavingFrom) {
   const leaveResult = await fetch(leaveApiUrl);
   const leavingFromJson = await leaveResult.json();
   console.log('leavingFromJson', leavingFromJson)
-
+  if(leavingFromJson.error_message){
+    ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT);
+    this.setState({
+      showDateTimePickerAfterLeavingFrom: false,
+      showSearchAfterLeavingFrom: false
+    })
+  }
   this.setState({
     leavingFromPredictions: leavingFromJson.predictions,
   });
   }catch(err) {
+    this.setState({
+      showDateTimePickerAfterLeavingFrom: false,
+      showSearchAfterLeavingFrom: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     console.log(err)
   }
 
@@ -169,10 +184,22 @@ async onChangeGoingTo(goingTo) {
     const result = await fetch(apiUrl);
     const goingToJson = await result.json();
     console.log('goinToJson', goingToJson)
+    if(goingToJson.error_message){
+      ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT)
+      this.setState({
+        showDateTimePickerAfterGoingTo: false,
+        showSearchAfterGoingTo: false
+      })
+    }
     this.setState({
       goingToPredictions: goingToJson.predictions
     });
   }catch(err) {
+    this.setState({
+      showDateTimePickerAfterGoingTo: false,
+      showSearchAfterGoingTo: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     console.log(err)
   }
 }
@@ -185,6 +212,13 @@ async getCurrentLocationForLeavingFrom() {
     const result = await fetch(apiUrl);
     const currentLocationJson = await result.json();
     console.log('currentLocationJson', currentLocationJson)
+    if(currentLocationJson.error_message){
+      ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT);
+      this.setState({
+        showDateTimePickerAfterLeavingFrom: false,
+        showSearchAfterLeavingFrom: false
+      })
+    }
     this.setState({
       currentLocationPredictions: currentLocationJson.results,
     });
@@ -194,12 +228,16 @@ async getCurrentLocationForLeavingFrom() {
       this.setCurrentLocationToLeavingFrom(currentLocationPrediction.formatted_address)
     ))
   }catch(err) {
-   console.log(err)
+    this.setState({
+      showDateTimePickerAfterLeavingFrom: false,
+      showSearchAfterLeavingFrom: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    console.log(err)
  }
 }
 
 setCurrentLocationToLeavingFrom =(currentPlace) => {
-  console.log('currentPlaceForLeavingPlace', currentPlace)
   this.setState({
     leavingFrom: currentPlace,
     leavingFromLatitude: this.state.currentLocationLatitude,
@@ -220,6 +258,13 @@ async getCurrentLocationForGoingTo() {
     const result = await fetch(apiUrl);
     const currentLocationJson = await result.json();
     console.log('currentLocationJson', currentLocationJson)
+    if(currentLocationJson.error_message){
+      ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT);
+      this.setState({
+        showDateTimePickerAfterGoingTo: false,
+        showSearchAfterGoingTo: false
+      })
+    }
     this.setState({
       currentLocationPredictions: currentLocationJson.results,
     });
@@ -229,13 +274,17 @@ async getCurrentLocationForGoingTo() {
       this.setCurrentLocationToGoingTo(currentLocationPrediction.formatted_address)
     ))
   }catch(err) {
-   console.log(err)
+    this.setState({
+      showDateTimePickerAfterGoingTo: false,
+      showSearchAfterGoingTo: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    console.log(err)
  }
 
 }
 
 setCurrentLocationToGoingTo =(currentPlace) => {
-  console.log('currentPlaceForGoingPlace', currentPlace)
   this.setState({
     goingTo: currentPlace,
     goingToLatitude: this.state.currentLocationLatitude,
@@ -250,8 +299,6 @@ setCurrentLocationToGoingTo =(currentPlace) => {
 }
 
 async setLeaveLocation (leavingPlace) {
-  console.log('selected leaving place : ', leavingPlace)
-  console.log('selected leaving place_id : ', leavingPlace.place_id)
   this.setState({
     leavingFromPlaceId: leavingPlace.place_id,
     leavingFrom: leavingPlace.description,
@@ -262,30 +309,35 @@ async setLeaveLocation (leavingPlace) {
     showDateTimePickerAfterLeavingFrom: true,
     showSearchAfterLeavingFrom: true,
   })
-
-  console.log('leaving place id : ', this.state.leavingFromPlaceId)
-
   const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${leavingPlace.place_id}&key=${apiKey}`
 
   try {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
-    console.log('place id json : ', placeIdJson)
-
-    this.setState({
-      leavingFromLatitude: placeIdJson.result.geometry.location.lat,
-      leavingFromLongitude: placeIdJson.result.geometry.location.lng
-    })
-      
+    if(placeIdJson.error_message){
+      ToastAndroid.show('Unable to set your selected location. Try again', ToastAndroid.SHORT);
+      this.setState({
+        showDateTimePickerAfterLeavingFrom: false,
+        showSearchAfterLeavingFrom: false
+      })
+    }
+    else {
+      this.setState({
+        leavingFromLatitude: placeIdJson.result.geometry.location.lat,
+        leavingFromLongitude: placeIdJson.result.geometry.location.lng
+      }) 
+    }  
   } catch (error) {
-      console.log(error)  
+    this.setState({
+      showDateTimePickerAfterLeavingFrom: false,
+      showSearchAfterLeavingFrom: false
+    })
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    console.log(error)  
   }
 }
 
 async setGoingToLocation (goingPlace) {
-
-  console.log('selected going place : ', goingPlace)
-  console.log('selected going place_id : ', goingPlace.place_id)
   this.setState({
     goingToPlaceId: goingPlace.place_id,
     goingTo: goingPlace.description,
@@ -305,13 +357,25 @@ async setGoingToLocation (goingPlace) {
   try {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
-    console.log('place id json : ', placeIdJson)
-
-    this.setState({
-      goingToLatitude: placeIdJson.result.geometry.location.lat,
-      goingToLongitude: placeIdJson.result.geometry.location.lng
-    })  
+    if(placeIdJson.error_message){
+      ToastAndroid.show('Unable to set your selected location. Try again', ToastAndroid.SHORT);
+      this.setState({
+        showDateTimePickerAfterGoingTo: false,
+        showSearchAfterGoingTo: false
+      })
+    }
+    else {
+      this.setState({
+        goingToLatitude: placeIdJson.result.geometry.location.lat,
+        goingToLongitude: placeIdJson.result.geometry.location.lng
+      }) 
+    } 
   } catch (error) {
+    this.setState({
+      showDateTimePickerAfterGoingTo: false,
+      showSearchAfterGoingTo: false
+    })
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
       console.log(error)  
   }
 }
@@ -325,8 +389,10 @@ setleavingFromLoading = () => {
 
     currentPlaceLoadingForLeavingFrom: true,
     currentPlaceLoadingForGoingTo: false,
-    // showDateTimePickerAfterLeavingFrom: false,
-    // showDateTimePickerAfterGoingTo: false
+    isleavingFromFocused: true  ,
+
+    showDateTimePickerAfterLeavingFrom: false,
+    showSearchAfterLeavingFrom: false
   })
 }
 
@@ -337,10 +403,29 @@ setGoingToLoading = () => {
 
     currentPlaceLoadingForLeavingFrom: false,
     currentPlaceLoadingForGoingTo: true,
-    // showDateTimePickerAfterLeavingFrom: false,
-    // showDateTimePickerAfterGoingTo: false
+    isGoingToFocused: true,
+
+    showSearchAfterGoingTo: false,
+    showDateTimePickerAfterGoingTo: false
   })
 }
+
+handleLeavingFromBlur = () => {
+  if(this.state.leavingFrom != ''){
+    this.setState({
+      isleavingFromFocused: false,
+      showDateTimePickerAfterLeavingFrom: true,
+      showSearchAfterLeavingFrom: true})
+    }
+  }
+handleGoingToBlur = () => {
+  if(this.state.goingTo != ''){
+    this.setState({
+      isGoingToFocused: false,
+      showDateTimePickerAfterGoingTo: true,
+      showSearchAfterGoingTo: true})
+    }
+  }
 
 _showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
  
@@ -358,18 +443,29 @@ _handleDatePicked = (date) => {
 
 async searchLeavingFromAndGoingToLocation()
 {
-  await AsyncStorage.setItem('leave_from_location', JSON.stringify(this.state.leavingFrom))
-  await AsyncStorage.setItem('going_to_location', JSON.stringify(this.state.goingTo))
-  await AsyncStorage.setItem('leave_from_longitude', JSON.stringify(this.state.leavingFromLongitude))
-  await AsyncStorage.setItem('leave_from_latitude', JSON.stringify(this.state.leavingFromLatitude))
-  await AsyncStorage.setItem('going_to_longitude', JSON.stringify(this.state.goingToLongitude))
-  await AsyncStorage.setItem('going_to_latitude', JSON.stringify(this.state.goingToLatitude))
-  await AsyncStorage.setItem('searched_ride_date_time', JSON.stringify(this.state.pickedDate))
-  this.props.navigation.navigate('SearchList')
+  this.setState({
+    isLoading: true
+  })
+  try {
+    await AsyncStorage.setItem('leave_from_location', JSON.stringify(this.state.leavingFrom))
+    await AsyncStorage.setItem('going_to_location', JSON.stringify(this.state.goingTo))
+    await AsyncStorage.setItem('leave_from_longitude', JSON.stringify(this.state.leavingFromLongitude))
+    await AsyncStorage.setItem('leave_from_latitude', JSON.stringify(this.state.leavingFromLatitude))
+    await AsyncStorage.setItem('going_to_longitude', JSON.stringify(this.state.goingToLongitude))
+    await AsyncStorage.setItem('going_to_latitude', JSON.stringify(this.state.goingToLatitude))
+    await AsyncStorage.setItem('searched_ride_date_time', JSON.stringify(this.state.pickedDate))
+    this.props.navigation.navigate('SearchList')
+    this.setState({
+      isLoading: false
+    })
+  } catch (error) {
+    console.log('error in async storage ', error)
+    ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
+    this.setState({
+      isLoading: false
+    })
+  }
 }
-
-
-
 
 render() {
 
@@ -388,52 +484,80 @@ render() {
 
   return (
     <ScrollView contentContainerStyle = {styles.container}>
-      <SafeAreaView style={[ { backgroundColor: '#7963b6' }]}/>
+      <SafeAreaView style={[ { backgroundColor: config.COLOR }]}/>
         <Text style = {styles.findRide}>Find a ride</Text>
 
-        <TextInput
+        <TextInput 
           placeholder='Leaving from'
+          placeholderTextColor={'#737373'}
+          selectionColor={config.COLOR}
           value={this.state.leavingFrom}
-          style = {styles.textInput}
+          onFocus = {this.setleavingFromLoading}
+          onBlur={this.handleLeavingFromBlur}
+          style={[styles.textInput, 
+            {borderBottomColor: (this.state.isleavingFromFocused? config.COLOR: '#000'),
+            borderBottomWidth: this.state.isleavingFromFocused? 2: 1,}]}
           onChangeText={leavingFrom =>{
             this.setState({ leavingFrom });
-            this.onChangeLeavingFromDebounced(leavingFrom)}}
-            onFocus = {this.setleavingFromLoading}  
-        />
-        
-        <TextInput
+            this.onChangeLeavingFromDebounced(leavingFrom)}}/>
+
+        <TextInput 
           placeholder='Going To'
+          placeholderTextColor={'#737373'}
+          selectionColor={config.COLOR}
           value={this.state.goingTo}
-          style = {styles.textInput}
+          onFocus = {this.setGoingToLoading}
+          onBlur={this.handleGoingToBlur}
+          style={[styles.textInput, 
+            {borderBottomColor: (this.state.isGoingToFocused? config.COLOR: '#000'),
+            borderBottomWidth: this.state.isGoingToFocused? 2: 1,}]}
           onChangeText={goingTo =>{
             this.setState({ goingTo });
-            this.onChangegoingToDebounced(goingTo)}}
-            onFocus = {this.setGoingToLoading} 
-        />
+            this.onChangegoingToDebounced(goingTo)}}/>
 
-        <View
-        style = {{borderBottomColor:'#054752', borderBottomWidth: 1, margin: 10}}/>
+        {/* <View style = {{
+          borderBottomWidth: 1.5,
+          borderBottomColor: config.TEXT_COLOR,
+          marginHorizontal: 20,
+          marginTop: 30,}}/> */}
 
-        {this.state.currentPlaceLoadingForLeavingFrom && <Text
-          style = {{backgroundColor: "#fff",
-                    padding: 10,
-                    fontSize: 16,
-                    borderBottomWidth: 0.5,
-                    marginLeft: 10,
-                    }}
-          onPress = {() => this.getCurrentLocationForLeavingFrom()}
-        >{locationIcon}Use current location</Text>}
 
-        {this.state.currentPlaceLoadingForGoingTo && <View><Text
-          style = {{backgroundColor: "#fff",
-          padding: 10,
+
+    {this.state.currentPlaceLoadingForLeavingFrom &&
+      <View style = {{
+        flexDirection: 'row',
+        borderBottomWidth: 1.5,
+        borderBottomColor: config.TEXT_COLOR,
+        marginHorizontal: 20,}}>
+          {locationIcon}<Text
+          style = {{
+          paddingVertical: 10,
           fontSize: 16,
           justifyContent: 'center',
           alignItems: 'center',
-          borderBottomWidth: 0.5,
-          marginLeft: 10,}}
+          fontWeight: 'bold',
+          color: '#666666', 
+          }}
+          onPress = {() => this.getCurrentLocationForLeavingFrom()}
+        >   Use current location</Text></View>}
+
+    {this.state.currentPlaceLoadingForGoingTo &&
+      <View style = {{
+        flexDirection: 'row',
+        borderBottomWidth: 1.5,
+        borderBottomColor: config.TEXT_COLOR,
+        marginHorizontal: 20,}}>
+          {locationIcon}<Text
+          style = {{
+          paddingVertical: 10,
+          fontSize: 16,
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontWeight: 'bold',
+          color: config.TEXT_COLOR,
+          }}
           onPress = {() => this.getCurrentLocationForGoingTo()}
-        >{locationIcon}Use current location</Text></View>}
+        >   Use current location</Text></View>}
 
         {this.state.leavingFromLoading && leavingFromPredictions}
         {this.state.goingToLoading && goingToPredictions}
@@ -452,7 +576,7 @@ render() {
 
             <Text 
               style = {{
-                color: '#7963b6',
+                color: config.COLOR,
                 fontWeight: 'bold',
                 marginTop: 5,
                 fontSize: 17,
@@ -461,12 +585,12 @@ render() {
             </Text>        
 
             <Icon2 name = "ios-arrow-down" 
-              size = {20} color = "#7963b6"
+              size = {20} color = {config.COLOR}
               style = {{ position: 'absolute',
-                          right: 30,
-                          top: 20}}/>        
+                right: 10,
+                top: 20}}/>        
           </TouchableOpacity>
-        {/* } */}
+        {/*  } */}
 
         <DateTimePicker
           mode = 'datetime'
@@ -476,12 +600,15 @@ render() {
         />
 
         {/* {this.state.showSearchAfterLeavingFrom && this.state.showSearchAfterGoingTo && */}
+        <View style={{alignItems: 'center',marginTop: 50}}>
           <Button mode = "contained" style = {styles.searchRide}
-            onPress = {() => {this.searchLeavingFromAndGoingToLocation()}}>
+            onPress = {() => {this.searchLeavingFromAndGoingToLocation()}}
+            loading = {this.state.isLoading}>
             <Text style = {{color: '#fff', fontWeight: 'bold' }}
             >Search</Text>
           </Button>
-          {/* } */}
+        </View>
+        {/* } */}
     
     </ScrollView>
     )
@@ -498,17 +625,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'sans-serif-medium',
     fontSize: 30,
-    color: '#054752',
+    color: config.TEXT_COLOR,
     margin: 20,
   },
+
   textInput: {
-    justifyContent: 'center',
-    borderRadius: 30,
-    backgroundColor: '#f2f2f2',
-    height: 50,
+    paddingVertical: 0,
+    fontWeight: 'bold',
+    color: config.TEXT_COLOR,
+    height: 40,
     marginHorizontal: 20,
     marginVertical: 10,
-    paddingHorizontal: 20,
+    fontSize: 16,
   },
 
   suggestions: {
@@ -516,27 +644,26 @@ const styles = StyleSheet.create({
     padding: 5,
     fontSize: 16,
     borderBottomWidth: 0.5,
-    marginHorizontal: 10,
-    
+    marginHorizontal: 20,
+    fontWeight: 'bold',
+    color: config.TEXT_COLOR,
   },
 
   searchRide: {
     borderRadius: 30,
-        width: 100,
-        height: 40,
-        backgroundColor: "#7963b6",
-        justifyContent: 'center',
-        position: 'absolute',
-        bottom: '35%',
-        left: '35%',
+    width: 280,
+    height: 45,
+    backgroundColor: config.COLOR,
+    justifyContent: 'center',
   },
 
   showTimePicker: {
     alignItems: 'flex-start' ,
     borderColor: '#000',
     backgroundColor: "#fff",
-    padding: 10,
+    paddingVertical: 10,
     borderBottomWidth: 0.5,
+    marginHorizontal: 20
     // height: 50,
 
   },
