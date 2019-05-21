@@ -183,7 +183,7 @@ async savePriceAndRideInfo() {
                 </TouchableOpacity>
             </View>
 
-            <View style = {{alignItems: 'center',position: 'relative', justifyContent: 'center', marginTop: 70 ,}}>
+            <View style = {{alignItems: 'center', justifyContent: 'center', marginTop: 70 }}>
                 <Button
                     style={styles.postRide}
                     onPress={() => {this.savePriceAndRideInfo()}}
@@ -199,7 +199,7 @@ async savePriceAndRideInfo() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
         paddingTop: 30,
       },
 

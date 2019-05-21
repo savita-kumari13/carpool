@@ -99,6 +99,7 @@ componentDidMount()
       this.setState({
       error: error.message
       })
+      console.log('error getting current location', error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     },
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
@@ -136,9 +137,11 @@ _handleBackHandler = () => {
       showNextIconAfterPickUp: false
     })
   }
-   this.setState({
-     pickUpPredictions: pickUpJson.predictions,
-   });
+  else {
+    this.setState({
+      pickUpPredictions: pickUpJson.predictions,
+    });
+  }
   }catch(err) {
     this.setState({
       showNextIconAfterPickUp: false
@@ -166,9 +169,11 @@ async onChangeDropOff(dropOff) {
       showNextIconAfterDropOff: false
     })
   }
-   this.setState({
-     dropOffPredictions: dropOffJson.predictions
-   });
+  else {
+    this.setState({
+      dropOffPredictions: dropOffJson.predictions
+    });
+  }
   }catch(err) {
     this.setState({
       showNextIconAfterDropOff: false
@@ -192,14 +197,15 @@ async getCurrentLocationForPickUp() {
         showNextIconAfterPickUp: false
       })
     }
-    this.setState({
-      currentLocationPredictions: currentLocationJson.results,
-    });
-
-    this.state.currentLocationPredictions.map(currentLocationPrediction => (
-      key = currentLocationPrediction.id,
-      this.setCurrentLocationToPickUp(currentLocationPrediction.formatted_address)
-    ))
+    else{
+      this.setState({
+        currentLocationPredictions: currentLocationJson.results,
+      });
+      this.state.currentLocationPredictions.map(currentLocationPrediction => (
+        key = currentLocationPrediction.id,
+        this.setCurrentLocationToPickUp(currentLocationPrediction.formatted_address)
+      ))
+    }
   }catch(err) {
     this.setState({
       showNextIconAfterPickUp: false
@@ -237,14 +243,16 @@ async getCurrentLocationForDropOff() {
         showNextIconAfterDropOff: false
       })
     }
-    this.setState({
-      currentLocationPredictions: currentLocationJson.results,
-    });
-
-    this.state.currentLocationPredictions.map(currentLocationPrediction => (
-      key = currentLocationPrediction.id,
-      this.setCurrentLocationToDropOff(currentLocationPrediction.formatted_address)
-    ))
+    else{
+      this.setState({
+        currentLocationPredictions: currentLocationJson.results,
+      });
+  
+      this.state.currentLocationPredictions.map(currentLocationPrediction => (
+        key = currentLocationPrediction.id,
+        this.setCurrentLocationToDropOff(currentLocationPrediction.formatted_address)
+      ))
+    }
   }catch(err) {
     this.setState({
       showNextIconAfterDropOff: false
@@ -281,12 +289,20 @@ async setPickUpLocation (pickUpPlace) {
 
   try {
 
-  const placeIdResult = await fetch(placeIdApiUrl);
-  const placeIdJson = await placeIdResult.json();
-  this.setState({
-    pickUpLatitude: placeIdJson.result.geometry.location.lat,
-    pickUpLongitude: placeIdJson.result.geometry.location.lng
-  }) 
+    const placeIdResult = await fetch(placeIdApiUrl);
+    const placeIdJson = await placeIdResult.json();
+    if(placeIdJson.error_message){
+      ToastAndroid.show('Unable to set your selected location setLeaveLocation. Try again', ToastAndroid.SHORT);
+      this.setState({
+        showNextIconAfterPickUp: false
+      })
+    }
+    else{
+      this.setState({
+        pickUpLatitude: placeIdJson.result.geometry.location.lat,
+        pickUpLongitude: placeIdJson.result.geometry.location.lng
+      }) 
+    }
   } catch (error) {
     this.setState({
       showNextIconAfterPickUp: false
@@ -312,10 +328,18 @@ async setDropOffLocation (dropOffPlace) {
   try {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
-    this.setState({
-      dropOfflatitude: placeIdJson.result.geometry.location.lat,
-      dropOfflongitude: placeIdJson.result.geometry.location.lng
-    })
+    if(placeIdJson.error_message){
+      ToastAndroid.show('Unable to set your selected location setLeaveLocation. Try again', ToastAndroid.SHORT);
+      this.setState({
+        showNextIconAfterDropOff: false
+      })
+    }
+    else{
+      this.setState({
+        dropOfflatitude: placeIdJson.result.geometry.location.lat,
+        dropOfflongitude: placeIdJson.result.geometry.location.lng
+      })
+    }
   }catch (error) {
     this.setState({
       showNextIconAfterDropOff: false
@@ -438,11 +462,6 @@ handleDropoffBlur = () => this.setState({isDropOffFocused: false, showNextIconAf
         onChangeText={dropOff =>{
           this.setState({ dropOff });
           this.onChangeDropOffDebounced(dropOff)}}/>
-
-      {/* <View style = {{
-        borderBottomColor:config.TEXT_COLOR,
-        borderBottomWidth: 1,
-        marginHorizontal: 20}}/> */}
 
     {this.state.currentPlaceLoadingForPickUp &&
       <View style = {{

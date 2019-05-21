@@ -122,7 +122,7 @@ componentDidMount()
     },
     (error) => {
       console.log('error getting current location', error)
-      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+      ToastAndroid.show('Unknown error occurred getCurrentPosition', ToastAndroid.SHORT)
     },
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
   );
@@ -153,21 +153,23 @@ async onChangeLeavingFrom(leavingFrom) {
   const leavingFromJson = await leaveResult.json();
   console.log('leavingFromJson', leavingFromJson)
   if(leavingFromJson.error_message){
-    ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT);
+    ToastAndroid.show('Unable to get selected location onChangeLeavingFrom. Try again', ToastAndroid.SHORT);
     this.setState({
       showDateTimePickerAfterLeavingFrom: false,
       showSearchAfterLeavingFrom: false
     })
   }
-  this.setState({
-    leavingFromPredictions: leavingFromJson.predictions,
-  });
+  else {
+    this.setState({
+      leavingFromPredictions: leavingFromJson.predictions,
+    });
+  }
   }catch(err) {
     this.setState({
       showDateTimePickerAfterLeavingFrom: false,
       showSearchAfterLeavingFrom: false
     })
-    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred onChangeLeavingFrom', ToastAndroid.SHORT)
     console.log(err)
   }
 
@@ -185,21 +187,23 @@ async onChangeGoingTo(goingTo) {
     const goingToJson = await result.json();
     console.log('goinToJson', goingToJson)
     if(goingToJson.error_message){
-      ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT)
+      ToastAndroid.show('Unable to get selected location onChangeGoingTo. Try again', ToastAndroid.SHORT)
       this.setState({
         showDateTimePickerAfterGoingTo: false,
         showSearchAfterGoingTo: false
       })
     }
-    this.setState({
-      goingToPredictions: goingToJson.predictions
-    });
+    else {
+      this.setState({
+        goingToPredictions: goingToJson.predictions
+      });
+    }
   }catch(err) {
     this.setState({
       showDateTimePickerAfterGoingTo: false,
       showSearchAfterGoingTo: false
     })
-    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred onChangeGoingTo', ToastAndroid.SHORT)
     console.log(err)
   }
 }
@@ -213,26 +217,27 @@ async getCurrentLocationForLeavingFrom() {
     const currentLocationJson = await result.json();
     console.log('currentLocationJson', currentLocationJson)
     if(currentLocationJson.error_message){
-      ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to get your current location getCurrentLocationForLeavingFrom. Try again', ToastAndroid.SHORT);
       this.setState({
         showDateTimePickerAfterLeavingFrom: false,
         showSearchAfterLeavingFrom: false
       })
     }
-    this.setState({
-      currentLocationPredictions: currentLocationJson.results,
-    });
-
-    this.state.currentLocationPredictions.map(currentLocationPrediction => (
-      key = currentLocationPrediction.id,
-      this.setCurrentLocationToLeavingFrom(currentLocationPrediction.formatted_address)
-    ))
+    else{
+      this.setState({
+        currentLocationPredictions: currentLocationJson.results,
+      });
+      this.state.currentLocationPredictions.map(currentLocationPrediction => (
+        key = currentLocationPrediction.id,
+        this.setCurrentLocationToLeavingFrom(currentLocationPrediction.formatted_address)
+      ))
+    }
   }catch(err) {
     this.setState({
       showDateTimePickerAfterLeavingFrom: false,
       showSearchAfterLeavingFrom: false
     })
-    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred getCurrentLocationForLeavingFrom', ToastAndroid.SHORT)
     console.log(err)
  }
 }
@@ -259,26 +264,28 @@ async getCurrentLocationForGoingTo() {
     const currentLocationJson = await result.json();
     console.log('currentLocationJson', currentLocationJson)
     if(currentLocationJson.error_message){
-      ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to get your current location setCurrentLocationToLeavingFrom. Try again', ToastAndroid.SHORT);
       this.setState({
         showDateTimePickerAfterGoingTo: false,
         showSearchAfterGoingTo: false
       })
     }
-    this.setState({
-      currentLocationPredictions: currentLocationJson.results,
-    });
-
-    this.state.currentLocationPredictions.map(currentLocationPrediction => (
-      key = currentLocationPrediction.id,
-      this.setCurrentLocationToGoingTo(currentLocationPrediction.formatted_address)
-    ))
+    else{
+      this.setState({
+        currentLocationPredictions: currentLocationJson.results,
+      });
+  
+      this.state.currentLocationPredictions.map(currentLocationPrediction => (
+        key = currentLocationPrediction.id,
+        this.setCurrentLocationToGoingTo(currentLocationPrediction.formatted_address)
+      ))
+    }
   }catch(err) {
     this.setState({
       showDateTimePickerAfterGoingTo: false,
       showSearchAfterGoingTo: false
     })
-    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred setCurrentLocationToLeavingFrom', ToastAndroid.SHORT)
     console.log(err)
  }
 
@@ -315,7 +322,7 @@ async setLeaveLocation (leavingPlace) {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
     if(placeIdJson.error_message){
-      ToastAndroid.show('Unable to set your selected location. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to set your selected location setLeaveLocation. Try again', ToastAndroid.SHORT);
       this.setState({
         showDateTimePickerAfterLeavingFrom: false,
         showSearchAfterLeavingFrom: false
@@ -332,7 +339,7 @@ async setLeaveLocation (leavingPlace) {
       showDateTimePickerAfterLeavingFrom: false,
       showSearchAfterLeavingFrom: false
     })
-    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred setLeaveLocation', ToastAndroid.SHORT)
     console.log(error)  
   }
 }
@@ -358,7 +365,7 @@ async setGoingToLocation (goingPlace) {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
     if(placeIdJson.error_message){
-      ToastAndroid.show('Unable to set your selected location. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to set your selected location setGoingToLocation. Try again', ToastAndroid.SHORT);
       this.setState({
         showDateTimePickerAfterGoingTo: false,
         showSearchAfterGoingTo: false
@@ -375,7 +382,7 @@ async setGoingToLocation (goingPlace) {
       showDateTimePickerAfterGoingTo: false,
       showSearchAfterGoingTo: false
     })
-      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+      ToastAndroid.show('Unknown error occurred setGoingToLocation', ToastAndroid.SHORT)
       console.log(error)  
   }
 }
