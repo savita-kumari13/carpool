@@ -441,10 +441,12 @@ userRouter.post('/add_profile_photo', passport.authenticate('jwt', { session: fa
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
     previous_photo = user.avatar
-    const image_path = path.resolve(__dirname, '../upload/profile_photo', previous_photo)
-    fs.unlink(image_path, (err) => {
-      if(err) throw err;
-    })
+    if(user.avatar){
+      const image_path = path.resolve(__dirname, '../upload/profile_photo', previous_photo)
+      fs.unlink(image_path, (err) => {
+        if(err) throw err;
+      })
+    }
     user.avatar = image_name
     return user.save()
   })
