@@ -178,6 +178,7 @@ export default class PhoneAuth extends Component {
         <View style = {{alignItems: 'center'}}>
             <Button 
               style={[styles.savePhoneBtn]}
+              mode = 'contained'
               onPress={() => this.savePhoneNumber()}
               loading = {this.state.isLoading}>
               <Text style = {{color: '#fff', fontWeight: 'bold' }}>SAVE</Text>

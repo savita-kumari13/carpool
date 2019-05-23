@@ -11,11 +11,12 @@ const User = require('./models/User');
 const config = require('./config');
 const UserRouter = require('./routes/userRouter')
 const RideRouter = require('./routes/rideRouter')
-
+const ValidateResetPasswordInput = require('./validation/reset_password')
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 
 app.use(express.static(__dirname + '/upload/profile_photo'));
+app.use(express.static(__dirname + '/templates'));
 // app.use('/static', express.static(path.join(__dirname, 'upload/profile_photo')))
 
 app.use(cors());
@@ -48,7 +49,6 @@ app.get('/', (req, res) => {
 
 app.post('/forgot_password', (req, res) => {
     console.log('Success! You can not see this without a token (forgot password)')
-    console.log(req.body)
     User.findOne({
       email : req.body.email
     })
@@ -116,30 +116,39 @@ app.post('/forgot_password', (req, res) => {
   })
 
 app.get('/reset_password', (req, res) => {
-  console.log('url ', req.query.token)
   User.findOne({
-    token: req.query.token
+    $and: [{token: {$eq: req.query.token}}, {token:{$ne: null}}, {token: {$ne: ''}}]
+    // token: {$eq: req.query.token, $and: [{$ne: null}, {$ne: ''}]},
   })
   .then(user => {
     if(!user) {
       throw new Error("User doesn't exists");
     }
-    var htmlBody=fs.readFileSync('./templates/confirm_password.html',{encoding: 'utf8'});
+    var errorExist=false;
+    if(req.query.errors){
+      errorExist = true
+    }
+    var htmlBody=fs.readFileSync('./templates/confirm_password1.html',{encoding: 'utf8'});
     htmlBody = htmlBody.replace(/{{app_host}}/g, config.app_host);
     htmlBody = htmlBody.replace(/{{user_token}}/g, user.token);
-    console.log(htmlBody)
+    htmlBody = htmlBody.replace(/{{error_str}}/g, errorExist ? '<div class="alert error alert-danger text-center">Please check fields</div>' : '');
     res.send(htmlBody)
   })
   .catch(err =>{
-    res.sendFile('./templates/reset_password_error.html', {root: __dirname })
+    res.sendFile('./templates/reset_password_error1.html', {root: __dirname })
   })
 })
 
 app.post('/reset_password_success', (req, res) => {
+  console.log('body ', req.body)
+  const validateResetPassword = ValidateResetPasswordInput(req.body);
+  console.log('validateRegister.status ', validateResetPassword.status)
+  if(!validateResetPassword.status) {
+    return res.redirect('/reset_password?token='+req.body.token+'&errors=1');
+  }
   let currentUser
-  console.log('req body ', req.body.password)
   User.findOne({
-    token: req.body.token
+    $and: [{token: {$eq: req.body.token}}, {token:{$ne: null}}, {token: {$ne: ''}}]
   })
   .then(user => {
     if(!user) {
@@ -152,15 +161,15 @@ app.post('/reset_password_success', (req, res) => {
     return bcrypt.hash(req.body.password, salt);
   }).then(hash=>{
     currentUser.password = hash;
+    currentUser.token = ''
     return currentUser.save();
   })
   .then(user => {
-    console.log('user ', user)
-    res.sendFile('./templates/reset_password_success.html', {root: __dirname })
+    res.sendFile('./templates/reset_password_success1.html', {root: __dirname })
   })
   .catch(err => {
     console.log('err ', err)
-    res.sendFile('./templates/reset_password_error.html', {root: __dirname })
+    res.sendFile('./templates/reset_password_error1.html', {root: __dirname })
   })
 })
   

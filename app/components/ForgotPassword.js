@@ -19,7 +19,8 @@ export default class ForgotPassword extends Component {
     super(props)
   
     this.state = {
-        email: ''
+        email: '',
+        isLoading: false,
     }
     this.handleBackPress = this.handleBackPress.bind(this);
   }
@@ -39,18 +40,31 @@ export default class ForgotPassword extends Component {
   }
 
   forgotPassword(){
+    this.setState({
+      isLoading: true
+    })
     axios.post('/forgot_password', {
       email: this.state.email
     })
     .then(res => {
       if(res.data.status){
+        this.setState({
+          isLoading: false
+        })
         ToastAndroid.show("We've sent you a link to change your password", ToastAndroid.LONG)
+        this.props.navigation.navigate('Login')
       }
       else{
+        this.setState({
+          isLoading: false
+        })
         ToastAndroid.show(res.data.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
       }
     })
     .catch(err => {
+      this.setState({
+        isLoading: false
+      })
       ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
       console.log('error sending forgot password request ', err)
     })
@@ -76,7 +90,8 @@ export default class ForgotPassword extends Component {
           <Button
               style={styles.loginBtn}
               onPress={() => {this.forgotPassword()}}
-              mode = "contained">
+              mode = "contained"
+              loading = {this.state.isLoading}>
             <Text style = {{color: '#fff', fontWeight: 'bold' }}>Submit</Text>
           </Button> 
         </View> 

@@ -277,14 +277,6 @@ setCurrentLocationToDropOff =(currentPlace) => {
 }
 
 async setPickUpLocation (pickUpPlace) {
-  this.setState({
-    pickUpPlaceId: pickUpPlace.place_id,
-    pickUp: pickUpPlace.description,
-    pickUploading: false,
-    dropOffLoading: false,
-    currentPlaceLoadingForPickUp: false,
-    showNextIconAfterPickUp: true,
-  })
   const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${pickUpPlace.place_id}&key=${apiKey}`
 
   try {
@@ -292,13 +284,19 @@ async setPickUpLocation (pickUpPlace) {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
     if(placeIdJson.error_message){
-      ToastAndroid.show('Unable to set your selected location setLeaveLocation. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to set your selected location. Try again', ToastAndroid.SHORT);
       this.setState({
         showNextIconAfterPickUp: false
       })
     }
     else{
       this.setState({
+        pickUpPlaceId: pickUpPlace.place_id,
+        pickUp: pickUpPlace.description,
+        pickUploading: false,
+        dropOffLoading: false,
+        currentPlaceLoadingForPickUp: false,
+        showNextIconAfterPickUp: true,
         pickUpLatitude: placeIdJson.result.geometry.location.lat,
         pickUpLongitude: placeIdJson.result.geometry.location.lng
       }) 
@@ -313,29 +311,26 @@ async setPickUpLocation (pickUpPlace) {
 }
 
 async setDropOffLocation (dropOffPlace) {
-  this.setState({
-    dropOffPlaceId: dropOffPlace.place_id,
-    dropOff: dropOffPlace.description,
-    pickUploading: false,
-    dropOffLoading: false,
-    currentPlaceLoadingForPickUp: false,
-    currentPlaceLoadingForDropOff: false,
-    showNextIconAfterDropOff: true,
-  })
-
   const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${dropOffPlace.place_id}&key=${apiKey}`
 
   try {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
     if(placeIdJson.error_message){
-      ToastAndroid.show('Unable to set your selected location setLeaveLocation. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to set your selected location. Try again', ToastAndroid.SHORT);
       this.setState({
         showNextIconAfterDropOff: false
       })
     }
     else{
       this.setState({
+        dropOffPlaceId: dropOffPlace.place_id,
+        dropOff: dropOffPlace.description,
+        pickUploading: false,
+        dropOffLoading: false,
+        currentPlaceLoadingForPickUp: false,
+        currentPlaceLoadingForDropOff: false,
+        showNextIconAfterDropOff: true,
         dropOfflatitude: placeIdJson.result.geometry.location.lat,
         dropOfflongitude: placeIdJson.result.geometry.location.lng
       })
@@ -411,8 +406,18 @@ async savePickUpDropOffLocations() {
   
 }
 
-handlePickUpBlur = () => this.setState({isPickUpFocused: false, showNextIconAfterPickUp: true,})
-handleDropoffBlur = () => this.setState({isDropOffFocused: false, showNextIconAfterDropOff: true,})
+handlePickUpBlur = () => {
+  this.setState({
+    isPickUpFocused: false,
+    // showNextIconAfterPickUp: true,
+  })
+}
+handleDropoffBlur = () => {
+  this.setState({
+    isDropOffFocused: false,
+    // showNextIconAfterDropOff: true,
+  })
+}
 
 
   render() {
@@ -502,24 +507,24 @@ handleDropoffBlur = () => this.setState({isDropOffFocused: false, showNextIconAf
       {this.state.pickUploading && pickUpPredictions}
       {this.state.dropOffLoading && dropOffPredictions}
 
-      {/* {this.state.showNextIconAfterPickUp && this.state.showNextIconAfterDropOff &&
-        <IconNext name = "ios-arrow-dropright-circle" size = {50} color = config.COLOR
+      {this.state.showNextIconAfterPickUp && this.state.showNextIconAfterDropOff &&
+        <IconNext name = "ios-arrow-dropright-circle" size = {50} color = {config.COLOR}
           style = {{position: 'absolute',
           bottom:20,
           right:20,}}
           onPress = {() =>
             this.savePickUpDropOffLocations()}
-          />} */}
+          />}
 
       {this.state.isLoading && <ActivityIndicator size="large" />}
 
-      <IconNext name = "ios-arrow-dropright-circle" size = {50} color = {config.COLOR}
+      {/* <IconNext name = "ios-arrow-dropright-circle" size = {50} color = {config.COLOR}
         style = {{position: 'absolute',
         bottom:20,
         right:20,}}
         onPress = {() =>
           this.savePickUpDropOffLocations()}
-        />                    
+        />                     */}
     </ScrollView>
   )
   }

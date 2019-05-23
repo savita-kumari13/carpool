@@ -124,7 +124,7 @@ export default class SearchList extends Component {
           this.setState({
             isLoadingRides: false
           })
-          ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+          ToastAndroid.show('Error while getting rides', ToastAndroid.SHORT)
         }
       }).catch(err => {
         this.setState({

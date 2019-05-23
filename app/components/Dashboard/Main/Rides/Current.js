@@ -50,68 +50,104 @@ export default class Current extends Component {
       this._handleBackHandler = this._handleBackHandler.bind(this);
   }
 
-  getCurrentRide(){
-    axios.get('/users')
+  getCurrentRide= async () =>{
+    await axios.get('/users')
     .then(res => {
       const resData = res.data
-      if(resData && resData.response && resData.response.user)
-      {
-        this.setState({
-          currentUserId: resData.response.user._id
-        })
+      if(resData.status){
+        if(resData && resData.response && resData.response.user)
+        {
+          this.setState({
+            currentUserId: resData.response.user._id
+          })
+        }
       }
-    }).catch(err => {
+      else{
+        ToastAndroid.show(resData.messages.join(', '), ToastAndroid.SHORT);
+        this.props.navigation.navigate('Login')
+      }
+    })
+    .catch(err => {
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
       console.log('err sending get current user request ', err)
     })
 
-    axios.get('rides/current_offered_ride')
+    await axios.get('rides/current_offered_ride')
     .then(res =>{
       const resData = res.data
-      if(resData && resData.response && resData.response.rides && (resData.response.rides).length > 0){
-        this.setState({
-          offeredRides: resData.response.rides,
-          offeredRideVisible: true,
-          refreshing: false,
-          noOfferedRides: false,
-          offerRideButton: false,
-        })
+      if(resData.status){
+        if(resData && resData.response && resData.response.rides && (resData.response.rides).length > 0){
+          this.setState({
+            offeredRides: resData.response.rides,
+            offeredRideVisible: true,
+            refreshing: false,
+            noOfferedRides: false,
+            offerRideButton: false,
+          })
+        }
+        else{
+          this.setState({
+            offeredRideVisible: false,
+            refreshing: false,
+            noOfferedRides: true,
+            offerRideButton: true
+          })
+          console.log('empty offered rides')
+        }
       }
       else{
-        this.setState({
-          offeredRideVisible: false,
-          refreshing: false,
-          noOfferedRides: true,
-          offerRideButton: true
-        })
-        console.log('empty offered rides')
+        ToastAndroid.show(resData.messages.join(', '), ToastAndroid.SHORT);
       }
     })
-    .catch(err => console.log('error sending current_offered_rides request', err))
+    .catch(err => {
+      this.setState({
+        offeredRideVisible: false,
+        refreshing: false,
+        noOfferedRides: true,
+        offerRideButton: true
+      })
+      console.log('error sending current_offered_rides request', err)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    })
 
 
     axios.get('rides/current_searched_ride')
     .then(res =>{
       const resData = res.data
-      if(resData && resData.response && resData.response.rides && (resData.response.rides).length > 0){
-        this.setState({
-          bookedRides: resData.response.rides,
-          bookedRideVisible: true,
-          refreshing: false,
-          noBookedRides: false,
-          searchRideButton: false,
-        })
+      if(resData.status){
+        if(resData && resData.response && resData.response.rides && (resData.response.rides).length > 0){
+          this.setState({
+            bookedRides: resData.response.rides,
+            bookedRideVisible: true,
+            refreshing: false,
+            noBookedRides: false,
+            searchRideButton: false,
+          })
+        }
+        else{
+          this.setState({
+            bookedRideVisible: false,
+            refreshing: false,
+            noBookedRides: true,
+            searchRideButton: true
+          })
+          console.log('empty booked rides')
+        }
       }
       else{
-        this.setState({
-          bookedRideVisible: false,
-          refreshing: false,
-          noBookedRides: true,
-          searchRideButton: true
-        })
-        console.log('empty booked rides')
+        ToastAndroid.show(resData.messages.join(', '), ToastAndroid.SHORT);
       }
     })
-    .catch(err => console.log('error sending current_searched_rides request', err))
+    .catch(err => {
+      this.setState({
+        bookedRideVisible: false,
+        refreshing: false,
+        noBookedRides: true,
+        searchRideButton: true
+      })
+      console.log('error sending current_searched_rides request', err)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+    })
   }
 
   startRide(rideId){
@@ -135,10 +171,14 @@ export default class Current extends Component {
           offeredRideVisible: true,
           refreshing: false
         })
+        ToastAndroid.show('Starting your ride', ToastAndroid.SHORT);
       }
-      ToastAndroid.show('Starting your ride', ToastAndroid.SHORT);
+      else{
+        ToastAndroid.show('Unable to start ride', ToastAndroid.SHORT);
+      }
     }).catch(err => {
       console.log('error sending start ride request ', err)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
 
@@ -162,10 +202,14 @@ export default class Current extends Component {
             offeredRideVisible: false
           })
         }
+        ToastAndroid.show('Ride has been cancelled', ToastAndroid.SHORT);
       }
-      ToastAndroid.show('Ride has been cancelled', ToastAndroid.SHORT);
+      else{
+        ToastAndroid.show('Unable to cancel ride', ToastAndroid.SHORT);
+      }
     }).catch(err => {
       console.log('error sending cancel offered ride request ', err)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
 
@@ -203,12 +247,15 @@ export default class Current extends Component {
           this.setState({
             offeredRideVisible: false
           })
-          ToastAndroid.show('Reached destination', ToastAndroid.SHORT);
         }
+        ToastAndroid.show('Ride completed', ToastAndroid.SHORT);
       }
-      ToastAndroid.show('Ride completed', ToastAndroid.SHORT);
+      else{
+        ToastAndroid.show('Please click again to complete your ride.', ToastAndroid.SHORT);
+      }
     }).catch(err => {
       console.log('error sending complete offered ride request ', err)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
 
@@ -232,10 +279,14 @@ export default class Current extends Component {
             bookedRideVisible: false
           })
         }
+        ToastAndroid.show('Ride has been cancelled', ToastAndroid.SHORT);
       }
-      ToastAndroid.show('Ride has been cancelled', ToastAndroid.SHORT);
+      else{
+        ToastAndroid.show('Please click again to cancel your ride.', ToastAndroid.SHORT);
+      }
     }).catch(err => {
       console.log('error sending cancel request ', err)
+      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
 
@@ -273,13 +324,16 @@ export default class Current extends Component {
           this.setState({
             bookedRideVisible: false
           })
-          ToastAndroid.show('Reached destination', ToastAndroid.SHORT);
         }
+        ToastAndroid.show('Ride completed', ToastAndroid.SHORT);
       }
-      ToastAndroid.show('Ride completed', ToastAndroid.SHORT);
-    }).catch(err => {
-      console.log('error sending complete booked ride request ', err)
-    })
+        else{
+          ToastAndroid.show('Please click again to complete your ride.', ToastAndroid.SHORT);
+        }
+      }).catch(err => {
+        console.log('error sending complete offered ride request ', err)
+        ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+      })
   }
 
   willFocus = this.props.navigation.addListener(
@@ -501,7 +555,7 @@ renderBookedRide = ({item}) => {
       </SafeAreaView>
 
         {this.state.offeredRideVisible &&
-        <View style = {styles.yourBookingView}>
+        <View style = {styles.yourOfferedRideView}>
           <Text style = {styles.yourBookingText}>YOUR OFFERED RIDES</Text>
         </View>}
         {this.state.offeredRideVisible && 
@@ -577,6 +631,14 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
       fontSize: 20,
       // fontFamily: "sans-serif-condensed",
+    },
+
+    yourOfferedRideView: {
+      backgroundColor: config.COLOR,
+      marginTop: 20,
+      marginHorizontal: 20,
+      padding: 10,
+
     },
 
     yourBookingView: {

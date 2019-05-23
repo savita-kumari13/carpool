@@ -79,7 +79,7 @@ export default class Loading extends Component {
       .catch(err => {
         console.log('Error sending authenticating request', err)
       })
-    }, 2000)
+    }, 1000)
   }
 
   checkMessagingPermission = async() => {

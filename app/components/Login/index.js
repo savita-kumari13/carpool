@@ -96,6 +96,7 @@ export default class Login extends Component {
   })
   await axios.post(`/users/login`, user)
   .then(res => {
+    console.log(res.data)
     let resData=res.data;
     if(!resData.status)
     {
@@ -124,6 +125,7 @@ export default class Login extends Component {
         throw new Error(Object.values(resData.response.errors).join(', '));
       }
     else{
+      console.log('error', resData.messages)
       ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
     }
   }
@@ -153,6 +155,7 @@ export default class Login extends Component {
     {
       LoginManager.logInWithReadPermissions(['public_profile', 'email']).then((result) =>
         {
+          console.log('result ', result)
           if (result.isCancelled)
           {
             return Promise.reject(new Error('The user cancelled the request'));
@@ -175,7 +178,7 @@ export default class Login extends Component {
             }
           })                                                                       
         }).catch((error) => {
-          console.log('error.', error)
+          console.log('error &&&', error)
           ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
         })
     })

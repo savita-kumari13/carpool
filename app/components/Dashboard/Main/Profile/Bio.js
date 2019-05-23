@@ -68,7 +68,7 @@ export default class Bio extends Component {
         this.setState({
           isGetBio: false
         })
-        ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+        ToastAndroid.show(resData.messages.join(', '), ToastAndroid.SHORT);
       }
     }).catch(err => {
       this.setState({
@@ -141,7 +141,7 @@ export default class Bio extends Component {
             ToastAndroid.show('profile photo updated', ToastAndroid.SHORT)
           }
           else{
-            ToastAndroid.show('Error occurred while updating profile photo', ToastAndroid.SHORT)
+            ToastAndroid.show(resData.messages.join(', '), ToastAndroid.SHORT);
           }
         })
         .catch((err)=>{

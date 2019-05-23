@@ -122,7 +122,7 @@ componentDidMount()
     },
     (error) => {
       console.log('error getting current location', error)
-      ToastAndroid.show('Unknown error occurred getCurrentPosition', ToastAndroid.SHORT)
+      ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
     },
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
   );
@@ -153,7 +153,7 @@ async onChangeLeavingFrom(leavingFrom) {
   const leavingFromJson = await leaveResult.json();
   console.log('leavingFromJson', leavingFromJson)
   if(leavingFromJson.error_message){
-    ToastAndroid.show('Unable to get selected location onChangeLeavingFrom. Try again', ToastAndroid.SHORT);
+    ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT);
     this.setState({
       showDateTimePickerAfterLeavingFrom: false,
       showSearchAfterLeavingFrom: false
@@ -169,7 +169,7 @@ async onChangeLeavingFrom(leavingFrom) {
       showDateTimePickerAfterLeavingFrom: false,
       showSearchAfterLeavingFrom: false
     })
-    ToastAndroid.show('Unknown error occurred onChangeLeavingFrom', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
     console.log(err)
   }
 
@@ -187,7 +187,7 @@ async onChangeGoingTo(goingTo) {
     const goingToJson = await result.json();
     console.log('goinToJson', goingToJson)
     if(goingToJson.error_message){
-      ToastAndroid.show('Unable to get selected location onChangeGoingTo. Try again', ToastAndroid.SHORT)
+      ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT)
       this.setState({
         showDateTimePickerAfterGoingTo: false,
         showSearchAfterGoingTo: false
@@ -203,7 +203,7 @@ async onChangeGoingTo(goingTo) {
       showDateTimePickerAfterGoingTo: false,
       showSearchAfterGoingTo: false
     })
-    ToastAndroid.show('Unknown error occurred onChangeGoingTo', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
     console.log(err)
   }
 }
@@ -217,7 +217,7 @@ async getCurrentLocationForLeavingFrom() {
     const currentLocationJson = await result.json();
     console.log('currentLocationJson', currentLocationJson)
     if(currentLocationJson.error_message){
-      ToastAndroid.show('Unable to get your current location getCurrentLocationForLeavingFrom. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT);
       this.setState({
         showDateTimePickerAfterLeavingFrom: false,
         showSearchAfterLeavingFrom: false
@@ -237,7 +237,7 @@ async getCurrentLocationForLeavingFrom() {
       showDateTimePickerAfterLeavingFrom: false,
       showSearchAfterLeavingFrom: false
     })
-    ToastAndroid.show('Unknown error occurred getCurrentLocationForLeavingFrom', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
     console.log(err)
  }
 }
@@ -264,7 +264,7 @@ async getCurrentLocationForGoingTo() {
     const currentLocationJson = await result.json();
     console.log('currentLocationJson', currentLocationJson)
     if(currentLocationJson.error_message){
-      ToastAndroid.show('Unable to get your current location setCurrentLocationToLeavingFrom. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT);
       this.setState({
         showDateTimePickerAfterGoingTo: false,
         showSearchAfterGoingTo: false
@@ -285,7 +285,7 @@ async getCurrentLocationForGoingTo() {
       showDateTimePickerAfterGoingTo: false,
       showSearchAfterGoingTo: false
     })
-    ToastAndroid.show('Unknown error occurred setCurrentLocationToLeavingFrom', ToastAndroid.SHORT)
+    ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
     console.log(err)
  }
 
@@ -306,23 +306,13 @@ setCurrentLocationToGoingTo =(currentPlace) => {
 }
 
 async setLeaveLocation (leavingPlace) {
-  this.setState({
-    leavingFromPlaceId: leavingPlace.place_id,
-    leavingFrom: leavingPlace.description,
-    leavingFromLoading: false,
-    goingToLoading: false,
-    currentPlaceLoadingForLeavingFrom: false,
-    currentPlaceLoadingForGoingTo: false,
-    showDateTimePickerAfterLeavingFrom: true,
-    showSearchAfterLeavingFrom: true,
-  })
   const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${leavingPlace.place_id}&key=${apiKey}`
 
   try {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
     if(placeIdJson.error_message){
-      ToastAndroid.show('Unable to set your selected location setLeaveLocation. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to set your selected location. Try again', ToastAndroid.SHORT);
       this.setState({
         showDateTimePickerAfterLeavingFrom: false,
         showSearchAfterLeavingFrom: false
@@ -330,6 +320,14 @@ async setLeaveLocation (leavingPlace) {
     }
     else {
       this.setState({
+        leavingFromPlaceId: leavingPlace.place_id,
+        leavingFrom: leavingPlace.description,
+        leavingFromLoading: false,
+        goingToLoading: false,
+        currentPlaceLoadingForLeavingFrom: false,
+        currentPlaceLoadingForGoingTo: false,
+        showDateTimePickerAfterLeavingFrom: true,
+        showSearchAfterLeavingFrom: true,
         leavingFromLatitude: placeIdJson.result.geometry.location.lat,
         leavingFromLongitude: placeIdJson.result.geometry.location.lng
       }) 
@@ -345,27 +343,13 @@ async setLeaveLocation (leavingPlace) {
 }
 
 async setGoingToLocation (goingPlace) {
-  this.setState({
-    goingToPlaceId: goingPlace.place_id,
-    goingTo: goingPlace.description,
-
-    leavingFromLoading: false,
-    goingToLoading: false,
-
-    currentPlaceLoadingForLeavingFrom: false,
-    currentPlaceLoadingForGoingTo: false,
-
-    showDateTimePickerAfterGoingTo: true,
-    showSearchAfterGoingTo: true,
-  })
-
   const placeIdApiUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${goingPlace.place_id}&key=${apiKey}`
 
   try {
     const placeIdResult = await fetch(placeIdApiUrl);
     const placeIdJson = await placeIdResult.json();
     if(placeIdJson.error_message){
-      ToastAndroid.show('Unable to set your selected location setGoingToLocation. Try again', ToastAndroid.SHORT);
+      ToastAndroid.show('Unable to set your selected location. Try again', ToastAndroid.SHORT);
       this.setState({
         showDateTimePickerAfterGoingTo: false,
         showSearchAfterGoingTo: false
@@ -373,6 +357,14 @@ async setGoingToLocation (goingPlace) {
     }
     else {
       this.setState({
+        goingToPlaceId: goingPlace.place_id,
+        goingTo: goingPlace.description,
+        leavingFromLoading: false,
+        goingToLoading: false,
+        currentPlaceLoadingForLeavingFrom: false,
+        currentPlaceLoadingForGoingTo: false,
+        showDateTimePickerAfterGoingTo: true,
+        showSearchAfterGoingTo: true,
         goingToLatitude: placeIdJson.result.geometry.location.lat,
         goingToLongitude: placeIdJson.result.geometry.location.lng
       }) 
@@ -421,18 +413,20 @@ handleLeavingFromBlur = () => {
   if(this.state.leavingFrom != ''){
     this.setState({
       isleavingFromFocused: false,
-      showDateTimePickerAfterLeavingFrom: true,
-      showSearchAfterLeavingFrom: true})
-    }
+      // showDateTimePickerAfterLeavingFrom: true,
+      // showSearchAfterLeavingFrom: true
+    })
   }
+}
 handleGoingToBlur = () => {
   if(this.state.goingTo != ''){
     this.setState({
       isGoingToFocused: false,
-      showDateTimePickerAfterGoingTo: true,
-      showSearchAfterGoingTo: true})
-    }
+      // showDateTimePickerAfterGoingTo: true,
+      // showSearchAfterGoingTo: true
+    })
   }
+}
 
 _showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
  
@@ -522,14 +516,6 @@ render() {
             this.setState({ goingTo });
             this.onChangegoingToDebounced(goingTo)}}/>
 
-        {/* <View style = {{
-          borderBottomWidth: 1.5,
-          borderBottomColor: config.TEXT_COLOR,
-          marginHorizontal: 20,
-          marginTop: 30,}}/> */}
-
-
-
     {this.state.currentPlaceLoadingForLeavingFrom &&
       <View style = {{
         flexDirection: 'row',
@@ -569,7 +555,7 @@ render() {
         {this.state.leavingFromLoading && leavingFromPredictions}
         {this.state.goingToLoading && goingToPredictions}
 
-        {/* {this.state.showDateTimePickerAfterLeavingFrom && this.state.showDateTimePickerAfterGoingTo && */}
+        {this.state.showDateTimePickerAfterLeavingFrom && this.state.showDateTimePickerAfterGoingTo &&
           <TouchableOpacity style = {styles.showTimePicker}
             onPress={this._showDateTimePicker}>
             <Text 
@@ -597,7 +583,7 @@ render() {
                 right: 10,
                 top: 20}}/>        
           </TouchableOpacity>
-        {/*  } */}
+        }
 
         <DateTimePicker
           mode = 'datetime'
@@ -606,7 +592,7 @@ render() {
           onCancel={this._hideDateTimePicker}
         />
 
-        {/* {this.state.showSearchAfterLeavingFrom && this.state.showSearchAfterGoingTo && */}
+        {this.state.showSearchAfterLeavingFrom && this.state.showSearchAfterGoingTo &&
         <View style={{alignItems: 'center',marginTop: 50}}>
           <Button mode = "contained" style = {styles.searchRide}
             onPress = {() => {this.searchLeavingFromAndGoingToLocation()}}
@@ -615,7 +601,7 @@ render() {
             >Search</Text>
           </Button>
         </View>
-        {/* } */}
+        }
     
     </ScrollView>
     )

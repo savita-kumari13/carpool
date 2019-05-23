@@ -58,8 +58,6 @@ userRouter.route('/save_device_token').post((req, res) => {
 
 userRouter.route('/register').post((req, res) => {
   const validateRegister = validateRegisterInput(req.body);
-  console.log('validateRegister ? ', validateRegister)
-  console.log('status : ', validateRegister.status)
 
   if(!validateRegister.status) {
     return res.json({
@@ -121,6 +119,7 @@ userRouter.route('/register').post((req, res) => {
 
 
 userRouter.route('/login').post((req, res) => {
+  console.log('body ', req.body)
   const validateLogin = validateLoginInput(req.body);
   if(!validateLogin.status) {
     return res.json({
@@ -152,7 +151,6 @@ userRouter.route('/login').post((req, res) => {
   })
   .then(isMatch => {
     if(!isMatch) {
-      errors.password = 'Incorrect password';
       throw new Error("Incorrect password");
     }
     return jwt.sign(payload, config.secretKey, {
