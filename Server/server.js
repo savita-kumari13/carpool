@@ -17,6 +17,7 @@ const fs = require('fs');
 
 app.use(express.static(__dirname + '/upload/profile_photo'));
 app.use(express.static(__dirname + '/templates'));
+app.use(express.static(__dirname + '/img'));
 // app.use('/static', express.static(path.join(__dirname, 'upload/profile_photo')))
 
 app.use(cors());
@@ -128,14 +129,14 @@ app.get('/reset_password', (req, res) => {
     if(req.query.errors){
       errorExist = true
     }
-    var htmlBody=fs.readFileSync('./templates/confirm_password1.html',{encoding: 'utf8'});
+    var htmlBody=fs.readFileSync('./templates/confirm_password.html',{encoding: 'utf8'});
     htmlBody = htmlBody.replace(/{{app_host}}/g, config.app_host);
     htmlBody = htmlBody.replace(/{{user_token}}/g, user.token);
     htmlBody = htmlBody.replace(/{{error_str}}/g, errorExist ? '<div class="alert error alert-danger text-center">Please check fields</div>' : '');
     res.send(htmlBody)
   })
   .catch(err =>{
-    res.sendFile('./templates/reset_password_error1.html', {root: __dirname })
+    res.sendFile('./templates/reset_password_error.html', {root: __dirname })
   })
 })
 
@@ -165,11 +166,11 @@ app.post('/reset_password_success', (req, res) => {
     return currentUser.save();
   })
   .then(user => {
-    res.sendFile('./templates/reset_password_success1.html', {root: __dirname })
+    res.sendFile('./templates/reset_password_success.html', {root: __dirname })
   })
   .catch(err => {
     console.log('err ', err)
-    res.sendFile('./templates/reset_password_error1.html', {root: __dirname })
+    res.sendFile('./templates/reset_password_error.html', {root: __dirname })
   })
 })
   
