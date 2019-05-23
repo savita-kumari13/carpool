@@ -121,7 +121,6 @@ componentDidMount()
       })
     },
     (error) => {
-      console.log('error getting current location', error)
       ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
     },
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
@@ -151,7 +150,6 @@ async onChangeLeavingFrom(leavingFrom) {
   try{
   const leaveResult = await fetch(leaveApiUrl);
   const leavingFromJson = await leaveResult.json();
-  console.log('leavingFromJson', leavingFromJson)
   if(leavingFromJson.error_message){
     ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT);
     this.setState({
@@ -170,7 +168,6 @@ async onChangeLeavingFrom(leavingFrom) {
       showSearchAfterLeavingFrom: false
     })
     ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
-    console.log(err)
   }
 
 }
@@ -185,7 +182,6 @@ async onChangeGoingTo(goingTo) {
   try{
     const result = await fetch(apiUrl);
     const goingToJson = await result.json();
-    console.log('goinToJson', goingToJson)
     if(goingToJson.error_message){
       ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT)
       this.setState({
@@ -204,7 +200,6 @@ async onChangeGoingTo(goingTo) {
       showSearchAfterGoingTo: false
     })
     ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
-    console.log(err)
   }
 }
 
@@ -215,7 +210,6 @@ async getCurrentLocationForLeavingFrom() {
   try{
     const result = await fetch(apiUrl);
     const currentLocationJson = await result.json();
-    console.log('currentLocationJson', currentLocationJson)
     if(currentLocationJson.error_message){
       ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT);
       this.setState({
@@ -238,7 +232,6 @@ async getCurrentLocationForLeavingFrom() {
       showSearchAfterLeavingFrom: false
     })
     ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
-    console.log(err)
  }
 }
 
@@ -262,7 +255,6 @@ async getCurrentLocationForGoingTo() {
   try{
     const result = await fetch(apiUrl);
     const currentLocationJson = await result.json();
-    console.log('currentLocationJson', currentLocationJson)
     if(currentLocationJson.error_message){
       ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT);
       this.setState({
@@ -286,7 +278,6 @@ async getCurrentLocationForGoingTo() {
       showSearchAfterGoingTo: false
     })
     ToastAndroid.show('Unknown error occurred.', ToastAndroid.SHORT)
-    console.log(err)
  }
 
 }
@@ -338,7 +329,6 @@ async setLeaveLocation (leavingPlace) {
       showSearchAfterLeavingFrom: false
     })
     ToastAndroid.show('Unknown error occurred setLeaveLocation', ToastAndroid.SHORT)
-    console.log(error)  
   }
 }
 
@@ -375,7 +365,6 @@ async setGoingToLocation (goingPlace) {
       showSearchAfterGoingTo: false
     })
       ToastAndroid.show('Unknown error occurred setGoingToLocation', ToastAndroid.SHORT)
-      console.log(error)  
   }
 }
 
@@ -460,7 +449,6 @@ async searchLeavingFromAndGoingToLocation()
       isLoading: false
     })
   } catch (error) {
-    console.log('error in async storage ', error)
     ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     this.setState({
       isLoading: false

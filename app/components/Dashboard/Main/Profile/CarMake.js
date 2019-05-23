@@ -168,7 +168,7 @@ export default class CarMake extends Component {
           carModelText: item,
           showContinueButton: true
         })
-        console.log('ford model ',this.state.carModelText)}}>
+        }}>
         <Text style = {styles.popularMakeName}>{item}</Text>
       </TouchableOpacity>
     )
@@ -443,14 +443,12 @@ async checkRegisteredYear(){
         this.setState({
           isLoading: false
         })
-        console.log('Error sending add car request ', err)
         ToastAndroid.show('Error occurred while updating profile photo', ToastAndroid.SHORT)
       })
     } catch (error) {
       this.setState({
         isLoading: false
       })
-      console.log('Error in AsyncStorage ', error) 
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT) 
     }
   }

@@ -43,7 +43,6 @@ export default class PriceAndAboutRide extends Component {
                 isLessThanZero: '#e0e0d1',
             })
         }
-        console.log('price ',this.state.price)
 
     }
 
@@ -117,7 +116,6 @@ async savePriceAndRideInfo() {
             this.setState({
                 isLoading: false
             })
-            console.log('error sending offered ride request ', error)
             ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT);
         })
     
@@ -125,7 +123,6 @@ async savePriceAndRideInfo() {
         this.setState({
             isLoading: false
         })
-        console.log('Error in AsyncStorage ', error)
         ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     }
 }
@@ -133,16 +130,11 @@ async savePriceAndRideInfo() {
   render() {
 
     const minusIcon = <Icon name = "minus" size = {60} color = {this.state.isLessThanZero}
-        onPress = {() =>
-        {console.log('Price decresed')
-        }}
         />
 
     const plusIcon = <Icon name = "plus" size = {60}
         color = {config.COLOR}
-        onPress = {() =>
-                {console.log('Price increased')
-                this.increasePrice()}}
+        onPress = {() =>this.increasePrice()}
         />
 
 

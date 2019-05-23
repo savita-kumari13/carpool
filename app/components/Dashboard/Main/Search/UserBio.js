@@ -87,7 +87,6 @@ export default class UserBio extends Component {
                 this.setState({
                     isLoadingUser: false
                 })
-                console.log('error in async storage ', error)
                 ToastAndroid.show('Please fill different places', ToastAndroid.SHORT)
             }     
         }

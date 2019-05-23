@@ -169,7 +169,6 @@ componentDidMount(){
             this.setState({
                 isloadingUser: false
             })
-            console.log('error in async storage ', error)
             ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
         }
     }
@@ -181,7 +180,6 @@ componentDidMount(){
       await AsyncStorage.setItem('booked_user', JSON.stringify(bookedUser))
       this.props.navigation.navigate('bookedUserPreferences')
     } catch (error) {
-      console.log('error in async storage ', error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }

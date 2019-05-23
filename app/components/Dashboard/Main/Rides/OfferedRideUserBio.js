@@ -89,7 +89,6 @@ export default class OfferedRideUserBio extends Component {
           this.setState({
               isLoadingUser: false
           })
-          console.log('error in async storage ', error)
           ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
       }     
   }

@@ -59,7 +59,6 @@ export default class OfferedRide extends Component {
             })
           }
       } catch (error) {
-        console.log("error in async storgae ", error)
         ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
       }
   }
@@ -92,7 +91,6 @@ export default class OfferedRide extends Component {
       await AsyncStorage.setItem('booked_user', JSON.stringify(bookedUser))
       this.props.navigation.navigate('bookedUserPreferences')
     } catch (error) {
-      console.log('error in async storage ', error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }

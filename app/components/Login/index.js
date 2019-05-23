@@ -80,10 +80,7 @@ export default class Login extends Component {
     .then(fcmToken => {
       if (fcmToken) {
         device_token = fcmToken
-        console.log('fcm token ', fcmToken)
       } else {
-        // user doesn't have a device token yet
-        console.log("no token")
       } 
     })
     const user = {
@@ -96,7 +93,6 @@ export default class Login extends Component {
   })
   await axios.post(`/users/login`, user)
   .then(res => {
-    console.log(res.data)
     let resData=res.data;
     if(!resData.status)
     {
@@ -125,7 +121,6 @@ export default class Login extends Component {
         throw new Error(Object.values(resData.response.errors).join(', '));
       }
     else{
-      console.log('error', resData.messages)
       ToastAndroid.show(resData.messages.join(', '),ToastAndroid.TOP, ToastAndroid.SHORT);
     }
   }
@@ -142,7 +137,6 @@ export default class Login extends Component {
     })
   })
   .catch(err => {
-    console.log('error sending post request',err.message)
     this.setState({
       isLoging: false
     })
@@ -155,7 +149,6 @@ export default class Login extends Component {
     {
       LoginManager.logInWithReadPermissions(['public_profile', 'email']).then((result) =>
         {
-          console.log('result ', result)
           if (result.isCancelled)
           {
             return Promise.reject(new Error('The user cancelled the request'));
@@ -164,7 +157,6 @@ export default class Login extends Component {
           return AccessToken.getCurrentAccessToken();
         }).then((data) =>
         {
-          console.log('data : ', data)
           const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
           return firebase.auth().signInWithCredential(credential).then((user) =>
           {
@@ -178,12 +170,10 @@ export default class Login extends Component {
             }
           })                                                                       
         }).catch((error) => {
-          console.log('error &&&', error)
           ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
         })
     })
     .catch((error) => {
-      console.log('error ....', error)
       ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     });
   }
@@ -206,7 +196,6 @@ export default class Login extends Component {
       this.setState({
         isFbLoging: false
       })
-      console.log(error)
       ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     }
   }
@@ -221,10 +210,7 @@ export default class Login extends Component {
     .then(fcmToken => {
       if (fcmToken) {
         device_token = fcmToken
-        console.log('fcm token ', fcmToken)
       } else {
-        // user doesn't have a device token yet
-        console.log("no token")
       } 
     });
     await axios.post(`/users/facebook/login`, {
@@ -254,7 +240,6 @@ export default class Login extends Component {
       this.setState({
         isFbLoging: false
       })
-      console.log('error sending post request',err.message)
       ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     })
   }

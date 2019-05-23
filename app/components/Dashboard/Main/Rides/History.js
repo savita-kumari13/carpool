@@ -64,7 +64,6 @@ getHistoryRide = async() => {
     })
     .catch(err => {
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-      console.log('err sending get current user request ', err)
     })
 
   await axios.get('rides/history_offered_ride')
@@ -84,7 +83,6 @@ getHistoryRide = async() => {
           refreshing: false,
           noOfferedRides: true,
         })
-        console.log('empty offered rides')
       }
     }
     else{
@@ -97,14 +95,12 @@ getHistoryRide = async() => {
     }
   })
   .catch(err => {
-    console.log('error sending current_offered_rides request', err)
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   })
 
 
   axios.get('rides/history_searched_ride')
   .then(res =>{
-    console.log('history searched rides ', res.data)
     const resData = res.data
     if(resData.status){
       if(resData && resData.response && resData.response.rides && (resData.response.rides).length > 0){
@@ -120,7 +116,6 @@ getHistoryRide = async() => {
           refreshing: false,
           noBookedRides: true,
         })
-        console.log('empty booked rides')
       }
     }
     else{
@@ -133,7 +128,6 @@ getHistoryRide = async() => {
       refreshing: false,
       noBookedRides: true,
     })
-    console.log('error sending current_searched_rides request', err)
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   })
 }
@@ -170,7 +164,6 @@ getHistoryRide = async() => {
       await AsyncStorage.setItem('offered_ride', JSON.stringify(item))
       this.props.navigation.navigate('OfferedRide')
     } catch (error) {
-      console.log("error in async storgae ", error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }
@@ -180,7 +173,6 @@ getHistoryRide = async() => {
       await AsyncStorage.setItem('booked_ride', JSON.stringify(item))
       this.props.navigation.navigate('BookedRide')
     } catch (error) {
-      console.log("error in async storgae ", error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }

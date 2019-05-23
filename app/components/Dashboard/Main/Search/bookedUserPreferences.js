@@ -120,7 +120,6 @@ export default class bookedUserPreferences extends Component {
       this.setState({
           isloadingUser: false
       })
-      console.log('error in async storage ', error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
     

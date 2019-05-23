@@ -75,7 +75,6 @@ export default class Preferences extends Component {
             this.setState({
               isGetBio: false
             })
-            console.log('error sending get bio request ', err)
             ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
           })
       }
@@ -214,7 +213,6 @@ export default class Preferences extends Component {
             this.setState({
                 isLoading: false
               })
-            console.log('error sending save preferences request ', err)
             ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
         })
     }

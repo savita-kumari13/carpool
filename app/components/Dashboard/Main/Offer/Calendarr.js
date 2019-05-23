@@ -32,7 +32,6 @@ async markSelectedDate(day)
     this.props.navigation.navigate('TimeAndPassengersNumber')
     
   } catch (error) {
-    console.log('Error in AsyncStorage ', error)
     
   }
 

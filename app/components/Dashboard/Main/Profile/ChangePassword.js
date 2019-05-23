@@ -61,7 +61,6 @@ export default class ChangePassword extends Component {
     }
     axios.post('/users/change_password', data)
     .then(res => {
-      console.log(res)
       let resData=res.data;
       if(!resData.status)
       {
@@ -114,7 +113,6 @@ export default class ChangePassword extends Component {
     this.setState({
       isLoading: false
     })
-    console.log('error sending change password request ', err)
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   })
 }

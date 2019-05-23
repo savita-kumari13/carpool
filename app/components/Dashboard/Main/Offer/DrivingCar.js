@@ -70,7 +70,6 @@ export default class DrivingCar extends Component {
             this.setState({
                 isLoadingCars: false
             })
-            console.log('error sending has car request ', err)
             ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
         })
     }
@@ -81,7 +80,6 @@ export default class DrivingCar extends Component {
             this.props.navigation.navigate('TimeAndPassengersNumber')      
         }
         catch (error) {
-            console.log('Error in AsyncStorage ', error)
             ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
         }
     }
@@ -134,7 +132,6 @@ export default class DrivingCar extends Component {
             this.setState({
                 isLoading: false
             })
-            console.log('Error in AsyncStorage ', error)
             ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
           }
     }

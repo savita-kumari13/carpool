@@ -74,7 +74,6 @@ export default class Bio extends Component {
       this.setState({
         isGetBio: false
       })
-      console.log('error sending get bio request ', err)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
@@ -113,13 +112,9 @@ export default class Bio extends Component {
     };
     ImagePicker.showImagePicker(options, (response) => {
       if (response.didCancel) {
-        console.log('User cancelled image picker');
       }else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
       }else if (response.customButton) {
-        console.log('User tapped custom button: ', response.customButton);
       }else {
-        console.log('User selected a file form camera or gallery', response);
         this.setState({
             uri : response.uri,
         })
@@ -145,7 +140,6 @@ export default class Bio extends Component {
           }
         })
         .catch((err)=>{
-          console.log(err)
           ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
         })
       }
@@ -220,7 +214,6 @@ export default class Bio extends Component {
       this.setState({
         isLoading: false
       })
-      console.log('error sending update profile request')
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }

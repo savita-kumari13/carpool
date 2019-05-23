@@ -69,7 +69,6 @@ export default class Current extends Component {
     })
     .catch(err => {
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-      console.log('err sending get current user request ', err)
     })
 
     await axios.get('rides/current_offered_ride')
@@ -92,7 +91,6 @@ export default class Current extends Component {
             noOfferedRides: true,
             offerRideButton: true
           })
-          console.log('empty offered rides')
         }
       }
       else{
@@ -106,7 +104,6 @@ export default class Current extends Component {
         noOfferedRides: true,
         offerRideButton: true
       })
-      console.log('error sending current_offered_rides request', err)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
 
@@ -131,7 +128,6 @@ export default class Current extends Component {
             noBookedRides: true,
             searchRideButton: true
           })
-          console.log('empty booked rides')
         }
       }
       else{
@@ -145,7 +141,6 @@ export default class Current extends Component {
         noBookedRides: true,
         searchRideButton: true
       })
-      console.log('error sending current_searched_rides request', err)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
@@ -162,7 +157,6 @@ export default class Current extends Component {
         rides = rides.map(ride => {
           if(ride._id.toString() == rideId.toString()){
           ride.offered_user.status = config.STATUS.ON_GOING
-          console.log('rides matched to start')
           }
           return ride
         })
@@ -177,7 +171,6 @@ export default class Current extends Component {
         ToastAndroid.show('Unable to start ride', ToastAndroid.SHORT);
       }
     }).catch(err => {
-      console.log('error sending start ride request ', err)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
@@ -208,7 +201,6 @@ export default class Current extends Component {
         ToastAndroid.show('Unable to cancel ride', ToastAndroid.SHORT);
       }
     }).catch(err => {
-      console.log('error sending cancel offered ride request ', err)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
@@ -219,7 +211,6 @@ export default class Current extends Component {
       [
         {
           text: 'Cancel',
-          onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
         {text: 'OK', onPress: () => this.cancelOfferedRide(rideId)},
@@ -254,7 +245,6 @@ export default class Current extends Component {
         ToastAndroid.show('Please click again to complete your ride.', ToastAndroid.SHORT);
       }
     }).catch(err => {
-      console.log('error sending complete offered ride request ', err)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
@@ -285,7 +275,6 @@ export default class Current extends Component {
         ToastAndroid.show('Please click again to cancel your ride.', ToastAndroid.SHORT);
       }
     }).catch(err => {
-      console.log('error sending cancel request ', err)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     })
   }
@@ -296,7 +285,6 @@ export default class Current extends Component {
       [
         {
           text: 'Cancel',
-          onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
         {text: 'OK', onPress: () => this.cancelBookedRide(rideId)},
@@ -331,7 +319,6 @@ export default class Current extends Component {
           ToastAndroid.show('Please click again to complete your ride.', ToastAndroid.SHORT);
         }
       }).catch(err => {
-        console.log('error sending complete offered ride request ', err)
         ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
       })
   }
@@ -367,7 +354,6 @@ export default class Current extends Component {
       await AsyncStorage.setItem('offered_ride', JSON.stringify(item))
       this.props.navigation.navigate('OfferedRide')
     } catch (error) {
-      console.log("error in async storgae ", error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }
@@ -377,7 +363,6 @@ export default class Current extends Component {
       await AsyncStorage.setItem('booked_ride', JSON.stringify(item))
       this.props.navigation.navigate('BookedRide')
     } catch (error) {
-      console.log("error in async storgae ", error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }

@@ -26,7 +26,6 @@ CPAxios.interceptors.response.use(function (response) {
   }
   return response;
 }, function (error) {
-  console.log(error, error.response.status);
   if(error.response.status === 401){
     return AsyncStorage.removeItem('id_token').then(_=>{
       NavigationService.navigate('Login', {})

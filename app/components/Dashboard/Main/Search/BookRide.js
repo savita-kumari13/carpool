@@ -95,7 +95,6 @@ export default class BookRide extends Component {
           isLoadingRide: false
         })
         ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-        console.log('Error in AsyncStorage ', error)
       }
     }
     gettingRideDetails()
@@ -119,7 +118,6 @@ export default class BookRide extends Component {
           isGreaterThanSeats: config.COLOR
       })
     }
-    console.log('number ',this.state.seats - 1)
 
 }
 
@@ -171,7 +169,6 @@ async bookingRide(){
       isLoading: false
     })
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-    console.log('error sending booking ride request', err)
   })
 }
 

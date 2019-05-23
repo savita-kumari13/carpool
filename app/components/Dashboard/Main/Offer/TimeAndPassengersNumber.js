@@ -112,10 +112,7 @@ export default class TimeAndPassengersNumber extends Component {
         await AsyncStorage.setItem('offered_ride_date_time', JSON.stringify(this.state.pickedDate))
         await AsyncStorage.setItem('passengers_number', JSON.stringify(this.state.passengersNumber))
         const minTime = new Date(new Date().setMinutes(new Date().getMinutes() + 15 ))
-        console.log('minTime ', minTime)
-        console.log('pickedDate ', this.state.pickedDate)
         if(this.state.pickedDate >= minTime){
-          console.log('Driving car Screen')
           this.props.navigation.navigate('PriceAndAboutRide')
           this.setState({
             isLoading: false
@@ -132,7 +129,6 @@ export default class TimeAndPassengersNumber extends Component {
           this.setState({
             isLoading: false
           })
-          console.log('Error in AsyncStorage ', error)
           ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
       }
     }
@@ -140,16 +136,11 @@ export default class TimeAndPassengersNumber extends Component {
 
   render() {
     const minusIcon = <Icon name = "minus" size = {60} color = {this.state.isLessThanZero}
-      onPress = {() =>
-      {console.log('PassengersNumber decresed')
-      }}
       />
 
     const plusIcon = <Icon name = "plus" size = {60}
     color = {this.state.isGreaterThanSeats}
-      onPress = {() =>
-        {console.log('PassengersNumber increased')
-        this.increasePassengersNumber()}}
+      onPress = {() =>this.increasePassengersNumber()}
       /> 
 
     return (

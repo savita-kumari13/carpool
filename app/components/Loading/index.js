@@ -46,13 +46,10 @@ export default class Loading extends Component {
           {
             navigator.geolocation.getCurrentPosition(
               (position) => {
-                  console.log(position);
               },
               (error) => {
-                  console.log('error getting current location', error.message);
               },
               { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
-            console.log('You can use the location');
           } else {
               alert("Permission Denied");
           }
@@ -61,23 +58,18 @@ export default class Loading extends Component {
       }
   }
 
-  checkUserToken = () => {
+  checkUserToken = async () => {
     setTimeout( async () => {
       await axios.get(`/users/auth`)
       .then(res => {
-        console.log('res in loading', res)
         if(res.status == 200)
         {
-          console.log('loading to maincontainer')
           NavigationService.navigate('MainContainer', {})
-          // this.props.navigation.navigate('MainContainer')
         }
         else{
-          console.log('status not 200')
         }
       })
       .catch(err => {
-        console.log('Error sending authenticating request', err)
       })
     }, 1000)
   }
@@ -86,15 +78,11 @@ export default class Loading extends Component {
     firebase.messaging().hasPermission()
     .then(enabled => {
       if (enabled) {
-        console.log('messaging permission enabled')
       } else {
-        console.log("user doesn't have messaging permission")
         firebase.messaging().requestPermission()
-        .then(() => {
-          console.log('User has authorised')  
+        .then(() => { 
         })
         .catch(error => {
-          console.log('User has rejected permissions') 
         });
       } 
     });
@@ -105,14 +93,11 @@ export default class Loading extends Component {
   checkMessagingPermission();
 
   this.notificationListener = firebase.notifications().onNotification((notification) => {
-    console.log('Notification received')
   });
 
   this.notificationOpenedListener = firebase.notifications().onNotificationOpened((notificationOpen) => {
     const action = notificationOpen.action;
-    console.log('action opened', action)
     const notification = notificationOpen.notification;
-    console.log('notification opened', notification)
 
     const localNotification = new firebase.notifications.Notification({
       sound: 'ringtone',
@@ -124,7 +109,7 @@ export default class Loading extends Component {
   
     firebase.notifications()
     .displayNotification(localNotification)
-    .catch(err => console.log(err))
+    .catch(err => {})
   });
 
 
@@ -134,10 +119,8 @@ export default class Loading extends Component {
           // App was opened by a notification
           // Get the action triggered by the notification being opened
           const action = notificationOpen.action;
-          console.log('action opened background', action)
           // Get information about the notification that was opened
           const notification = notificationOpen.notification; 
-          console.log('notification opened background', notification) 
         }
       });
 }

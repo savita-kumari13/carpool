@@ -88,7 +88,6 @@ export default class BookedRide extends Component {
           alreadyBooked: true,
           bookedUsers: ride.booked_user
         })
-        console.log('booked users ', this.state.bookedUsers)
       }
       if(ride.info != 'null' && ride.info  !== null && ride.info !== undefined )
       {
@@ -175,7 +174,6 @@ export default class BookedRide extends Component {
       this.setState({
           isloadingUser: false
       })
-      console.log('error in async storage ', error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }
@@ -208,7 +206,6 @@ export default class BookedRide extends Component {
       await AsyncStorage.setItem('booked_user', JSON.stringify(bookedUser))
       this.props.navigation.navigate('bookedUserPreferences')
     } catch (error) {
-      console.log('error in async storage ', error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }

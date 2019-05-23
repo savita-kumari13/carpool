@@ -48,10 +48,11 @@ export default class Profile extends Component {
 signOut = async () => {
   await AsyncStorage.removeItem('id_token')
   .then(() => {
-    console.log('signing out user...')
     this.props.navigation.navigate('Login')
   })
-  .catch(err => console.log('error in signing out user'))
+  .catch(err => {
+    ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+  })
 }
 
 getProfile(){
@@ -99,7 +100,6 @@ getProfile(){
     this.setState({
       isProfileLoading: false
     })
-    console.log('error sending get profile request ', err)
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   })
 
@@ -140,7 +140,6 @@ Show_Custom_Alert(item) {
     [
       {
         text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
       {text: 'OK', onPress: () => this.deleteCar(item)},
@@ -191,7 +190,6 @@ ok_Button=()=>{
       this.setState({
         isDeleteLoading: false
       })
-      console.log('error sending delete car request ', err)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
    })
  }
@@ -206,13 +204,9 @@ ok_Button=()=>{
   };
   ImagePicker.showImagePicker(options, (response) => {
     if (response.didCancel) {
-      console.log('User cancelled image picker');
     }else if (response.error) {
-      console.log('ImagePicker Error: ', response.error);
     }else if (response.customButton) {
-      console.log('User tapped custom button: ', response.customButton);
     }else {
-      console.log('User selected a file form camera or gallery', response);
       this.setState({
           uri : response.uri,
       })
@@ -238,7 +232,6 @@ ok_Button=()=>{
         }
       })
       .catch((err)=>{
-        console.log(err)
         ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
       })
     }

@@ -88,10 +88,8 @@ export default class PhoneAuth extends Component {
       .then(fcmToken => {
         if (fcmToken) {
           device_token = fcmToken
-          console.log('fcm token ', fcmToken)
         } else {
           // user doesn't have a device token yet
-          console.log("no token")
         } 
       });
       await axios.post(`/users/facebook/register`, {
@@ -137,7 +135,6 @@ export default class PhoneAuth extends Component {
         }
       })
       .catch(err => {
-        console.log('error sending save phone number request ', err)
         this.setState({
           isLoading: false
         })
@@ -147,7 +144,6 @@ export default class PhoneAuth extends Component {
     this.setState({
       isLoading: false
     })
-    console.log('error in async storage ', error)
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   }
 }

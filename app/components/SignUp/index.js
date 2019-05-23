@@ -79,7 +79,6 @@ export default class SignUp extends Component {
     BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
     this.onTokenRefreshListener = firebase.messaging().onTokenRefresh(fcmToken => {
       // Process your token as required
-      console.log('new device token ', fcmToken)
       const data = {
         name: this.state.name,
         device_token: fcmToken
@@ -113,13 +112,9 @@ export default class SignUp extends Component {
     .then(fcmToken => {
       if (fcmToken) {
         device_token = fcmToken
-        console.log('fcm token ', fcmToken)
       } else {
-        // user doesn't have a device token yet
-        console.log("no token")
       } 
     });
-    console.log('device token ', device_token)
     const user = {
       name: this.state.name,
       email: this.state.email,
@@ -202,7 +197,6 @@ export default class SignUp extends Component {
     })
   })
   .catch(err => {
-    console.log('error sending post request',err.message)
     this.setState({
       isSigningUp: false
     })
@@ -236,12 +230,10 @@ export default class SignUp extends Component {
             }
           })                                                                       
         }).catch((error) => {
-          console.log('error.', error)
           ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
         })
     })
     .catch((error) => {
-      console.log('error ....', error)
       ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     });
   }
@@ -264,7 +256,6 @@ export default class SignUp extends Component {
       this.setState({
         isFbLoging: false
       })
-      console.log(error)
       ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     }
   }
@@ -279,10 +270,7 @@ export default class SignUp extends Component {
     .then(fcmToken => {
       if (fcmToken) {
         device_token = fcmToken
-        console.log('fcm token ', fcmToken)
       } else {
-        // user doesn't have a device token yet
-        console.log("no token")
       } 
     });
     await axios.post(`/users/facebook/login`, {
@@ -312,7 +300,6 @@ export default class SignUp extends Component {
       this.setState({
         isFbLoging: false
       })
-      console.log('error sending post request',err.message)
       ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
     })
   }

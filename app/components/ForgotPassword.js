@@ -66,7 +66,6 @@ export default class ForgotPassword extends Component {
         isLoading: false
       })
       ToastAndroid.show('Unknown error occurred',ToastAndroid.TOP, ToastAndroid.SHORT)
-      console.log('error sending forgot password request ', err)
     })
   }
     

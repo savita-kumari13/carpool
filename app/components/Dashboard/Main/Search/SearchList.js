@@ -130,7 +130,6 @@ export default class SearchList extends Component {
         this.setState({
           isLoadingRides: false
         })
-        console.log('error sending search request : ', err)
         ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
       })
     }
@@ -165,7 +164,6 @@ export default class SearchList extends Component {
       this.setState({
         isLoading: false
       })
-      console.log('error in async storage ', error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     }
   }

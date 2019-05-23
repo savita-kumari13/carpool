@@ -99,7 +99,6 @@ componentDidMount()
       this.setState({
       error: error.message
       })
-      console.log('error getting current location', error)
       ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
     },
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
@@ -130,7 +129,6 @@ _handleBackHandler = () => {
    const pickUpResult = await fetch(pickUpApiUrl);
    const pickUpJson = await pickUpResult.json();
 
-   console.log('pickUpJson', pickUpJson)
    if(pickUpJson.error_message){
     ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT)
     this.setState({
@@ -147,7 +145,6 @@ _handleBackHandler = () => {
       showNextIconAfterPickUp: false
     })
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-    console.log(err)
   }
 
 }
@@ -162,7 +159,6 @@ async onChangeDropOff(dropOff) {
   try{
    const dropOffResult = await fetch(dropOffApiUrl);
    const dropOffJson = await dropOffResult.json();
-   console.log('dropOffJson', dropOffJson)
    if(dropOffJson.error_message){
     ToastAndroid.show('Unable to get selected location. Try again', ToastAndroid.SHORT)
     this.setState({
@@ -179,7 +175,6 @@ async onChangeDropOff(dropOff) {
       showNextIconAfterDropOff: false
     })
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-    console.log('errorr ',err)
   }
 
 }
@@ -190,7 +185,6 @@ async getCurrentLocationForPickUp() {
   try{
     const result = await fetch(apiUrl);
     const currentLocationJson = await result.json();
-    console.log('currentLocationJson', currentLocationJson)
     if(currentLocationJson.error_message){
       ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT)
       this.setState({
@@ -211,7 +205,6 @@ async getCurrentLocationForPickUp() {
       showNextIconAfterPickUp: false
     })
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-    console.log('errorr ',err)
  }
 
 }
@@ -236,7 +229,6 @@ async getCurrentLocationForDropOff() {
   try{
     const result = await fetch(apiUrl);
     const currentLocationJson = await result.json();
-    console.log('currentLocationJson', currentLocationJson)
     if(currentLocationJson.error_message){
       ToastAndroid.show('Unable to get your current location. Try again', ToastAndroid.SHORT)
       this.setState({
@@ -258,7 +250,6 @@ async getCurrentLocationForDropOff() {
       showNextIconAfterDropOff: false
     })
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-    console.log(err)
  }
 
 }
@@ -305,7 +296,6 @@ async setPickUpLocation (pickUpPlace) {
     this.setState({
       showNextIconAfterPickUp: false
     })
-    console.log(error)
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   }
 }
@@ -340,7 +330,6 @@ async setDropOffLocation (dropOffPlace) {
       showNextIconAfterDropOff: false
     })
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-    console.log(error) 
   }
 }
 
@@ -401,7 +390,6 @@ async savePickUpDropOffLocations() {
       isLoading: false
     })
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
-    console.log('Error in AsyncStorage ', error)
   }
   
 }
