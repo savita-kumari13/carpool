@@ -1,17 +1,49 @@
-
-.logo{
-	width: 62%;
-	padding: 20px 0px 0px 30px; 
+body{
+	margin:0px;
+	padding: 0px;
 }
+header{
+	background-color: #4370a3;
+}
+.container-fluid{
+	margin:0px;
+	padding: 0px;
+}
+
+.logo-image{
+	width: 30%;
+	margin-left: 20%;
+}
+.website-name{
+	font-weight: bold;
+	font-size: 42px;
+	color: #fff;
+	text-align: center;
+	padding-top: 10px; 
+}
+
+/*======================coming soon==================*/
+.coming-soon-heading{
+	font-size: 42px;
+	color: #4370a3;
+	font-weight: bold;
+	margin-left:37%;
+}
+/*=====================coming soon=====================*/
+
+/*=====================new password====================*/
 .new-password h1{
 	text-align: center;
-	color: #054752;
+	color: #4370a3;
 	font-size: 28px;
 	font-weight: 500;
 	line-height: 1.06;
 	font-weight: bold;
 	margin-top: 48px;
 }
+/*=====================new password====================*/
+
+/*=====================common page=====================*/
 .email-input{
 	border: 0;
 	border-radius: 16px;
@@ -21,12 +53,14 @@
 	font-size: 16px;
 	line-height: 20px;
 	width: 100%;
-	caret-color: #4370A3;
+	caret-color: #7963b6;
 	padding: 16px;
-	/*margin-top: 20px;*/
+}
+.email-input:focus{
+	border: solid 3px #4370a3;
 }
 .send-button{
-	background-color: #4370A3;
+	background-color: #4370a3;
 	color: #FFF;
 	font-weight: bold;
 	font-size: 16px;
@@ -36,6 +70,9 @@
 	border: none;
 	margin-top: 20px;
 }
-.email-input:focus{
-	border: solid 3px #4370A3;
+.send-button:hover {
+	background-color: #fff;
+	color: #4370a3;
+	border: solid 2px #4370a3;
 }
+/*=====================common page=====================*/

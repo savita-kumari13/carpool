@@ -13,11 +13,8 @@ var FCM = new fcm('../Server/private_key.json');
 
 
 rideRouter.post('/offer_ride', passport.authenticate('jwt', { session: false }),(req, res) => {
-    console.log("Success! You can not see this without a token (offer ride)")
     User.findById(mongoose.Types.ObjectId(req.user._id))
     .then(user => {
-        console.log('avatar',user.avatar)
-        console.log('bio', user.bio)
         const newRide = new Ride({
             pick_up_name: req.body.pick_up_name,
             pick_up_coordinates:{
@@ -54,7 +51,6 @@ rideRouter.post('/offer_ride', passport.authenticate('jwt', { session: false }),
             messages: ["Ride saved"]  
         }) 
     }).catch(err => {
-        console.log('error saving ride', err)
         return res.json({
             status: false,
             response:{},
@@ -64,7 +60,6 @@ rideRouter.post('/offer_ride', passport.authenticate('jwt', { session: false }),
 })
 
 rideRouter.post('/search_ride', passport.authenticate('jwt', { session: false}), (req, res) => {
-    console.log('Success! You can not see this without a token (search ride)')
     Ride.find({
         pick_up_coordinates: {
             $geoWithin: {
@@ -95,7 +90,6 @@ rideRouter.post('/search_ride', passport.authenticate('jwt', { session: false}),
         })     
     })
     .catch(err => {
-        console.log('error in searching rides ', err)
         return res.json({
             status: false,
             response:{},
@@ -106,13 +100,11 @@ rideRouter.post('/search_ride', passport.authenticate('jwt', { session: false}),
 
 
 rideRouter.post('/book', passport.authenticate('jwt', { session : false }), (req, res) => {
-    console.log('Success! You can not see this without a token (book ride)')
     let id = mongoose.Types.ObjectId(req.body.ride_id)
     let deviceToken
     let currentUser
     let currentRide
     if(!mongoose.Types.ObjectId.isValid(id)) {
-        console.log('Not valid');
         return res.json({
             status: false,
             response:{},
@@ -177,14 +169,10 @@ rideRouter.post('/book', passport.authenticate('jwt', { session : false }), (req
                 },
                 token : deviceToken
             };
-            console.log(message);
             FCM.send(message, (err, response) => {
                 if(err) {
-                    console.log('error in sending notification ', err)
                     throw err
                 }
-                console.log('notification ', response)
-                console.log('sjafiiw')
             })
             return
           })
@@ -202,7 +190,6 @@ rideRouter.post('/book', passport.authenticate('jwt', { session : false }), (req
       return
     })
     .catch((err)=>{
-      console.log('errrrrr', err)
       return res.json({
           status: false,
           response:{},

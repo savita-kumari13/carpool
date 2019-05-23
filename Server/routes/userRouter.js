@@ -119,7 +119,6 @@ userRouter.route('/register').post((req, res) => {
 
 
 userRouter.route('/login').post((req, res) => {
-  console.log('body ', req.body)
   const validateLogin = validateLoginInput(req.body);
   if(!validateLogin.status) {
     return res.json({
@@ -175,9 +174,7 @@ userRouter.route('/login').post((req, res) => {
 
 
 userRouter.route('/facebook/register').post((req, res) => {
-  console.log('body ', req.body)
   const validatePhoneNumber = validatePhoneNumberInput(req.body);
-  console.log('validatePhoneNumber ? ', validatePhoneNumber)
   if(!validatePhoneNumber.status) {
     return res.json({
       status: false,
@@ -212,7 +209,6 @@ userRouter.route('/facebook/register').post((req, res) => {
       })
     })
   }).then(() => {
-    console.log('download finished')
     const newUser = new User({ 
       name: req.body.name,
       email: req.body.email,
@@ -244,7 +240,6 @@ userRouter.route('/facebook/register').post((req, res) => {
     });
   })
   .catch(err=>{
-    console.log('errrrr', err)
     return res.json({
       status: false,
       response: {},
@@ -254,7 +249,6 @@ userRouter.route('/facebook/register').post((req, res) => {
 })
 
 userRouter.route('/facebook/login').post((req, res) => {
-  console.log('body ', req.body)
   const payload = {}
   User.findOne({
     email : req.body.email
@@ -284,7 +278,6 @@ userRouter.route('/facebook/login').post((req, res) => {
     });
   })
   .catch(err => {
-    console.log('errrr ', err)
     return res.json({
       status: false,
       response: {},
@@ -294,7 +287,6 @@ userRouter.route('/facebook/login').post((req, res) => {
 })
 
 userRouter.get('/auth', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log("Success! You can not see this without a token auth")
   return res.json({
     status: true,
     response: {},
@@ -303,7 +295,6 @@ userRouter.get('/auth', passport.authenticate('jwt', { session: false }), (req, 
 });
 
 userRouter.get('/', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log('Success! You can not see this without a token (get current user)')
     User.findById(mongoose.Types.ObjectId(req.user._id))
     .then(user => {
       return res.json({
@@ -323,7 +314,6 @@ userRouter.get('/', passport.authenticate('jwt', { session: false }), (req, res)
 });
 
 userRouter.get('/get_profile', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log('Success! You can not see this without a token (profile)')
     User.findById(mongoose.Types.ObjectId(req.user._id))
     .then(user => {
       return res.json({
@@ -343,7 +333,6 @@ userRouter.get('/get_profile', passport.authenticate('jwt', { session: false }),
 });
 
 userRouter.post('/add_car', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log('Success! You can not see this without a token (add_car)')
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
     user.cars.push(
@@ -397,7 +386,6 @@ userRouter.get('/has_car', passport.authenticate('jwt', { session: false }), (re
 
 
 userRouter.post('/delete_car', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log('Success! You can not see this without a token (delete car)')
 
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
@@ -447,8 +435,6 @@ userRouter.post('/delete_car', passport.authenticate('jwt', { session: false }),
 var profileImgUpload=upload.single('image');
 
 userRouter.post('/add_profile_photo', passport.authenticate('jwt', { session: false }),profileImgUpload, (req, res) => {
-  console.log('Success! You can not see this without a token (add profile photo)')
-  // console.log('req image name ', req.body.data._parts[1][1].name )
   const image_name = date +'-'+ req.file.originalname
   let currentUser
   let previous_photo
@@ -494,7 +480,6 @@ userRouter.post('/add_profile_photo', passport.authenticate('jwt', { session: fa
         return rides
       })
       .then(rides => {
-        console.log('updated')
         return
       })
       return
@@ -517,7 +502,6 @@ userRouter.post('/add_profile_photo', passport.authenticate('jwt', { session: fa
 })
 
 userRouter.post('/update_profile', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log('Success! You can not see this without a token (update profile)')
   let currentUser
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
@@ -562,7 +546,6 @@ userRouter.post('/update_profile', passport.authenticate('jwt', { session: false
         return rides
       })
       .then(rides => {
-        console.log('updated profile')
         return
       })
       return
@@ -583,7 +566,6 @@ userRouter.post('/update_profile', passport.authenticate('jwt', { session: false
 })
 
 userRouter.post('/save_preferences', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log('Success! You can not see this without a token (save preferences)')
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
     user.preferences.chattiness = req.body.chattiness
@@ -630,7 +612,6 @@ userRouter.post('/save_preferences', passport.authenticate('jwt', { session: fal
         return rides
       })
       .then(rides => {
-        console.log('updated preferences')
         return
       })
       return
@@ -651,7 +632,6 @@ userRouter.post('/save_preferences', passport.authenticate('jwt', { session: fal
 })
 
 userRouter.post('/change_password', passport.authenticate('jwt', { session: false }), (req, res) => {
-  console.log('Success! You can not see this without a token (change password)')
   const validateChangePassword = validateChangePasswordInput(req.body);
   if(!validateChangePassword.status) {
     return res.json({
@@ -702,7 +682,6 @@ userRouter.post('/change_password', passport.authenticate('jwt', { session: fals
       });
     })
     .catch(err => {
-      console.log('user not found', err)
       return res.json({
         status: false,
         response: {},

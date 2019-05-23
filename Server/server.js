@@ -24,10 +24,8 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false  }));
 app.use(bodyParser.json());
 
-mongoose.connect(config.DB, { useNewUrlParser: true }).then(() => {
-    console.log('database connected')},
+mongoose.connect(config.DB, { useNewUrlParser: true }).then(() => 
     err => {
-        console.log('can not connect ot databse : ', err)
     });
 
 app.use('/users', UserRouter);
@@ -45,11 +43,10 @@ app.use(passport.session());
 
 
 app.get('/', (req, res) => {
-    res.send('helllllooo reacttt native')
+  res.sendFile('./templates/homepage.html', {root: __dirname })
 })
 
 app.post('/forgot_password', (req, res) => {
-    console.log('Success! You can not see this without a token (forgot password)')
     User.findOne({
       email : req.body.email
     })
@@ -89,7 +86,6 @@ app.post('/forgot_password', (req, res) => {
         html: htmlBody
       }; 
 
-      console.log(config.app_host + '/users/reset_password' + '?token=' + user.token)
       return new Promise(function(resolve,reject){
         transporter.sendMail(mailOptions, function(error, info){
           if (error) {
@@ -141,9 +137,7 @@ app.get('/reset_password', (req, res) => {
 })
 
 app.post('/reset_password_success', (req, res) => {
-  console.log('body ', req.body)
   const validateResetPassword = ValidateResetPasswordInput(req.body);
-  console.log('validateRegister.status ', validateResetPassword.status)
   if(!validateResetPassword.status) {
     return res.redirect('/reset_password?token='+req.body.token+'&errors=1');
   }
@@ -169,11 +163,9 @@ app.post('/reset_password_success', (req, res) => {
     res.sendFile('./templates/reset_password_success.html', {root: __dirname })
   })
   .catch(err => {
-    console.log('err ', err)
     res.sendFile('./templates/reset_password_error.html', {root: __dirname })
   })
 })
   
 app.listen(config.port, () => {
-    console.log(`Listening at ${config.port}`);
  })
