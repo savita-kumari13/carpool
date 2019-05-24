@@ -71,7 +71,6 @@ userRouter.route('/register').post((req, res) => {
       email: (req.body.email.toLowerCase()),
       password: req.body.password,
       phone_number: req.body.phone_number,
-      avatar: config.profile,
       bio: '',
       preferences,
       device_token: req.body.device_token
@@ -441,10 +440,16 @@ userRouter.post('/add_profile_photo', passport.authenticate('jwt', { session: fa
   User.findById(mongoose.Types.ObjectId(req.user._id))
   .then(user => {
     previous_photo = user.avatar
+    let image_path
+    // if(user.avatar == config.profile){
+    //   image_path = path.resolve(__dirname, '../img', previous_photo)
+    // }
     if(user.avatar){
-      const image_path = path.resolve(__dirname, '../upload/profile_photo', previous_photo)
+      image_path = path.resolve(__dirname, '../upload/profile_photo', previous_photo)
       fs.unlink(image_path, (err) => {
-        if(err) throw err;
+        if(err){
+          console.log('err unlink', err)
+        }
       })
     }
     user.avatar = image_name

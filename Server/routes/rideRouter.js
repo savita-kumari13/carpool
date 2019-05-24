@@ -63,12 +63,12 @@ rideRouter.post('/search_ride', passport.authenticate('jwt', { session: false}),
     Ride.find({
         pick_up_coordinates: {
             $geoWithin: {
-                $centerSphere: [[req.body.leaving_from_coordinates[0], req.body.leaving_from_coordinates[1]], 0.310686/3963.2 ]
+                $centerSphere: [[req.body.leaving_from_coordinates[0], req.body.leaving_from_coordinates[1]], 10/6378.1 ]
             }
         }
         ,drop_off_coordinates: {
             $geoWithin: {
-                $centerSphere: [[req.body.going_to_coordinates[0], req.body.going_to_coordinates[1]], 0.310686/3963.2 ]
+                $centerSphere: [[req.body.going_to_coordinates[0], req.body.going_to_coordinates[1]], 10/6378.1 ]
             }
         }
         ,offered_ride_date_time: {
@@ -165,7 +165,7 @@ rideRouter.post('/book', passport.authenticate('jwt', { session : false }), (req
                 // },
                 notification:{
                     title : 'CarPool',
-                    body : user.name + ' has booked ' + req.body.seats_booked + seats + ' for your ride ' + currentRide.pick_up_name + ' - ' + currentRide.drop_off_name
+                    body : user.name + ' has booked ' + req.body.seats_booked + seats + ' for your ride ' + currentRide.pick_up_name + ' --> ' + currentRide.drop_off_name
                 },
                 token : deviceToken
             };

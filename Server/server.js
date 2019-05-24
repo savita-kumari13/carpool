@@ -168,4 +168,5 @@ app.post('/reset_password_success', (req, res) => {
 })
   
 app.listen(config.port, () => {
+  console.log(config.port)
  })

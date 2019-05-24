@@ -56,14 +56,24 @@ export default class Bio extends Component {
     .then(res => {
       const resData = res.data
       if(resData.status){
-        this.setState({
-          uri: config.API_HOST + '/' + resData.response.user.avatar,
-          name: resData.response.user.name,
-          bio: resData.response.user.bio,
-          phoneNumber: (resData.response.user.phone_number).toString(),
-          isGetBio: false
-        })
-      }
+        if(resData && resData.response && resData.response.user)
+          {
+            if(resData.response.user.avatar && resData.response.user.avatar != ''){
+              this.setState({
+                uri: config.API_HOST + '/' + resData.response.user.avatar
+              })
+            }
+            this.setState({
+              name: resData.response.user.name,
+              bio: resData.response.user.bio,
+              phoneNumber: (resData.response.user.phone_number).toString(),
+              isGetBio: false
+            })
+          }
+          this.setState({
+            isGetBio: false
+          })
+        }
       else{
         this.setState({
           isGetBio: false

@@ -163,10 +163,12 @@ async savePriceAndRideInfo() {
             <View style = {{marginTop: 60, justifyContent: 'flex-start'}}>
                 <Text style = {styles.aboutRideText}>Anything to add about your ride?</Text>
                 <TouchableOpacity style = {styles.aboutTextInput}>
-                <ScrollView contentContainerStyle = {{justifyContent: 'flex-start', flex: 1}}>
+                <ScrollView contentContainerStyle = {{justifyContent: 'flex-start'}}>
                     <TextInput
                         multiline = {true}
-                        numberOfLines = {6}                       
+                        numberOfLines = {6}
+                        style={styles.inputs}
+                        selectionColor={config.COLOR}                 
                         value = {this.state.aboutText}                      
                         placeholder = "Hello! I'm going to visit my family. I travel with a dog and I have a lot of space in the boot!"
                         onChangeText = {(aboutText) => {this.setState({aboutText})}}
@@ -199,6 +201,15 @@ const styles = StyleSheet.create({
           flex: 1,
           backgroundColor: 'grey'
       },
+
+      inputs:{
+        // marginTop: 15,
+        padding: 0,
+        // flex: 1,
+        fontSize: 16,
+        color: config.TEXT_COLOR,
+        fontWeight: 'bold'
+    },
 
       priceText: {
         fontWeight: 'bold',

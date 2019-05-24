@@ -65,13 +65,17 @@ getProfile(){
     if(resData.status){
       if(resData && resData.response && resData.response.user)
       {
+        if(resData.response.user.avatar && resData.response.user.avatar != ''){
+          this.setState({
+            uri: config.API_HOST + '/' + resData.response.user.avatar
+          })
+        }
         this.setState({
           userName: resData.response.user.name,
           userEmail: resData.response.user.email,
           phoneNumber: resData.response.user.phone_number,
           preferences: resData.response.user.preferences,
           cars: resData.response.user.cars,
-          uri: config.API_HOST + '/' + resData.response.user.avatar
         })
         if((resData.response.user.cars).length > 0){
           this.setState({
@@ -94,7 +98,7 @@ getProfile(){
       this.setState({
         isProfileLoading: false
       })
-      ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
+      ToastAndroid.show(resData.messages.join(', '), ToastAndroid.SHORT);
     }
   }).catch(err => {
     this.setState({
@@ -223,7 +227,6 @@ ok_Button=()=>{
         const resData = res.data
         if(resData.status){
           this.setState({
-            // uri: config.API_HOST + '/' + resData.response.user.avatar
           })
           ToastAndroid.show('profile photo updated', ToastAndroid.SHORT)
         }

@@ -239,11 +239,11 @@ export default class SearchList extends Component {
   render() {
     return (
       <ScrollView contentContainerStyle = {styles.container}>
-        <View style = {{flexDirection: "row", marginTop: 20,marginBottom: 5,}}>
-          <Text style = {styles.searchLocationText}>{this.state.leaveLocation}</Text>
-          <ArrowIcon name = 'md-arrow-forward' size = {20} color = {config.TEXT_COLOR} style = {{marginRight: 10}}>
-          </ArrowIcon>
-          <Text style = {styles.searchLocationText}>{this.state.goingLocation}</Text>
+        <View style = {{flexDirection: "row", marginTop: 20,marginBottom: 5, flexWrap: 'wrap'}}>
+          <Text style = {styles.searchLocationText}>{this.state.leaveLocation}{'   '}
+          <ArrowIcon name = 'md-arrow-forward' size = {21} color = {config.TEXT_COLOR} style = {{marginLeft: 10}}/>{'   '}
+          {this.state.goingLocation}
+          </Text>
         </View>
 
         {this.state.todayTommorow &&  <View style = {{marginTop: 20}}>
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   },
 
   searchLocationText: {
-    flex: 1,
+    // flex: 1,
     fontSize: 18,
     fontWeight: 'bold',
     color: config.TEXT_COLOR,
