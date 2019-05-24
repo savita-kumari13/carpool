@@ -1,8 +1,9 @@
 module.exports = {
     port: 5570,
     DB: 'mongodb://localhost:27017/PoolCarDb',
-    app_host: 'http://192.168.137.1:5570',
+    // app_host: 'http://192.168.137.1:5570',
     // app_host: 'http://192.168.43.100:5570',
+    app_host: 'http://52.66.240.224:5570',
     secretKey : 'yfbrbW%^%W^47665fhgfTZHDZRSDHF',
     uploadFolder: './upload/profile_photo',
     profile: 'user_default_profile_photo.jpg',

@@ -62,51 +62,32 @@ getProfile(){
   axios.get('/users/get_profile')
   .then(res =>{
     const resData = res.data
-    if(resData.status){
-      if(resData && resData.response && resData.response.user)
-      {
-        if(resData.response.user.avatar && resData.response.user.avatar != ''){
-          this.setState({
-            uri: config.API_HOST + '/' + resData.response.user.avatar
-          })
-        }
-        this.setState({
-          userName: resData.response.user.name,
-          userEmail: resData.response.user.email,
-          phoneNumber: resData.response.user.phone_number,
-          preferences: resData.response.user.preferences,
-          cars: resData.response.user.cars,
-        })
-        if((resData.response.user.cars).length > 0){
-          this.setState({
-            addCarShow: false,
-            carList: true
-          })
-        }
-        if((resData.response.user.cars).length == 0){
-          this.setState({
-            addCarShow: true,
-            carList: false
-          })
-        }
-      }
-      this.setState({
-        isProfileLoading: false
-      })
-    }
-    else{
-      this.setState({
-        isProfileLoading: false
-      })
+    let valsToSet={isProfileLoading: false};
+    if(!resData.status){
       ToastAndroid.show(resData.messages.join(', '), ToastAndroid.SHORT);
+      return;
     }
+    if(resData && resData.response && resData.response.user)
+    {
+      valsToSet.userName=resData.response.user.name;
+      valsToSet.userEmail=resData.response.user.email;
+      valsToSet.phoneNumber=resData.response.user.phone_number;
+      valsToSet.preferences=resData.response.user.preferences;
+      valsToSet.cars=resData.response.user.cars;
+      
+      if(resData.response.user.avatar && resData.response.user.avatar != ''){
+        valsToSet.uri=config.API_HOST + '/' + resData.response.user.avatar;
+      }
+      valsToSet.addCarShow= (resData.response.user.cars).length <= 0;
+      valsToSet.carList=(resData.response.user.cars).length > 0;
+    }
+    this.setState(valsToSet);
   }).catch(err => {
     this.setState({
       isProfileLoading: false
     })
     ToastAndroid.show('Unknown error occurred', ToastAndroid.SHORT)
   })
-
 }
 
 componentDidMount()
