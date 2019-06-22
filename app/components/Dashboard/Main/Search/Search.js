@@ -578,6 +578,7 @@ render() {
           isVisible={this.state.isDateTimePickerVisible}
           onConfirm={this._handleDatePicked}
           onCancel={this._hideDateTimePicker}
+          minimumDate = {new Date(new Date().setMinutes(new Date().getMinutes() + 30 ))}
         />
 
         {this.state.showSearchAfterLeavingFrom && this.state.showSearchAfterGoingTo &&
