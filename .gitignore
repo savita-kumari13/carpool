@@ -60,3 +60,6 @@ android
 android/*
 ios
 ios/*
+
+# removing api_key folder
+app/components/apiKey
